@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  WISATAWAN
+  PENGELOLA
+  ADMIN
+}
+
+enum Kabupaten {
+  SLEMAN
+  GUNUNGKIDUL
+  BANTUL
+  KULON_PROGO
+  KOTA_YOGYAKARTA
+}
+
+enum Kategori {
+  PANTAI
+  AIR_TERJUN
+  GUNUNG
+  BUKIT
+  TEBING
+}
+
+enum DestinationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RouteStatus {
+  MUDAH
+  SEDANG
+  SULIT
+  RUSAK
+  BELUM_ADA_DATA
+}
+
+enum SignalStrength {
+  LEMAH
+  SEDANG
+  KUAT
+}
+
+enum CrowdLevel {
+  SEPI
+  SEDANG
+  PADAT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  EXPIRED
+}
+
+enum ServiceType {
+  OJEK
+  JEEP
+  GUIDE
+}
+
+enum VibeTag {
+  SUNSET
+  SUNRISE
+  SPOT_FOTO
+  QUIET_PLACE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  nikEncrypted String?
+  role         Role
+  createdAt    DateTime @default(now())
+
+  reports               UserReport[]
+  bookings              Booking[]
+  submittedDestinations Destination[]  @relation("SubmittedBy")
+  approvedDestinations  Destination[]  @relation("ApprovedBy")
+  validatedServices     LocalService[] @relation("ValidatedBy")
+}
+
+model Destination {
+  id                 String            @id @default(cuid())
+  name               String
+  kabupaten          Kabupaten
+  kategori           Kategori
+  latitude           Float
+  longitude          Float
+  jamOperasional     String?
+  htmResmi           Decimal           @default(0)
+  hasToilet          Boolean           @default(false)
+  hasParkir          Boolean           @default(false)
+  hasTempatIbadah    Boolean           @default(false)
+  hasTempatDuduk     Boolean           @default(false)
+  hasPenitipanBarang Boolean           @default(false)
+  aksesibilitas      String?
+  vibeTags           VibeTag[]
+  routeStatus        RouteStatus       @default(BELUM_ADA_DATA)
+  status             DestinationStatus @default(PENDING)
+  submittedById      String
+  submittedBy        User              @relation("SubmittedBy", fields: [submittedById], references: [id])
+  approvedById       String?
+  approvedBy         User?             @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt         DateTime?
+  createdAt          DateTime          @default(now())
+
+  localServices LocalService[]
+  reports       UserReport[]
+  warungs       LocalWarung[]
+  visitStats    VisitStat[]
+  bookings      Booking[]
+}
+
+model LocalService {
+  id            String      @id @default(cuid())
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  providerName  String
+  serviceType   ServiceType
+  contactWa     String
+  baseRate      Decimal
+  isValidated   Boolean     @default(false)
+  validatedById String?
+  validatedBy   User?       @relation("ValidatedBy", fields: [validatedById], references: [id])
+
+  bookings Booking[]
+}
+
+model UserReport {
+  id                   String         @id @default(cuid())
+  userId               String
+  user                 User           @relation(fields: [userId], references: [id])
+  destinationId        String
+  destination          Destination    @relation(fields: [destinationId], references: [id])
+  roadCondition        RouteStatus
+  signalStrength       SignalStrength
+  toiletLayak          Boolean?
+  parkirLayak          Boolean?
+  tempatIbadahLayak    Boolean?
+  tempatDudukLayak     Boolean?
+  penitipanBarangLayak Boolean?
+  reportedFee          Decimal?
+  crowdLevel           CrowdLevel
+  photoUrl             String?
+  latitude             Float
+  longitude            Float
+  isVerified           Boolean        @default(false)
+  upvoteCount          Int            @default(0)
+  notes                String?
+  createdAt            DateTime       @default(now())
+}
+
+model LocalWarung {
+  id            String      @id @default(cuid())
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  name          String
+  location      String?
+  updatedAt     DateTime    @updatedAt
+
+  menuItems MenuItem[]
+}
+
+model MenuItem {
+  id       String      @id @default(cuid())
+  warungId String
+  warung   LocalWarung @relation(fields: [warungId], references: [id])
+  name     String
+  price    Decimal
+}
+
+model VisitStat {
+  id            String      @id @default(cuid())
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  date          DateTime
+  visitorCount  Int         @default(0)
+  peakHour      Int?
+  crowdLevel    CrowdLevel?
+
+  @@unique([destinationId, date])
+}
+
+model Booking {
+  id                   String        @id @default(cuid())
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id])
+  serviceId            String
+  service              LocalService  @relation(fields: [serviceId], references: [id])
+  destinationId        String
+  destination          Destination   @relation(fields: [destinationId], references: [id])
+  travelDate           DateTime
+  meetingPoint         String?
+  notes                String?
+  contactNumber        String
+  estimatedArrivalTime String?
+  status               BookingStatus @default(PENDING)
+  createdAt            DateTime      @default(now())
+}
