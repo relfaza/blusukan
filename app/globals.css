@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -46,6 +47,24 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Blusukan Design System */
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --color-blusukan-primary: var(--blusukan-primary);
+  --color-blusukan-primary-container: var(--blusukan-primary-container);
+  --color-blusukan-on-primary: var(--blusukan-on-primary);
+  --color-blusukan-secondary: var(--blusukan-secondary);
+  --color-blusukan-secondary-container: var(--blusukan-secondary-container);
+  --color-blusukan-on-secondary: var(--blusukan-on-secondary);
+  --color-blusukan-surface: var(--blusukan-surface);
+  --color-blusukan-surface-low: var(--blusukan-surface-low);
+  --color-blusukan-on-surface: var(--blusukan-on-surface);
+  --color-blusukan-on-surface-variant: var(--blusukan-on-surface-variant);
+  --color-blusukan-outline: var(--blusukan-outline);
+  --color-blusukan-outline-variant: var(--blusukan-outline-variant);
+  --color-blusukan-error: var(--blusukan-error);
+  --color-blusukan-error-container: var(--blusukan-error-container);
 }
 
 :root {
