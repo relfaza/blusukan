@@ -27,8 +27,10 @@ import {
   Cross,
   Plus,
   Minus,
+  TrendingUp,
 } from "lucide-react";
 import type { MapDestination } from "@/components/DestinationMap";
+import { getPopularityBadge } from "@/lib/popularity";
 
 // Leaflet browser-only
 const DestinationMap = dynamic(() => import("@/components/DestinationMap"), {
@@ -79,6 +81,9 @@ export type DestinasiDetail = {
   hasTempatDuduk: boolean;
   hasPenitipanBarang: boolean;
   vibeTags: string[];
+  totalUpvotes: number;
+  verifiedReportsCount: number;
+  populerMingguIni: boolean;
   reports: Report[];
   localServices: LocalService[];
   warungs: Warung[];
@@ -381,6 +386,7 @@ function SimulasiLoketCard({ htmResmi }: { htmResmi: number | null }) {
 export default function DestinasiDetailClient({ destination: d }: Props) {
   const badge = getRouteBadge(d.routeStatus);
   const needsHelp = d.routeStatus === "SULIT" || d.routeStatus === "RUSAK";
+  const popularityBadge = getPopularityBadge(d);
 
   const mapPoint: MapDestination[] = [
     { id: d.id, name: d.name, latitude: d.latitude, longitude: d.longitude, routeStatus: d.routeStatus },
@@ -476,6 +482,19 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                   {tag}
                 </span>
               ))}
+              {popularityBadge && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
+                  style={{ background: "#fef3e7", color: "#805533" }}
+                >
+                  {popularityBadge.kind === "trending" ? (
+                    <TrendingUp size={13} />
+                  ) : (
+                    <Star size={13} />
+                  )}
+                  {popularityBadge.label}
+                </span>
+              )}
             </div>
             <h1
               className="text-3xl lg:text-4xl font-bold leading-tight"

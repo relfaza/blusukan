@@ -18,6 +18,8 @@ import {
   MapPin,
   Map,
   X,
+  Star,
+  TrendingUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -26,6 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { MapDestination } from "@/components/DestinationMap";
+import { getPopularityBadge } from "@/lib/popularity";
 
 // Leaflet is browser-only — load dynamically with ssr: false
 const DestinationMap = dynamic(
@@ -55,6 +58,9 @@ export type DestinationForClient = {
   longitude: number;
   routeStatus: string;
   vibeTags: string[];
+  totalUpvotes: number;
+  verifiedReportsCount: number;
+  populerMingguIni: boolean;
   reports: Array<{
     signalStrength: string | null;
     crowdLevel: string | null;
@@ -400,6 +406,7 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
           ) : (
             filtered.map((dest) => {
               const badge = getRouteBadge(dest.routeStatus);
+              const popularityBadge = getPopularityBadge(dest);
               const report = dest.reports[0];
               const signalInfo = report?.signalStrength
                 ? SIGNAL_LABEL[report.signalStrength]
@@ -470,6 +477,27 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                       >
                         {dest.name}
                       </h3>
+
+                      {/* Popularitas — dari upvote & laporan terverifikasi komunitas */}
+                      {popularityBadge && (
+                        <div className="mb-2">
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold"
+                            style={{
+                              background: "#fef3e7",
+                              color: "#805533",
+                              fontFamily: "Inter, sans-serif",
+                            }}
+                          >
+                            {popularityBadge.kind === "trending" ? (
+                              <TrendingUp size={13} />
+                            ) : (
+                              <Star size={13} />
+                            )}
+                            {popularityBadge.label}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Signal + crowd chips */}
                       {(signalInfo || crowdLabel) && (
