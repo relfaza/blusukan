@@ -16,7 +16,15 @@ import {
   WifiOff,
   Users,
   MapPin,
+  Map,
+  X,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { MapDestination } from "@/components/DestinationMap";
 
 // Leaflet is browser-only — load dynamically with ssr: false
@@ -110,7 +118,7 @@ function getRouteBadge(routeStatus: string): BadgeCfg {
       };
     case "RUSAK":
       return {
-        label: "Rusak",
+        label: "Perlu Perhatian",
         bg: "#ba1a1a",
         textColor: "#ffffff",
         icon: <AlertTriangle size={12} />,
@@ -148,6 +156,7 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedWilayah, setSelectedWilayah] = useState("ALL");
   const [selectedKategori, setSelectedKategori] = useState("ALL");
+  const [mapOpen, setMapOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -164,7 +173,8 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
     });
   }, [destinations, searchQuery, selectedWilayah, selectedKategori]);
 
-  const mapDestinations: MapDestination[] = filtered.map((d) => ({
+  // Semua destinasi untuk peta (SELALU lengkap, tidak mengikuti filter)
+  const allMapDestinations: MapDestination[] = destinations.map((d) => ({
     id: d.id,
     name: d.name,
     latitude: d.latitude,
@@ -172,21 +182,47 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
     routeStatus: d.routeStatus,
   }));
 
+  // ID destinasi yang sesuai filter aktif (untuk highlight di peta)
+  const filteredIds = new Set(filtered.map((d) => d.id));
+
   return (
     <div
       className="min-h-screen flex flex-col"
       style={{ background: "#f9f9f9", color: "#1a1c1c" }}
     >
-      {/* ── Sticky search header ── */}
-      <header
-        className="sticky top-0 z-40 px-4 py-3 border-b"
+      {/* ── Hero banner ── */}
+      <div
+        className="px-4 lg:px-8 py-8"
         style={{
-          background: "rgba(249,249,249,0.92)",
-          backdropFilter: "blur(8px)",
-          borderColor: "#c2c9bb",
+          background: "linear-gradient(135deg, rgba(45,90,39,0.08) 0%, rgba(21,66,18,0.14) 100%)",
+          borderBottom: "1px solid #c2c9bb",
         }}
       >
-        <div className="relative w-full max-w-2xl mx-auto">
+        <div className="max-w-7xl mx-auto">
+          <p
+            className="text-xs font-semibold uppercase tracking-widest mb-1"
+            style={{ color: "#2d5a27", fontFamily: "Inter, sans-serif" }}
+          >
+            Yogyakarta · Hidden Gem
+          </p>
+          <h1
+            className="text-2xl font-bold leading-tight"
+            style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+          >
+            Jelajahi Hidden Gem<br />Yogyakarta
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+            Temukan destinasi wisata tersembunyi yang menakjubkan
+          </p>
+        </div>
+      </div>
+
+
+      {/* ── Main scrollable content ── */}
+      <main className="flex-1 px-4 lg:px-8 py-5 pb-28 max-w-7xl mx-auto w-full">
+
+        {/* ── Search bar (Tugas 3: bukan sticky lagi) ── */}
+        <div className="relative w-full max-w-2xl mb-6">
           <Search
             size={18}
             className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -198,29 +234,43 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
             placeholder="Cari destinasi atau wilayah…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-3 pl-11 pr-4 rounded-full text-sm transition-all focus:outline-none focus:ring-2"
+            className="w-full py-3 pl-11 pr-4 rounded-full text-sm transition-all focus:outline-none"
             style={{
               background: "#ffffff",
               border: "1px solid #c2c9bb",
               color: "#1a1c1c",
               fontFamily: "Inter, sans-serif",
-              // focus ring colour set via JS below — ring-2 defaults to theme ring
+              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
             }}
           />
         </div>
-      </header>
 
-      {/* ── Main scrollable content ── */}
-      <main className="flex-1 px-4 py-5 pb-28 space-y-6 max-w-2xl mx-auto w-full">
-
-        {/* ── Wilayah filter ── */}
+        <div className="space-y-6">
+        {/* ── Destination cards — grid 3 kolom (Tugas 1) ── */}
         <section>
-          <h2
-            className="text-xs font-semibold uppercase tracking-wide mb-2"
-            style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
-          >
-            Wilayah
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2
+              className="text-xs font-semibold uppercase tracking-wide"
+              style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
+            >
+              Wilayah
+            </h2>
+            {/* Tombol Lihat Peta di samping label filter */}
+            <button
+              id="btn-lihat-peta"
+              type="button"
+              onClick={() => setMapOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+              style={{
+                background: "#2d5a27",
+                color: "#ffffff",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              <Map size={13} />
+              Lihat Peta
+            </button>
+          </div>
           <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1">
             {WILAYAH_OPTIONS.map((opt) => {
               const active = selectedWilayah === opt.value;
@@ -293,20 +343,43 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
           </div>
         </section>
 
-        {/* ── Leaflet Map ── */}
-        <section
-          className="rounded-xl overflow-hidden border shadow-sm"
-          style={{
-            height: 280,
-            borderColor: "#44372a",
-            background: "#f3f3f3",
-          }}
-        >
-          <DestinationMap destinations={mapDestinations} />
-        </section>
-
-        {/* ── Destination cards ── */}
-        <section className="space-y-4">
+        {/* ── Modal Peta (Tugas 4) ── */}
+        <Dialog open={mapOpen} onOpenChange={setMapOpen}>
+          <DialogContent
+            showCloseButton={false}
+            className="!max-w-4xl !w-[calc(100vw-2rem)] !h-[80vh] !p-0 overflow-hidden"
+          >
+            <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#c2c9bb" }}>
+              <DialogTitle
+                className="text-sm font-bold"
+                style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+              >
+                Peta Destinasi Yogyakarta
+                {(selectedWilayah !== "ALL" || selectedKategori !== "ALL") && (
+                  <span className="ml-2 text-xs font-normal" style={{ color: "#72796e" }}>
+                    (pin berwarna = sesuai filter aktif)
+                  </span>
+                )}
+              </DialogTitle>
+              <button
+                type="button"
+                onClick={() => setMapOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
+                style={{ color: "#42493e" }}
+                aria-label="Tutup peta"
+              >
+                <X size={16} />
+              </button>
+            </DialogHeader>
+            <div className="flex-1" style={{ height: "calc(80vh - 52px)" }}>
+              <DestinationMap
+                destinations={allMapDestinations}
+                highlightIds={filteredIds}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {filtered.length === 0 ? (
             <div className="text-center py-16">
               <MapPin
@@ -336,119 +409,127 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                 : null;
 
               return (
-                <article
+                <Link
                   key={dest.id}
-                  className="rounded-xl overflow-hidden flex flex-col transition-shadow hover:shadow-lg"
-                  style={{
-                    background: "#ffffff",
-                    border: "1px solid #44372a",
-                  }}
+                  href={`/destinasi/${dest.id}`}
+                  id={`card-${dest.id}`}
+                  className="block"
                 >
-                  {/* Card photo */}
-                  <div className="h-48 relative w-full">
-                    <Image
-                      src="/destination-placeholder.png"
-                      alt={dest.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 672px"
-                    />
-                    {/* Road condition badge */}
-                    {badge && (
-                      <div className="absolute top-2 left-2">
-                        <span
-                          className="flex items-center gap-1 px-2 py-1 rounded text-xs font-bold shadow-sm"
-                          style={{
-                            background: badge.bg,
-                            color: badge.textColor,
-                            fontFamily: "Inter, sans-serif",
-                          }}
-                        >
-                          {badge.icon}
-                          {badge.label}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card body */}
-                  <div className="p-4 flex flex-col flex-1">
-                    {/* Category + name */}
-                    <p
-                      className="text-xs font-bold uppercase tracking-wider mb-1"
-                      style={{
-                        color: "#805533",
-                        fontFamily: "Inter, sans-serif",
-                      }}
-                    >
-                      {KATEGORI_LABEL[dest.kategori] ?? dest.kategori}
-                    </p>
-                    <h3
-                      className="text-lg font-bold leading-tight mb-3"
-                      style={{
-                        color: "#1a1c1c",
-                        fontFamily: "Montserrat, sans-serif",
-                      }}
-                    >
-                      {dest.name}
-                    </h3>
-
-                    {/* Signal + crowd chips */}
-                    {(signalInfo || crowdLabel) && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {signalInfo && (
+                  <article
+                    className="rounded-2xl overflow-hidden flex flex-col transition-all shadow-sm hover:shadow-lg hover:scale-[1.02]"
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #44372a",
+                    }}
+                  >
+                    {/* Card photo */}
+                    <div className="h-48 relative w-full">
+                      <Image
+                        src="/destination-placeholder.png"
+                        alt={dest.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 672px"
+                      />
+                      {/* Road condition badge */}
+                      {badge && (
+                        <div className="absolute top-2 left-2">
                           <span
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-bold shadow-sm"
                             style={{
-                              background: "#eeeeee",
-                              color: "#42493e",
+                              background: badge.bg,
+                              color: badge.textColor,
                               fontFamily: "Inter, sans-serif",
                             }}
                           >
-                            {signalInfo.icon}
-                            {signalInfo.label}
+                            {badge.icon}
+                            {badge.label}
                           </span>
-                        )}
-                        {crowdLabel && (
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
-                            style={{
-                              background: "#eeeeee",
-                              color: "#42493e",
-                              fontFamily: "Inter, sans-serif",
-                            }}
-                          >
-                            <Users size={13} />
-                            {crowdLabel}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                    </div>
 
-                    {/* Vibe tags */}
-                    {dest.vibeTags.length > 0 && (
-                      <div className="mt-auto flex flex-wrap gap-1">
-                        {dest.vibeTags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-1 rounded text-xs font-semibold"
-                            style={{
-                              background: "rgba(161, 212, 148, 0.2)",
-                              color: "#154212",
-                              fontFamily: "Inter, sans-serif",
-                            }}
-                          >
-                            {VIBE_LABEL[tag] ?? tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </article>
+                    {/* Card body */}
+                    <div className="p-4 flex flex-col flex-1">
+                      {/* Category + name */}
+                      <p
+                        className="text-xs font-bold uppercase tracking-wider mb-1"
+                        style={{
+                          color: "#805533",
+                          fontFamily: "Inter, sans-serif",
+                        }}
+                      >
+                        {KATEGORI_LABEL[dest.kategori] ?? dest.kategori}
+                      </p>
+                      <h3
+                        className="text-lg font-bold leading-tight mb-3"
+                        style={{
+                          color: "#1a1c1c",
+                          fontFamily: "Montserrat, sans-serif",
+                        }}
+                      >
+                        {dest.name}
+                      </h3>
+
+                      {/* Signal + crowd chips */}
+                      {(signalInfo || crowdLabel) && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {signalInfo && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                              style={{
+                                background: "#eeeeee",
+                                color: "#42493e",
+                                fontFamily: "Inter, sans-serif",
+                              }}
+                            >
+                              {signalInfo.icon}
+                              {signalInfo.label}
+                            </span>
+                          )}
+                          {crowdLabel && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                              style={{
+                                background: "#eeeeee",
+                                color: "#42493e",
+                                fontFamily: "Inter, sans-serif",
+                              }}
+                            >
+                              <Users size={13} />
+                              {crowdLabel}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Vibe tags */}
+                      {dest.vibeTags.length > 0 && (
+                        <div className="mt-auto flex flex-wrap gap-1">
+                          {dest.vibeTags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-1 rounded text-xs font-semibold"
+                              style={{
+                                background: "rgba(161, 212, 148, 0.2)",
+                                color: "#154212",
+                                fontFamily: "Inter, sans-serif",
+                              }}
+                            >
+                              {VIBE_LABEL[tag] ?? tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                </Link>
               );
             })
           )}
         </section>
+
+        </div> {/* end space-y-6 wrapper */}
       </main>
 
       {/* ── Fixed bottom navigation ── */}

@@ -1,0 +1,844 @@
+"use client";
+
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Clock,
+  Ticket,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  CheckCircle,
+  Droplets,
+  Wifi,
+  WifiOff,
+  Users,
+  Car,
+  Armchair,
+  Package,
+  Utensils,
+  MessageCircle,
+  MapPin,
+  ExternalLink,
+  Star,
+  Cross,
+  Plus,
+  Minus,
+} from "lucide-react";
+import type { MapDestination } from "@/components/DestinationMap";
+
+// Leaflet browser-only
+const DestinationMap = dynamic(() => import("@/components/DestinationMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center" style={{ background: "#f0f0f0" }}>
+      <span className="text-sm" style={{ color: "#72796e" }}>Memuat peta…</span>
+    </div>
+  ),
+});
+
+// ── Types ────────────────────────────────────────────────────────
+type Report = {
+  id: string;
+  userName: string;
+  roadCondition: string | null;
+  signalStrength: string | null;
+  crowdLevel: string | null;
+  reportedFee: number | null;
+  notes: string | null;
+  createdAt: string;
+};
+
+type LocalService = {
+  id: string;
+  providerName: string;
+  serviceType: string;
+  contactWa: string;
+  baseRate: number | null;
+};
+
+type MenuItem = { id: string; name: string; price: number };
+type Warung = { id: string; name: string; menuItems: MenuItem[] };
+
+export type DestinasiDetail = {
+  id: string;
+  name: string;
+  kabupaten: string;
+  kategori: string;
+  latitude: number;
+  longitude: number;
+  routeStatus: string;
+  jamOperasional: string | null;
+  htmResmi: number | null;
+  hasToilet: boolean;
+  hasParkir: boolean;
+  hasTempatIbadah: boolean;
+  hasTempatDuduk: boolean;
+  hasPenitipanBarang: boolean;
+  vibeTags: string[];
+  reports: Report[];
+  localServices: LocalService[];
+  warungs: Warung[];
+};
+
+interface Props {
+  destination: DestinasiDetail;
+}
+
+// ── Label maps ──────────────────────────────────────────────────
+const KABUPATEN_LABEL: Record<string, string> = {
+  SLEMAN: "Sleman",
+  GUNUNGKIDUL: "Gunungkidul",
+  BANTUL: "Bantul",
+  KULON_PROGO: "Kulon Progo",
+  KOTA_YOGYAKARTA: "Kota Yogyakarta",
+};
+
+const KATEGORI_LABEL: Record<string, string> = {
+  PANTAI: "Pantai",
+  AIR_TERJUN: "Air Terjun",
+  GUNUNG: "Gunung",
+  BUKIT: "Bukit",
+  TEBING: "Tebing",
+};
+
+const ROAD_LABEL: Record<string, string> = {
+  MUDAH: "Mudah",
+  SEDANG: "Sedang",
+  SULIT: "Sulit",
+  RUSAK: "Rusak",
+};
+
+const SIGNAL_LABEL: Record<string, { label: string; icon: React.ReactNode }> = {
+  KUAT: { label: "Sinyal Kuat", icon: <Wifi size={12} /> },
+  SEDANG: { label: "Sinyal Sedang", icon: <Wifi size={12} /> },
+  LEMAH: { label: "Sinyal Lemah", icon: <WifiOff size={12} /> },
+};
+
+const CROWD_LABEL: Record<string, string> = {
+  SEPI: "Sepi",
+  SEDANG: "Sedang",
+  PADAT: "Padat",
+};
+
+// ── Route badge ─────────────────────────────────────────────────
+function getRouteBadge(routeStatus: string) {
+  switch (routeStatus) {
+    case "MUDAH":
+    case "SEDANG":
+      return { label: "Kondisi Aman", bg: "#2d5a27", textColor: "#ffffff", icon: <CheckCircle size={14} /> };
+    case "SULIT":
+      return { label: "Berlumpur / Sulit", bg: "#44372a", textColor: "#ffffff", icon: <Droplets size={14} /> };
+    case "RUSAK":
+      return { label: "Perlu Perhatian", bg: "#ba1a1a", textColor: "#ffffff", icon: <AlertTriangle size={14} /> };
+    default:
+      return null;
+  }
+}
+
+// ── Utilities ───────────────────────────────────────────────────
+function timeAgo(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `${minutes} menit lalu`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} hari lalu`;
+  return `${Math.floor(days / 30)} bulan lalu`;
+}
+
+function formatRupiah(n: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+// ── Sub-components ──────────────────────────────────────────────
+
+/** Card wrapper dengan shadow dan rounded-2xl */
+function SectionCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-2xl p-6 ${className}`}
+      style={{
+        background: "#ffffff",
+        border: "1px solid #e8e8e8",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Judul section dengan garis aksen */
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      className="text-base font-bold mb-5"
+      style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+/** Chip kecil info (kondisi jalan, sinyal, dll) */
+function InfoChip({
+  icon,
+  label,
+  color = "#42493e",
+  bg = "#f0f0f0",
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  color?: string;
+  bg?: string;
+}) {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+      style={{ background: bg, color }}
+    >
+      {icon}
+      {label}
+    </span>
+  );
+}
+
+/** Item info dengan ikon di kotak warna */
+function InfoItem({
+  icon,
+  label,
+  value,
+  iconBg = "#e8f4e8",
+  iconColor = "#2d5a27",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  iconBg?: string;
+  iconColor?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3.5">
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+        style={{ background: iconBg, color: iconColor }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs" style={{ color: "#72796e", fontFamily: "Inter, sans-serif" }}>
+          {label}
+        </p>
+        <p className="text-sm font-semibold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Item fasilitas dalam grid 2 kolom */
+function FasilitasItem({ label, value, icon }: { label: string; value: boolean; icon: React.ReactNode }) {
+  return (
+    <div
+      className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl"
+      style={{ background: value ? "#f0f8f0" : "#fafafa", border: `1px solid ${value ? "#c8e6c9" : "#eeeeee"}` }}
+    >
+      <span style={{ color: value ? "#2d5a27" : "#c2c9bb" }}>{icon}</span>
+      <span
+        className="text-sm flex-1"
+        style={{
+          color: value ? "#1a1c1c" : "#9e9e9e",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        {label}
+      </span>
+      {value ? (
+        <CheckCircle2 size={15} style={{ color: "#2d5a27" }} />
+      ) : (
+        <XCircle size={15} style={{ color: "#c2c9bb" }} />
+      )}
+    </div>
+  );
+}
+
+/** Simulasi kalkulator loket masuk — estimasi client-side, bukan pembayaran nyata */
+function SimulasiLoketCard({ htmResmi }: { htmResmi: number | null }) {
+  const [jumlah, setJumlah] = useState(1);
+
+  const isGratis = htmResmi === 0;
+  const isTidakTersedia = htmResmi == null;
+  const total = (htmResmi ?? 0) * jumlah;
+
+  return (
+    <SectionCard>
+      <div className="flex items-center justify-between mb-5">
+        <h2
+          className="text-base font-bold"
+          style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+        >
+          Simulasi Loket Masuk
+        </h2>
+        {isGratis && (
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full"
+            style={{ background: "#e8f4e8", color: "#2d5a27" }}
+          >
+            Gratis
+          </span>
+        )}
+      </div>
+
+      {isTidakTersedia ? (
+        <p className="text-sm" style={{ color: "#72796e" }}>
+          Informasi harga tiket belum tersedia untuk destinasi ini.
+        </p>
+      ) : isGratis ? (
+        <p className="text-sm" style={{ color: "#42493e" }}>
+          Tidak ada biaya masuk untuk destinasi ini.
+        </p>
+      ) : (
+        <>
+          {/* Stepper jumlah pengunjung */}
+          <div className="flex items-center justify-between mb-4">
+            <span
+              className="text-sm font-medium"
+              style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
+            >
+              Jumlah Pengunjung
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setJumlah((j) => Math.max(1, j - 1))}
+                disabled={jumlah <= 1}
+                aria-label="Kurangi jumlah pengunjung"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+              >
+                <Minus size={14} />
+              </button>
+              <span
+                className="w-6 text-center text-sm font-bold"
+                style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+              >
+                {jumlah}
+              </span>
+              <button
+                type="button"
+                onClick={() => setJumlah((j) => j + 1)}
+                aria-label="Tambah jumlah pengunjung"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+                style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Breakdown total */}
+          <div className="rounded-xl p-4" style={{ background: "#f0f8f0" }}>
+            <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+              {jumlah} Pengunjung x {formatRupiah(htmResmi)} ={" "}
+              <strong style={{ color: "#2d5a27" }}>
+                Total Bayar {formatRupiah(total)}
+              </strong>
+            </p>
+          </div>
+
+          <p className="text-xs mt-3" style={{ color: "#72796e" }}>
+            Simulasi ini hanya estimasi. Pembayaran dilakukan langsung di lokasi (tunai/COD).
+          </p>
+        </>
+      )}
+    </SectionCard>
+  );
+}
+
+// ── Main Component ───────────────────────────────────────────────
+export default function DestinasiDetailClient({ destination: d }: Props) {
+  const badge = getRouteBadge(d.routeStatus);
+  const needsHelp = d.routeStatus === "SULIT" || d.routeStatus === "RUSAK";
+
+  const mapPoint: MapDestination[] = [
+    { id: d.id, name: d.name, latitude: d.latitude, longitude: d.longitude, routeStatus: d.routeStatus },
+  ];
+
+  return (
+    <div
+      className="min-h-screen"
+      style={{ background: "#f9f9f9", color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+    >
+      {/* ── Sticky breadcrumb header ── */}
+      <header
+        className="sticky top-14 z-30 flex items-center gap-3 px-4 lg:px-8 py-3 border-b"
+        style={{
+          background: "rgba(249,249,249,0.95)",
+          backdropFilter: "blur(10px)",
+          borderColor: "#e8e8e8",
+        }}
+      >
+        <Link
+          href="/"
+          id="detail-back"
+          className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-70 transition-opacity"
+          style={{ color: "#2d5a27" }}
+        >
+          <ArrowLeft size={16} />
+          Kembali ke Beranda
+        </Link>
+        <span style={{ color: "#c2c9bb" }}>/</span>
+        <span className="text-sm truncate" style={{ color: "#72796e" }}>
+          {d.name}
+        </span>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-20">
+
+        {/* ── Hero Section ── */}
+        <section className="pt-6 pb-8">
+          {/* Hero image — 21:9 aspect ratio */}
+          <div
+            className="relative w-full rounded-2xl overflow-hidden mb-6"
+            style={{ aspectRatio: "21/9", background: "#e0e0e0", minHeight: 200 }}
+          >
+            <Image
+              src="/destination-placeholder.png"
+              alt={d.name}
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 1280px) 100vw, 1280px"
+            />
+            {/* Gradient overlay bawah */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%)",
+              }}
+            />
+            {/* Badge status jalan — pojok kiri atas */}
+            {badge && (
+              <div className="absolute top-4 left-4">
+                <span
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+                  style={{
+                    background: badge.bg,
+                    color: badge.textColor,
+                    backdropFilter: "blur(8px)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  {badge.icon}
+                  {badge.label}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Judul & subtitle */}
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              <span
+                className="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                style={{ background: "#fef3e7", color: "#805533" }}
+              >
+                {KATEGORI_LABEL[d.kategori] ?? d.kategori}
+              </span>
+              {d.vibeTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                  style={{ background: "rgba(45,90,39,0.1)", color: "#154212" }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <h1
+              className="text-3xl lg:text-4xl font-bold leading-tight"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+            >
+              {d.name}
+            </h1>
+            <div className="flex items-center gap-1.5">
+              <MapPin size={15} style={{ color: "#72796e" }} />
+              <span className="text-sm" style={{ color: "#72796e" }}>
+                {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, Daerah Istimewa Yogyakarta
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Layout 2 kolom ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* ══ KOLOM KIRI (lg:col-span-2) ══ */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Card Informasi */}
+            <SectionCard>
+              <SectionTitle>Informasi Destinasi</SectionTitle>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {d.jamOperasional && (
+                  <InfoItem
+                    icon={<Clock size={18} />}
+                    label="Jam Operasional"
+                    value={d.jamOperasional}
+                  />
+                )}
+                <InfoItem
+                  icon={<Ticket size={18} />}
+                  label="Harga Tiket Masuk"
+                  value={
+                    d.htmResmi != null
+                      ? d.htmResmi === 0
+                        ? "Gratis"
+                        : formatRupiah(d.htmResmi)
+                      : "Informasi tidak tersedia"
+                  }
+                />
+                <InfoItem
+                  icon={<MapPin size={18} />}
+                  label="Wilayah"
+                  value={`${KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, DIY`}
+                />
+                <InfoItem
+                  icon={<Star size={18} />}
+                  label="Kategori"
+                  value={KATEGORI_LABEL[d.kategori] ?? d.kategori}
+                  iconBg="#fef3e7"
+                  iconColor="#805533"
+                />
+              </div>
+            </SectionCard>
+
+            {/* Card Simulasi Loket Masuk */}
+            <SimulasiLoketCard htmResmi={d.htmResmi} />
+
+            {/* Card Fasilitas */}
+            <SectionCard>
+              <SectionTitle>Fasilitas Tersedia</SectionTitle>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <FasilitasItem label="Toilet" value={d.hasToilet} icon={<CheckCircle2 size={16} />} />
+                <FasilitasItem label="Parkir" value={d.hasParkir} icon={<Car size={16} />} />
+                <FasilitasItem label="Tempat Ibadah" value={d.hasTempatIbadah} icon={<Cross size={16} />} />
+                <FasilitasItem label="Tempat Duduk" value={d.hasTempatDuduk} icon={<Armchair size={16} />} />
+                <FasilitasItem label="Penitipan Barang" value={d.hasPenitipanBarang} icon={<Package size={16} />} />
+              </div>
+            </SectionCard>
+
+            {/* Card Warung Sekitar */}
+            {d.warungs.length > 0 && (
+              <SectionCard>
+                <SectionTitle>
+                  <span className="flex items-center gap-2">
+                    <Utensils size={18} />
+                    Warung Sekitar
+                  </span>
+                </SectionTitle>
+                <div className="space-y-4">
+                  {d.warungs.map((w) => (
+                    <div key={w.id}>
+                      <p
+                        className="font-semibold text-sm mb-2.5"
+                        style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                      >
+                        {w.name}
+                      </p>
+                      {w.menuItems.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {w.menuItems.map((m) => (
+                            <div
+                              key={m.id}
+                              className="flex justify-between items-center py-1.5 border-b last:border-0"
+                              style={{ borderColor: "#f0f0f0" }}
+                            >
+                              <span className="text-sm" style={{ color: "#42493e" }}>
+                                {m.name}
+                              </span>
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: "#2d5a27" }}
+                              >
+                                {formatRupiah(m.price)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm" style={{ color: "#72796e" }}>
+                          Menu belum tersedia
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+            )}
+
+            {/* Section Laporan Wisatawan */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2
+                  className="text-base font-bold"
+                  style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+                >
+                  Ulasan & Laporan Wisatawan
+                </h2>
+                {d.reports.length > 0 && (
+                  <span className="text-xs" style={{ color: "#72796e" }}>
+                    {d.reports.length} laporan terbaru
+                  </span>
+                )}
+              </div>
+
+              {d.reports.length === 0 ? (
+                <SectionCard>
+                  <div className="text-center py-6">
+                    <MessageCircle
+                      size={36}
+                      className="mx-auto mb-3"
+                      style={{ color: "#c2c9bb" }}
+                    />
+                    <p
+                      className="text-sm font-medium"
+                      style={{ color: "#42493e" }}
+                    >
+                      Belum ada laporan
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "#72796e" }}>
+                      Bantu usulkan perbaikan untuk destinasi ini — jadilah pelapor lapangan pertama
+                    </p>
+                  </div>
+                </SectionCard>
+              ) : (
+                <div className="space-y-4">
+                  {d.reports.map((r) => {
+                    const signalInfo = r.signalStrength ? SIGNAL_LABEL[r.signalStrength] : null;
+                    const crowdLabel = r.crowdLevel ? CROWD_LABEL[r.crowdLevel] : null;
+                    const roadLabel = r.roadCondition ? ROAD_LABEL[r.roadCondition] : null;
+
+                    return (
+                      <SectionCard key={r.id} className="hover:shadow-md transition-shadow">
+                        {/* Header reviewer */}
+                        <div className="flex items-start gap-3 mb-4">
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                            style={{ background: "#e3efe0", color: "#2d5a27" }}
+                          >
+                            {getInitials(r.userName)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="text-sm font-semibold"
+                              style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                            >
+                              {r.userName}
+                            </p>
+                            <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+                              {timeAgo(r.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Kondisi chips */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {roadLabel && (
+                            <InfoChip
+                              label={`Jalan: ${roadLabel}`}
+                              bg={
+                                r.roadCondition === "RUSAK"
+                                  ? "#fde8e8"
+                                  : r.roadCondition === "SULIT"
+                                  ? "#fef3e7"
+                                  : "#e8f4e8"
+                              }
+                              color={
+                                r.roadCondition === "RUSAK"
+                                  ? "#ba1a1a"
+                                  : r.roadCondition === "SULIT"
+                                  ? "#805533"
+                                  : "#2d5a27"
+                              }
+                            />
+                          )}
+                          {signalInfo && (
+                            <InfoChip icon={signalInfo.icon} label={signalInfo.label} />
+                          )}
+                          {crowdLabel && (
+                            <InfoChip icon={<Users size={12} />} label={crowdLabel} />
+                          )}
+                          {r.reportedFee != null && (
+                            <InfoChip
+                              icon={<Ticket size={12} />}
+                              label={r.reportedFee === 0 ? "Gratis" : formatRupiah(r.reportedFee)}
+                              bg="#e8f4e8"
+                              color="#2d5a27"
+                            />
+                          )}
+                        </div>
+
+                        {/* Catatan / notes */}
+                        {r.notes && (
+                          <p
+                            className="text-sm leading-relaxed italic"
+                            style={{ color: "#42493e", borderLeft: "3px solid #e3efe0", paddingLeft: "12px" }}
+                          >
+                            &ldquo;{r.notes}&rdquo;
+                          </p>
+                        )}
+                      </SectionCard>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ══ KOLOM KANAN — sidebar sticky ══ */}
+          <div className="lg:col-span-1">
+            <div className="space-y-5 lg:sticky lg:top-28">
+
+              {/* Card Peta Lokasi */}
+              <SectionCard className="!p-0 overflow-hidden">
+                {/* Peta */}
+                <div style={{ height: 250 }}>
+                  <DestinationMap destinations={mapPoint} />
+                </div>
+                {/* Tombol Google Maps */}
+                <div className="p-4">
+                  <p
+                    className="text-sm font-bold mb-3"
+                    style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+                  >
+                    Peta Lokasi
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${d.latitude},${d.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    id="btn-google-maps"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80"
+                    style={{
+                      border: "1px solid #c2c9bb",
+                      color: "#1a1c1c",
+                      background: "#fafafa",
+                    }}
+                  >
+                    <ExternalLink size={15} style={{ color: "#2d5a27" }} />
+                    Buka di Google Maps
+                  </a>
+                </div>
+              </SectionCard>
+
+              {/* Card Butuh Bantuan Akses */}
+              {needsHelp && d.localServices.length > 0 && (
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    border: `2px solid ${d.routeStatus === "RUSAK" ? "#ba1a1a" : "#44372a"}`,
+                    boxShadow: `0 0 0 4px ${d.routeStatus === "RUSAK" ? "rgba(186,26,26,0.08)" : "rgba(68,55,42,0.08)"}`,
+                  }}
+                >
+                  {/* Header warning */}
+                  <div
+                    className="px-5 py-4"
+                    style={{
+                      background: d.routeStatus === "RUSAK" ? "#fde8e8" : "#fdf0e0",
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertTriangle
+                        size={16}
+                        style={{ color: d.routeStatus === "RUSAK" ? "#ba1a1a" : "#805533" }}
+                      />
+                      <h3
+                        className="text-sm font-bold"
+                        style={{
+                          fontFamily: "Montserrat, sans-serif",
+                          color: d.routeStatus === "RUSAK" ? "#ba1a1a" : "#44372a",
+                        }}
+                      >
+                        Perlu Perhatian — Usulan Perbaikan Akses
+                      </h3>
+                    </div>
+                    <p className="text-xs" style={{ color: "#72796e" }}>
+                      Jalan menuju sini berstatus{" "}
+                      <strong>{ROAD_LABEL[d.routeStatus]?.toLowerCase()}</strong>. Warga
+                      mengusulkan perbaikan akses ke destinasi ini — sementara itu, hubungi jasa
+                      lokal berikut untuk bantuan:
+                    </p>
+                  </div>
+
+                  {/* List jasa */}
+                  <div
+                    className="divide-y"
+                    style={{ background: "#ffffff", borderColor: "#f0f0f0" }}
+                  >
+                    {d.localServices.map((s) => (
+                      <div key={s.id} className="px-5 py-4">
+                        <p
+                          className="text-sm font-semibold"
+                          style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                        >
+                          {s.providerName}
+                        </p>
+                        <p className="text-xs mt-0.5 mb-2" style={{ color: "#72796e" }}>
+                          {s.serviceType}
+                        </p>
+                        {s.baseRate != null && (
+                          <p
+                            className="text-sm font-bold mb-3"
+                            style={{ color: "#2d5a27" }}
+                          >
+                            {formatRupiah(s.baseRate)}
+                          </p>
+                        )}
+                        <a
+                          href={`https://wa.me/${s.contactWa.replace(/\D/g, "")}?text=${encodeURIComponent(
+                            `Halo ${s.providerName}, saya butuh bantuan akses ke destinasi *${d.name}*. Apakah tersedia?`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          id={`wa-${s.id}`}
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-85"
+                          style={{ background: "#25D366", color: "#ffffff" }}
+                        >
+                          <MessageCircle size={15} />
+                          Pesan via WhatsApp
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
