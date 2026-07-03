@@ -66,6 +66,14 @@ type LocalService = {
 type MenuItem = { id: string; name: string; price: number };
 type Warung = { id: string; name: string; menuItems: MenuItem[] };
 
+type SewaFasilitas = {
+  id: string;
+  nama: string;
+  hargaSewa: number;
+  satuanWaktu: string;
+  jumlahUnit: number;
+};
+
 export type DestinasiDetail = {
   id: string;
   name: string;
@@ -88,6 +96,7 @@ export type DestinasiDetail = {
   reports: Report[];
   localServices: LocalService[];
   warungs: Warung[];
+  fasilitas: SewaFasilitas[];
 };
 
 interface Props {
@@ -432,6 +441,174 @@ function CheckoutTiketCard({
           </p>
         </>
       )}
+    </SectionCard>
+  );
+}
+
+/** Format Date jadi string "YYYY-MM-DDTHH:mm" untuk value awal <input type="datetime-local"> */
+function toLocalInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** Satu kartu booking untuk satu fasilitas — quantity stepper + jadwal + konfirmasi */
+function FasilitasBookingRow({
+  destinationId,
+  fasilitas,
+}: {
+  destinationId: string;
+  fasilitas: SewaFasilitas;
+}) {
+  const router = useRouter();
+  const [jumlah, setJumlah] = useState(1);
+  const [jadwal, setJadwal] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const total = fasilitas.hargaSewa * jumlah;
+  const minJadwal = toLocalInputValue(new Date());
+
+  async function handleKonfirmasi() {
+    if (!jadwal) {
+      setError("Pilih jadwal booking terlebih dahulu.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/transaksi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "FASILITAS",
+          destinationId,
+          fasilitasId: fasilitas.id,
+          kuantitas: jumlah,
+          jadwal: new Date(jadwal).toISOString(),
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Gagal membuat booking. Coba lagi.");
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/transaksi/${data.id}`);
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl p-4" style={{ border: "1px solid #e8e8e8" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+            {fasilitas.nama}
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+            {formatRupiah(fasilitas.hargaSewa)} / {fasilitas.satuanWaktu}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setJumlah((j) => Math.max(1, j - 1))}
+            disabled={jumlah <= 1}
+            aria-label={`Kurangi jumlah ${fasilitas.nama}`}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+          >
+            <Minus size={14} />
+          </button>
+          <span className="w-6 text-center text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+            {jumlah}
+          </span>
+          <button
+            type="button"
+            onClick={() => setJumlah((j) => Math.min(fasilitas.jumlahUnit, j + 1))}
+            disabled={jumlah >= fasilitas.jumlahUnit}
+            aria-label={`Tambah jumlah ${fasilitas.nama}`}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <label
+          htmlFor={`jadwal-${fasilitas.id}`}
+          className="block text-xs font-medium mb-1"
+          style={{ color: "#72796e" }}
+        >
+          Jadwal Booking
+        </label>
+        <input
+          id={`jadwal-${fasilitas.id}`}
+          type="datetime-local"
+          value={jadwal}
+          min={minJadwal}
+          onChange={(e) => setJadwal(e.target.value)}
+          className="w-full px-3 py-2 text-sm"
+          style={{
+            border: "1px solid var(--blusukan-outline-variant)",
+            borderRadius: "8px",
+            color: "var(--blusukan-on-surface)",
+          }}
+        />
+      </div>
+
+      <div className="rounded-xl p-3 mb-3" style={{ background: "#f0f8f0" }}>
+        <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+          {jumlah} x {formatRupiah(fasilitas.hargaSewa)} ={" "}
+          <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
+        </p>
+      </div>
+
+      {error && (
+        <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+          {error}
+        </p>
+      )}
+
+      <button
+        type="button"
+        id={`btn-konfirmasi-booking-${fasilitas.id}`}
+        onClick={handleKonfirmasi}
+        disabled={loading}
+        className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+      >
+        {loading ? "Memproses..." : "Konfirmasi Booking"}
+      </button>
+    </div>
+  );
+}
+
+/** Section sewa fasilitas — disembunyikan total kalau destinasi belum punya Fasilitas */
+function SewaFasilitasSection({
+  destinationId,
+  fasilitasList,
+}: {
+  destinationId: string;
+  fasilitasList: SewaFasilitas[];
+}) {
+  if (fasilitasList.length === 0) return null;
+
+  return (
+    <SectionCard>
+      <SectionTitle>Sewa Fasilitas</SectionTitle>
+      <div className="space-y-4">
+        {fasilitasList.map((f) => (
+          <FasilitasBookingRow key={f.id} destinationId={destinationId} fasilitas={f} />
+        ))}
+      </div>
     </SectionCard>
   );
 }
@@ -794,6 +971,9 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
 
               {/* Card Checkout Tiket Masuk */}
               <CheckoutTiketCard destinationId={d.id} htmResmi={d.htmResmi} />
+
+              {/* Card Sewa Fasilitas — disembunyikan otomatis kalau belum ada Fasilitas */}
+              <SewaFasilitasSection destinationId={d.id} fasilitasList={d.fasilitas} />
 
               {/* Card Peta Lokasi */}
               <SectionCard className="!p-0 overflow-hidden">
