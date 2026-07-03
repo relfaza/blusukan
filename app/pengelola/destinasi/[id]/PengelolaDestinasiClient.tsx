@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Ticket, Pencil, Trash2, Plus } from "lucide-react";
+import RupiahInput from "@/components/ui/rupiah-input";
 
 type TransaksiRow = {
   id: string;
@@ -208,7 +209,7 @@ function FasilitasForm({
   submitting: boolean;
 }) {
   const [nama, setNama] = useState(initial?.nama ?? "");
-  const [hargaSewa, setHargaSewa] = useState(initial ? String(initial.hargaSewa) : "");
+  const [hargaSewa, setHargaSewa] = useState<number | "">(initial ? initial.hargaSewa : "");
   const [satuanWaktu, setSatuanWaktu] = useState(initial?.satuanWaktu ?? "per jam");
   const [jumlahUnit, setJumlahUnit] = useState(initial ? String(initial.jumlahUnit) : "1");
 
@@ -251,15 +252,14 @@ function FasilitasForm({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-            Harga Sewa (Rp)
+            Harga Sewa
           </label>
-          <input
+          <RupiahInput
+            id="hargaSewa"
             required
-            type="number"
-            min={0}
             value={hargaSewa}
-            onChange={(e) => setHargaSewa(e.target.value)}
-            className="w-full px-3 py-2 text-sm"
+            onChange={setHargaSewa}
+            className="w-full pl-9 pr-3 py-2 text-sm"
             style={inputStyle}
           />
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, MapPin, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import RupiahInput from "@/components/ui/rupiah-input";
 
 type Destination = {
   id: string;
@@ -59,7 +60,7 @@ export default function LaporanFormClient() {
   const [signalStrength, setSignalStrength] = useState("");
   const [crowdLevel, setCrowdLevel] = useState("");
   const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({});
-  const [reportedFee, setReportedFee] = useState("");
+  const [reportedFee, setReportedFee] = useState<number | "">("");
   const [notes, setNotes] = useState("");
 
   const [geoStatus, setGeoStatus] = useState<GeoStatus>("loading");
@@ -140,7 +141,7 @@ export default function LaporanFormClient() {
           tempatIbadahLayak: fasilitas.tempatIbadahLayak ?? false,
           tempatDudukLayak: fasilitas.tempatDudukLayak ?? false,
           penitipanBarangLayak: fasilitas.penitipanBarangLayak ?? false,
-          reportedFee: reportedFee.trim() === "" ? null : Number(reportedFee),
+          reportedFee: reportedFee === "" ? null : reportedFee,
           notes: notes.trim() === "" ? null : notes.trim(),
         }),
       });
@@ -370,30 +371,14 @@ export default function LaporanFormClient() {
             >
               Biaya yang dikeluarkan (opsional)
             </label>
-            <div className="relative">
-              <span
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-base"
-                style={{ color: "var(--blusukan-on-surface-variant)" }}
-              >
-                Rp
-              </span>
-              <input
-                id="reportedFee"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={reportedFee}
-                onChange={(e) => setReportedFee(e.target.value)}
-                placeholder="0"
-                className="w-full pl-11 pr-4 py-3.5 text-base"
-                style={{
-                  border: "1px solid var(--blusukan-outline-variant)",
-                  borderRadius: "8px",
-                  background: "#ffffff",
-                  color: "var(--blusukan-on-surface)",
-                }}
-              />
-            </div>
+            <RupiahInput
+              id="reportedFee"
+              value={reportedFee}
+              onChange={setReportedFee}
+              placeholder="0"
+              className="w-full pl-11 pr-4 py-3.5 text-base"
+              style={{ fontSize: "1rem" }}
+            />
           </div>
 
           {/* Catatan */}

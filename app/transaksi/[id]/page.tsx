@@ -25,6 +25,20 @@ function formatTanggalWaktu(date: Date): string {
   }).format(date);
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  PENDING: "Menunggu Konfirmasi",
+  DIKONFIRMASI: "Dikonfirmasi",
+  SELESAI: "Selesai",
+  DIBATALKAN: "Dibatalkan",
+};
+
+const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
+  PENDING: { bg: "#fef3e7", color: "#805533" },
+  DIKONFIRMASI: { bg: "#e3efe0", color: "#1d4ed8" },
+  SELESAI: { bg: "#e3efe0", color: "#1f4d2c" },
+  DIBATALKAN: { bg: "#eeeeee", color: "#4b4f45" },
+};
+
 export default async function TransaksiDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
@@ -143,9 +157,9 @@ export default async function TransaksiDetailPage({ params }: Props) {
             </span>
             <span
               className="text-xs font-bold px-2.5 py-1 rounded-full"
-              style={{ background: "#fef3e7", color: "#805533" }}
+              style={STATUS_STYLE[transaksi.status] ?? STATUS_STYLE.PENDING}
             >
-              Menunggu Konfirmasi
+              {STATUS_LABEL[transaksi.status] ?? transaksi.status}
             </span>
           </div>
         </div>
@@ -153,12 +167,24 @@ export default async function TransaksiDetailPage({ params }: Props) {
 
       <div className="w-full max-w-md mt-8 flex flex-col items-center gap-4">
         <Link
-          href="/riwayat"
+          href="/notifikasi?tab=riwayat"
           id="btn-lihat-riwayat"
           className="w-full text-center py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
           style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
         >
           Lihat Riwayat Transaksi
+        </Link>
+        <Link
+          href="/notifikasi?tab=notifikasi"
+          id="btn-lihat-notifikasi"
+          className="w-full text-center py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
+          style={{
+            background: "#ffffff",
+            color: "var(--blusukan-primary)",
+            border: "1px solid var(--blusukan-primary)",
+          }}
+        >
+          Lihat Notifikasi
         </Link>
         <Link
           href="/"

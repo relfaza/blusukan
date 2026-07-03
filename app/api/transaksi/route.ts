@@ -49,6 +49,7 @@ function serializeTransaksi(t: {
 export async function POST(req: Request) {
   const session = await auth();
   const userId = (session?.user as { id?: string } | undefined)?.id;
+  const namaPembeli = (session?.user as { name?: string } | undefined)?.name ?? "Wisatawan";
 
   if (!userId) {
     return NextResponse.json({ message: "Anda harus masuk terlebih dahulu." }, { status: 401 });
@@ -65,6 +66,15 @@ export async function POST(req: Request) {
   const jumlah = Number(kuantitas);
   if (!Number.isInteger(jumlah) || jumlah < 1) {
     return NextResponse.json({ message: "Kuantitas tidak valid." }, { status: 400 });
+  }
+
+  const destination = await prisma.destination.findUnique({
+    where: { id: destinationId },
+    select: { name: true, htmResmi: true, submittedById: true },
+  });
+
+  if (!destination) {
+    return NextResponse.json({ message: "Destinasi tidak ditemukan." }, { status: 404 });
   }
 
   let namaItem: string;
@@ -98,15 +108,6 @@ export async function POST(req: Request) {
     hargaSatuan = Number(fasilitas.hargaSewa);
     jadwal = parsedJadwal;
   } else {
-    const destination = await prisma.destination.findUnique({
-      where: { id: destinationId },
-      select: { htmResmi: true },
-    });
-
-    if (!destination) {
-      return NextResponse.json({ message: "Destinasi tidak ditemukan." }, { status: 404 });
-    }
-
     namaItem = "Tiket Masuk";
     hargaSatuan = Number(destination.htmResmi);
   }
@@ -117,7 +118,7 @@ export async function POST(req: Request) {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
       const transaksi = await prisma.$transaction(async (tx) => {
-        return tx.transaksi.create({
+        const created = await tx.transaksi.create({
           data: {
             userId,
             destinationId,
@@ -141,6 +142,17 @@ export async function POST(req: Request) {
             destination: { select: { name: true } },
           },
         });
+
+        await tx.notifikasi.create({
+          data: {
+            userId: destination.submittedById,
+            judul: "Pesanan Baru Masuk",
+            pesan: `${namaPembeli} memesan ${namaItem} di ${destination.name}. Kode: ${created.kodeTransaksi}`,
+            link: `/pengelola/destinasi/${destinationId}`,
+          },
+        });
+
+        return created;
       });
 
       return NextResponse.json(serializeTransaksi(transaksi), { status: 201 });
