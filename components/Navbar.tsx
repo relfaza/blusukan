@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, LogOut, User, MapPin } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, MapPin, LayoutDashboard } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 // Inisial nama user (maks 2 huruf)
@@ -25,6 +25,23 @@ const NAV_LINKS = [
   { href: "/laporan", label: "Laporan" },
   { href: "/booking", label: "Booking" },
 ];
+
+// Menu navigasi & shortcut dashboard khusus per role — WISATAWAN pakai NAV_LINKS default
+const ROLE_NAV_LINKS: Record<string, { href: string; label: string }[]> = {
+  PENGELOLA: [
+    { href: "/pengelola", label: "Dashboard Pengelola" },
+    { href: "/", label: "Jelajahi" },
+  ],
+  ADMIN: [
+    { href: "/dashboard", label: "Dashboard Admin" },
+    { href: "/", label: "Jelajahi" },
+  ],
+};
+
+const ROLE_DASHBOARD_LINK: Record<string, { href: string; label: string }> = {
+  PENGELOLA: { href: "/pengelola", label: "Dashboard Pengelola" },
+  ADMIN: { href: "/dashboard", label: "Dashboard Admin" },
+};
 
 // Demo: hardcode notif = true untuk sekarang
 const HAS_NOTIFICATION = true;
@@ -57,6 +74,8 @@ export default function Navbar() {
   const user = session?.user as { name?: string; email?: string; role?: string } | undefined;
   const initials = getInitials(user?.name);
   const roleLabel = user?.role ? (ROLE_LABEL[user.role] ?? user.role) : null;
+  const navLinks = (user?.role && ROLE_NAV_LINKS[user.role]) || NAV_LINKS;
+  const dashboardLink = user?.role ? ROLE_DASHBOARD_LINK[user.role] : undefined;
 
   return (
     <nav
@@ -87,13 +106,13 @@ export default function Navbar() {
 
         {/* ── Nav links (desktop only) ── */}
         <div className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map((link) => {
+          {navLinks.map((link) => {
             const active = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                id={`nav-link-${link.label.toLowerCase()}`}
+                id={`nav-link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                 className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                 style={{
                   color: active ? "#2d5a27" : "#42493e",
@@ -181,6 +200,19 @@ export default function Navbar() {
 
                 {/* Menu items */}
                 <div className="py-1">
+                  {dashboardLink && (
+                    <Link
+                      href={dashboardLink.href}
+                      id="dropdown-dashboard"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
+                      style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
+                    >
+                      <LayoutDashboard size={15} style={{ color: "var(--blusukan-on-surface-variant)" }} />
+                      {dashboardLink.label}
+                    </Link>
+                  )}
+
                   <Link
                     href="/profil"
                     id="dropdown-profil"

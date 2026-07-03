@@ -48,8 +48,9 @@ export default function LoginPage() {
 
       if (data.role === "ADMIN") {
         router.push("/dashboard");
+      } else if (data.role === "PENGELOLA") {
+        router.push("/pengelola");
       } else {
-        // TODO: redirect ke dashboard role masing-masing jika sudah ada
         router.push("/");
       }
     } catch {
