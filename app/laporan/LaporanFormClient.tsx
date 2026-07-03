@@ -287,7 +287,7 @@ export default function LaporanFormClient() {
               </option>
               {destinations?.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.name} — {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}
+                  {d.name} ({KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten})
                 </option>
               ))}
             </select>

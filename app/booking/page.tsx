@@ -15,17 +15,22 @@ export default async function BookingPage() {
 
   const services = await prisma.localService.findMany({
     where: { isValidated: true },
-    include: { destination: { select: { id: true, name: true } } },
+    include: { destination: { select: { id: true, name: true, kabupaten: true } } },
     orderBy: { providerName: "asc" },
   });
 
-  const destinationMap = new Map<string, string>();
+  const destinationMap = new Map<string, { name: string; kabupaten: string }>();
   for (const s of services) {
-    destinationMap.set(s.destination.id, s.destination.name);
+    destinationMap.set(s.destination.id, {
+      name: s.destination.name,
+      kabupaten: s.destination.kabupaten,
+    });
   }
-  const destinations = Array.from(destinationMap, ([id, name]) => ({ id, name })).sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  const destinations = Array.from(destinationMap, ([id, d]) => ({
+    id,
+    name: d.name,
+    kabupaten: d.kabupaten,
+  })).sort((a, b) => a.name.localeCompare(b.name));
 
   const serviceList = services.map((s) => ({
     id: s.id,

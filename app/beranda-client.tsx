@@ -467,6 +467,8 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                         }}
                       >
                         {KATEGORI_LABEL[dest.kategori] ?? dest.kategori}
+                        {" · "}
+                        {KABUPATEN_LABEL[dest.kabupaten] ?? dest.kabupaten}
                       </p>
                       <h3
                         className="text-lg font-bold leading-tight mb-3"
