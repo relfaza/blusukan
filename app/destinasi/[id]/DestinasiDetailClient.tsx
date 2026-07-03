@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Clock,
@@ -289,13 +290,46 @@ function FasilitasItem({ label, value, icon }: { label: string; value: boolean; 
   );
 }
 
-/** Simulasi kalkulator loket masuk — estimasi client-side, bukan pembayaran nyata */
-function SimulasiLoketCard({ htmResmi }: { htmResmi: number | null }) {
+/** Checkout tiket masuk — buat transaksi COD sungguhan lewat /api/transaksi */
+function CheckoutTiketCard({
+  destinationId,
+  htmResmi,
+}: {
+  destinationId: string;
+  htmResmi: number | null;
+}) {
+  const router = useRouter();
   const [jumlah, setJumlah] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const isGratis = htmResmi === 0;
   const isTidakTersedia = htmResmi == null;
   const total = (htmResmi ?? 0) * jumlah;
+
+  async function handleKonfirmasi() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/transaksi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ destinationId, kuantitas: jumlah }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Gagal membuat pesanan. Coba lagi.");
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/transaksi/${data.id}`);
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+      setLoading(false);
+    }
+  }
 
   return (
     <SectionCard>
@@ -304,7 +338,7 @@ function SimulasiLoketCard({ htmResmi }: { htmResmi: number | null }) {
           className="text-base font-bold"
           style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
         >
-          Simulasi Loket Masuk
+          Beli Tiket Masuk
         </h2>
         {isGratis && (
           <span
@@ -326,20 +360,25 @@ function SimulasiLoketCard({ htmResmi }: { htmResmi: number | null }) {
         </p>
       ) : (
         <>
-          {/* Stepper jumlah pengunjung */}
+          {/* Baris item + stepper */}
           <div className="flex items-center justify-between mb-4">
-            <span
-              className="text-sm font-medium"
-              style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
-            >
-              Jumlah Pengunjung
-            </span>
+            <div>
+              <p
+                className="text-sm font-semibold"
+                style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+              >
+                Tiket Masuk Dewasa
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+                {formatRupiah(htmResmi)} / orang
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setJumlah((j) => Math.max(1, j - 1))}
                 disabled={jumlah <= 1}
-                aria-label="Kurangi jumlah pengunjung"
+                aria-label="Kurangi jumlah tiket"
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
               >
@@ -354,7 +393,7 @@ function SimulasiLoketCard({ htmResmi }: { htmResmi: number | null }) {
               <button
                 type="button"
                 onClick={() => setJumlah((j) => j + 1)}
-                aria-label="Tambah jumlah pengunjung"
+                aria-label="Tambah jumlah tiket"
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
                 style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
               >
@@ -363,18 +402,33 @@ function SimulasiLoketCard({ htmResmi }: { htmResmi: number | null }) {
             </div>
           </div>
 
-          {/* Breakdown total */}
-          <div className="rounded-xl p-4" style={{ background: "#f0f8f0" }}>
+          {/* Live price breakdown */}
+          <div className="rounded-xl p-4 mb-3" style={{ background: "#f0f8f0" }}>
             <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
-              {jumlah} Pengunjung x {formatRupiah(htmResmi)} ={" "}
-              <strong style={{ color: "#2d5a27" }}>
-                Total Bayar {formatRupiah(total)}
-              </strong>
+              {jumlah} x {formatRupiah(htmResmi)} ={" "}
+              <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
             </p>
           </div>
 
+          {error && (
+            <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            type="button"
+            id="btn-konfirmasi-pesanan"
+            onClick={handleKonfirmasi}
+            disabled={loading}
+            className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+          >
+            {loading ? "Memproses..." : "Konfirmasi Pesanan"}
+          </button>
+
           <p className="text-xs mt-3" style={{ color: "#72796e" }}>
-            Simulasi ini hanya estimasi. Pembayaran dilakukan langsung di lokasi (tunai/COD).
+            Pembayaran dilakukan tunai di lokasi (COD). Tunjukkan kode pesanan ke petugas.
           </p>
         </>
       )}
@@ -553,9 +607,6 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                 />
               </div>
             </SectionCard>
-
-            {/* Card Simulasi Loket Masuk */}
-            <SimulasiLoketCard htmResmi={d.htmResmi} />
 
             {/* Card Fasilitas */}
             <SectionCard>
@@ -740,6 +791,9 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
           {/* ══ KOLOM KANAN — sidebar sticky ══ */}
           <div className="lg:col-span-1">
             <div className="space-y-5 lg:sticky lg:top-28">
+
+              {/* Card Checkout Tiket Masuk */}
+              <CheckoutTiketCard destinationId={d.id} htmResmi={d.htmResmi} />
 
               {/* Card Peta Lokasi */}
               <SectionCard className="!p-0 overflow-hidden">
