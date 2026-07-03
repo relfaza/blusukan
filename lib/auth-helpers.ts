@@ -47,3 +47,35 @@ export async function findOwnedDestination(destinationId: string, userId: string
     where: { id: destinationId, submittedById: userId },
   });
 }
+
+/** Dipakai di Server Component halaman app/dashboard/** — redirect kalau bukan Admin yang login */
+export async function requireAdminPage(): Promise<string> {
+  const user = await getSessionUser();
+
+  if (!user?.id) {
+    redirect("/login");
+  }
+  if (user.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  return user.id as string;
+}
+
+type AdminAuthResult =
+  | { ok: true; userId: string }
+  | { ok: false; status: 401 | 403; message: string };
+
+/** Dipakai di Route Handler app/api/admin/** — caller yang bikin NextResponse dari hasilnya */
+export async function requireAdminApi(): Promise<AdminAuthResult> {
+  const user = await getSessionUser();
+
+  if (!user?.id) {
+    return { ok: false, status: 401, message: "Anda harus masuk terlebih dahulu." };
+  }
+  if (user.role !== "ADMIN") {
+    return { ok: false, status: 403, message: "Akses khusus untuk Admin." };
+  }
+
+  return { ok: true, userId: user.id };
+}
