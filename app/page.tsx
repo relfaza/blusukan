@@ -69,6 +69,7 @@ export default async function Home() {
       longitude: d.longitude,
       routeStatus: d.routeStatus,
       vibeTags: d.vibeTags as string[],
+      photoUrls: d.photoUrls as string[],
       totalUpvotes: upvoteMap.get(d.id) ?? 0,
       verifiedReportsCount: verifiedMap.get(d.id) ?? 0,
       populerMingguIni: majorityCrowd === "PADAT",

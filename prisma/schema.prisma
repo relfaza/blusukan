@@ -131,6 +131,7 @@ model Destination {
   hasTempatDuduk     Boolean           @default(false)
   hasPenitipanBarang Boolean           @default(false)
   aksesibilitas      String?
+  photoUrls          String[]          @default([])
   vibeTags           VibeTag[]
   routeStatus        RouteStatus       @default(BELUM_ADA_DATA)
   status             DestinationStatus @default(PENDING)

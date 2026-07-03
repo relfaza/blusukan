@@ -29,6 +29,7 @@ import {
   Plus,
   Minus,
   TrendingUp,
+  ImageOff,
 } from "lucide-react";
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
@@ -90,6 +91,7 @@ export type DestinasiDetail = {
   hasTempatDuduk: boolean;
   hasPenitipanBarang: boolean;
   vibeTags: string[];
+  photoUrls: string[];
   totalUpvotes: number;
   verifiedReportsCount: number;
   populerMingguIni: boolean;
@@ -661,14 +663,25 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
             className="relative w-full rounded-2xl overflow-hidden mb-6"
             style={{ aspectRatio: "21/9", background: "#e0e0e0", minHeight: 200 }}
           >
-            <Image
-              src="/destination-placeholder.png"
-              alt={d.name}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 1280px) 100vw, 1280px"
-            />
+            {d.photoUrls[0] ? (
+              <Image
+                src={d.photoUrls[0]}
+                alt={d.name}
+                fill
+                className="object-cover"
+                priority
+                sizes="(max-width: 1280px) 100vw, 1280px"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)",
+                }}
+              >
+                <ImageOff size={40} style={{ color: "rgba(21,66,18,0.35)" }} />
+              </div>
+            )}
             {/* Gradient overlay bawah */}
             <div
               className="absolute inset-0"
@@ -694,6 +707,30 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
               </div>
             )}
           </div>
+
+          {/* Galeri foto — hanya tampil kalau destinasi punya lebih dari 1 foto */}
+          {d.photoUrls.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar mb-6 pb-1">
+              {d.photoUrls.map((url, idx) => (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative shrink-0 rounded-xl overflow-hidden"
+                  style={{ width: 120, height: 90, border: "1px solid #e8e8e8" }}
+                >
+                  <Image
+                    src={url}
+                    alt={`${d.name} — foto ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="120px"
+                  />
+                </a>
+              ))}
+            </div>
+          )}
 
           {/* Judul & subtitle */}
           <div className="flex flex-col gap-2">

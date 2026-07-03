@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, X } from "lucide-react";
 import RupiahInput from "@/components/ui/rupiah-input";
 
 const MapPicker = dynamic(() => import("@/components/map-picker"), {
@@ -52,6 +52,12 @@ const FASILITAS_FIELDS = [
   { key: "hasPenitipanBarang", label: "Penitipan barang" },
 ] as const;
 
+const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_PHOTOS = 5;
+
+type PhotoDraft = { file: File; previewUrl: string };
+
 export default function AjukanDestinasiFormClient() {
   const router = useRouter();
 
@@ -65,11 +71,49 @@ export default function AjukanDestinasiFormClient() {
   const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({});
   const [aksesibilitas, setAksesibilitas] = useState("");
   const [vibeTags, setVibeTags] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  function handlePhotosChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (selected.length === 0) return;
+
+    const invalid = selected.find(
+      (file) => !ALLOWED_PHOTO_TYPES.includes(file.type) || file.size > MAX_PHOTO_SIZE_BYTES
+    );
+    if (invalid) {
+      setErrors((prev) => ({ ...prev, photos: "Foto harus JPEG/PNG/WebP dan maksimal 5MB per foto." }));
+      return;
+    }
+
+    if (photos.length + selected.length > MAX_PHOTOS) {
+      setErrors((prev) => ({ ...prev, photos: `Maksimal ${MAX_PHOTOS} foto.` }));
+      return;
+    }
+
+    setErrors((prev) => {
+      const { photos: _omit, ...rest } = prev;
+      return rest;
+    });
+    setPhotos((prev) => [
+      ...prev,
+      ...selected.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
+    ]);
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((prev) => {
+      const target = prev[index];
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
 
   function toggleFasilitas(key: string) {
     setFasilitas((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -89,6 +133,18 @@ export default function AjukanDestinasiFormClient() {
     return Object.keys(next).length === 0;
   }
 
+  async function uploadPhoto(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Gagal mengunggah salah satu foto.");
+    }
+    setUploadProgress((prev) => (prev ? { done: prev.done + 1, total: prev.total } : prev));
+    return data.url as string;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError("");
@@ -97,6 +153,13 @@ export default function AjukanDestinasiFormClient() {
 
     setSubmitting(true);
     try {
+      let photoUrls: string[] = [];
+      if (photos.length > 0) {
+        setUploadProgress({ done: 0, total: photos.length });
+        photoUrls = await Promise.all(photos.map((p) => uploadPhoto(p.file)));
+        setUploadProgress(null);
+      }
+
       const res = await fetch("/api/pengelola/destinasi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,6 +178,7 @@ export default function AjukanDestinasiFormClient() {
           hasPenitipanBarang: fasilitas.hasPenitipanBarang ?? false,
           aksesibilitas: aksesibilitas.trim() === "" ? null : aksesibilitas.trim(),
           vibeTags,
+          photoUrls,
         }),
       });
 
@@ -123,14 +187,16 @@ export default function AjukanDestinasiFormClient() {
       if (!res.ok) {
         setSubmitError(data.message || "Gagal mengirim pengajuan. Coba lagi.");
         setSubmitting(false);
+        setUploadProgress(null);
         return;
       }
 
       setSuccess(true);
       setTimeout(() => router.push("/pengelola"), 1800);
-    } catch {
-      setSubmitError("Terjadi kesalahan jaringan. Coba lagi.");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan. Coba lagi.");
       setSubmitting(false);
+      setUploadProgress(null);
     }
   }
 
@@ -401,6 +467,51 @@ export default function AjukanDestinasiFormClient() {
             </div>
           </div>
 
+          {/* Foto destinasi */}
+          <div>
+            <label htmlFor="photos" className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
+              Foto Destinasi (opsional, maksimal {MAX_PHOTOS} foto)
+            </label>
+            <input
+              id="photos"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handlePhotosChange}
+              disabled={photos.length >= MAX_PHOTOS}
+              className="w-full text-sm"
+              style={{ color: "var(--blusukan-on-surface-variant)" }}
+            />
+            {errors.photos && (
+              <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
+                {errors.photos}
+              </p>
+            )}
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3">
+                {photos.map((p, idx) => (
+                  <div
+                    key={p.previewUrl}
+                    className="relative aspect-square rounded-lg overflow-hidden"
+                    style={{ border: "1px solid var(--blusukan-outline-variant)" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.previewUrl} alt={`Preview foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(idx)}
+                      aria-label={`Hapus foto ${idx + 1}`}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ background: "rgba(0,0,0,0.6)", color: "#ffffff" }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Aksesibilitas */}
           <div>
             <label htmlFor="aksesibilitas" className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
@@ -434,7 +545,11 @@ export default function AjukanDestinasiFormClient() {
               cursor: submitting ? "not-allowed" : "pointer",
             }}
           >
-            {submitting ? "Mengirim..." : "Ajukan Destinasi"}
+            {submitting
+              ? uploadProgress
+                ? `Mengunggah foto (${uploadProgress.done}/${uploadProgress.total})...`
+                : "Mengirim..."
+              : "Ajukan Destinasi"}
           </button>
         </form>
       </div>

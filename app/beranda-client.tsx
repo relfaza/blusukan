@@ -20,6 +20,7 @@ import {
   X,
   Star,
   TrendingUp,
+  ImageOff,
 } from "lucide-react";
 import {
   Dialog,
@@ -58,6 +59,7 @@ export type DestinationForClient = {
   longitude: number;
   routeStatus: string;
   vibeTags: string[];
+  photoUrls: string[];
   totalUpvotes: number;
   verifiedReportsCount: number;
   populerMingguIni: boolean;
@@ -431,13 +433,25 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                   >
                     {/* Card photo */}
                     <div className="h-48 relative w-full">
-                      <Image
-                        src="/destination-placeholder.png"
-                        alt={dest.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 672px"
-                      />
+                      {dest.photoUrls[0] ? (
+                        <Image
+                          src={dest.photoUrls[0]}
+                          alt={dest.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 672px"
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full flex items-center justify-center"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)",
+                          }}
+                        >
+                          <ImageOff size={28} style={{ color: "rgba(21,66,18,0.35)" }} />
+                        </div>
+                      )}
                       {/* Road condition badge */}
                       {badge && (
                         <div className="absolute top-2 left-2">
