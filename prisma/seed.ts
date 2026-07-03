@@ -15,16 +15,31 @@ function pick<T>(arr: T[]): T {
   return arr[randomInt(0, arr.length - 1)]
 }
 
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
+function dummyPhotos(name: string): string[] {
+  const slug = slugify(name)
+  return [
+    `https://picsum.photos/seed/${slug}-1/800/600`,
+    `https://picsum.photos/seed/${slug}-2/800/600`,
+  ]
+}
+
 async function main() {
   console.log('🌱 Mulai seeding...')
 
   await prisma.booking.deleteMany()
+  await prisma.transaksi.deleteMany()
   await prisma.menuItem.deleteMany()
   await prisma.localWarung.deleteMany()
   await prisma.visitStat.deleteMany()
   await prisma.userReport.deleteMany()
   await prisma.localService.deleteMany()
+  await prisma.fasilitas.deleteMany()
   await prisma.destination.deleteMany()
+  await prisma.notifikasi.deleteMany()
   await prisma.user.deleteMany()
 
   // 1. USERS
@@ -98,6 +113,7 @@ async function main() {
         hasPenitipanBarang: Math.random() > 0.7,
         vibeTags: d.vibe as any,
         routeStatus: d.route as any,
+        photoUrls: dummyPhotos(d.name),
         status: 'APPROVED',
         submittedById: pengelola.id,
         approvedById: admin.id,
@@ -117,6 +133,7 @@ async function main() {
       longitude: 110.6234,
       htmResmi: 0,
       vibeTags: ['QUIET_PLACE'],
+      photoUrls: dummyPhotos('Curug Lepo'),
       status: 'PENDING',
       submittedById: pengelola.id,
     },
@@ -130,6 +147,7 @@ async function main() {
       longitude: 110.4567,
       htmResmi: 5000,
       vibeTags: ['SUNSET'],
+      photoUrls: dummyPhotos('Bukit Watu Lawang'),
       status: 'PENDING',
       submittedById: pengelola.id,
     },
