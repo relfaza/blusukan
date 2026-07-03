@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     hasPenitipanBarang,
     aksesibilitas,
     vibeTags,
+    photoUrls,
   } = body;
 
   if (typeof name !== "string" || name.trim() === "") {
@@ -60,6 +61,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Vibe tag tidak valid." }, { status: 400 });
   }
 
+  const photoUrlsInput = Array.isArray(photoUrls)
+    ? photoUrls.filter((url): url is string => typeof url === "string" && url.trim() !== "")
+    : [];
+  if (photoUrlsInput.length > 5) {
+    return NextResponse.json({ message: "Maksimal 5 foto per destinasi." }, { status: 400 });
+  }
+
   const destination = await prisma.destination.create({
     data: {
       name: name.trim(),
@@ -76,6 +84,7 @@ export async function POST(req: Request) {
       hasPenitipanBarang: Boolean(hasPenitipanBarang),
       aksesibilitas: typeof aksesibilitas === "string" && aksesibilitas.trim() !== "" ? aksesibilitas.trim() : null,
       vibeTags: vibeTagsInput,
+      photoUrls: photoUrlsInput,
       status: "PENDING",
       submittedById: authResult.userId,
     },

@@ -73,6 +73,7 @@ export default async function DestinasiDetailPage({ params }: Props) {
     hasTempatDuduk: raw.hasTempatDuduk,
     hasPenitipanBarang: raw.hasPenitipanBarang,
     vibeTags: raw.vibeTags as string[],
+    photoUrls: raw.photoUrls as string[],
     totalUpvotes,
     verifiedReportsCount,
     populerMingguIni,
