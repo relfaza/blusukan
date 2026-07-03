@@ -9,6 +9,24 @@ function isAllowedStatus(value: unknown): value is AllowedStatus {
   return typeof value === "string" && (ALLOWED_STATUS as readonly string[]).includes(value);
 }
 
+const NOTIFIKASI_CONTENT: Record<
+  AllowedStatus,
+  (kodeTransaksi: string, namaDestinasi: string) => { judul: string; pesan: string }
+> = {
+  DIKONFIRMASI: (kode, nama) => ({
+    judul: "Pesanan Dikonfirmasi",
+    pesan: `Pesanan ${kode} di ${nama} telah dikonfirmasi oleh pengelola.`,
+  }),
+  DIBATALKAN: (kode, nama) => ({
+    judul: "Pesanan Ditolak",
+    pesan: `Pesanan ${kode} di ${nama} ditolak oleh pengelola.`,
+  }),
+  SELESAI: (_kode, nama) => ({
+    judul: "Kunjungan Selesai",
+    pesan: `Terima kasih telah berkunjung ke ${nama}!`,
+  }),
+};
+
 interface Props {
   params: Promise<{ id: string }>;
 }
@@ -28,7 +46,7 @@ export async function PATCH(req: Request, { params }: Props) {
 
   const transaksi = await prisma.transaksi.findUnique({
     where: { id },
-    include: { destination: { select: { submittedById: true } } },
+    include: { destination: { select: { submittedById: true, name: true } } },
   });
 
   if (!transaksi) {
@@ -42,6 +60,19 @@ export async function PATCH(req: Request, { params }: Props) {
   const updated = await prisma.transaksi.update({
     where: { id },
     data: { status },
+  });
+
+  const { judul, pesan } = NOTIFIKASI_CONTENT[status](
+    transaksi.kodeTransaksi,
+    transaksi.destination.name
+  );
+  await prisma.notifikasi.create({
+    data: {
+      userId: transaksi.userId,
+      judul,
+      pesan,
+      link: `/transaksi/${transaksi.id}`,
+    },
   });
 
   return NextResponse.json({ id: updated.id, status: updated.status });

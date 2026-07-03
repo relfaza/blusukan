@@ -6,6 +6,11 @@ import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, LogOut, User, MapPin, LayoutDashboard } from "lucide-react";
 import { signOut } from "next-auth/react";
 
+type NotifikasiItem = {
+  id: string;
+  isRead: boolean;
+};
+
 // Inisial nama user (maks 2 huruf)
 function getInitials(name?: string | null): string {
   if (!name) return "U";
@@ -42,9 +47,6 @@ const ROLE_DASHBOARD_LINK: Record<string, { href: string; label: string }> = {
   ADMIN: { href: "/dashboard", label: "Dashboard Admin" },
 };
 
-// Demo: hardcode notif = true untuk sekarang
-const HAS_NOTIFICATION = true;
-
 export type NavbarUser = {
   name: string | null;
   role: string | null;
@@ -55,6 +57,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [notifications, setNotifications] = useState<NotifikasiItem[] | null>(null);
 
   // Shadow on scroll
   useEffect(() => {
@@ -74,6 +77,33 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Fetch notifikasi saat header mount / setelah login (props user berubah),
+  // lalu polling ringan tiap 30 detik + refetch saat tab kembali fokus —
+  // bukan WebSocket, cukup ini supaya badge tidak basi selama user browsing.
+  useEffect(() => {
+    if (!user) {
+      setNotifications(null);
+      return;
+    }
+
+    function fetchNotifikasi() {
+      fetch("/api/notifikasi")
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => setNotifications(Array.isArray(data) ? data : []))
+        .catch(() => setNotifications([]));
+    }
+
+    fetchNotifikasi();
+    const intervalId = setInterval(fetchNotifikasi, 30_000);
+    window.addEventListener("focus", fetchNotifikasi);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("focus", fetchNotifikasi);
+    };
+  }, [user]);
+
+  const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
   const initials = getInitials(user?.name);
   const roleLabel = user?.role ? (ROLE_LABEL[user.role] ?? user.role) : null;
   const navLinks = (user?.role && ROLE_NAV_LINKS[user.role]) || NAV_LINKS;
@@ -136,21 +166,26 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
         {/* ── Right side: Notif + Avatar ── */}
         <div className="flex items-center gap-2 shrink-0">
 
-          {/* Bell icon dengan badge */}
-          <button
-            id="nav-notif"
-            type="button"
-            className="relative w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
-            aria-label="Notifikasi"
-          >
-            <Bell size={20} style={{ color: "#42493e" }} />
-            {HAS_NOTIFICATION && (
-              <span
-                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-                style={{ background: "#ba1a1a" }}
-              />
-            )}
-          </button>
+          {/* Bell icon dengan badge — hanya untuk user yang sudah login, klik buka /notifikasi */}
+          {user && (
+            <Link
+              href="/notifikasi"
+              id="nav-notif"
+              onClick={() => setDropdownOpen(false)}
+              className="relative w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
+              aria-label="Notifikasi"
+            >
+              <Bell size={20} style={{ color: "#42493e" }} />
+              {unreadCount > 0 && (
+                <span
+                  className="absolute top-1 right-1 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold"
+                  style={{ background: "var(--blusukan-error)", color: "#ffffff" }}
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Avatar + dropdown */}
           <div className="relative" ref={dropdownRef}>
