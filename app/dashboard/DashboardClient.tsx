@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Inbox, MapPin, Check, X } from "lucide-react";
+import StatistikSection from "./StatistikSection";
 
 type PendingDestination = {
   id: string;
@@ -82,6 +83,15 @@ export default function DashboardClient() {
         <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Destinasi yang menunggu persetujuan
         </p>
+
+        <StatistikSection />
+
+        <h2
+          className="text-lg font-bold mb-4"
+          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+        >
+          Persetujuan Destinasi
+        </h2>
 
         {error && (
           <p
