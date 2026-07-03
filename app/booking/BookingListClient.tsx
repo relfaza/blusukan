@@ -13,7 +13,15 @@ type ServiceItem = {
   destination: { id: string; name: string };
 };
 
-type DestinationOption = { id: string; name: string };
+type DestinationOption = { id: string; name: string; kabupaten: string };
+
+const KABUPATEN_LABEL: Record<string, string> = {
+  SLEMAN: "Sleman",
+  GUNUNGKIDUL: "Gunungkidul",
+  BANTUL: "Bantul",
+  KULON_PROGO: "Kulon Progo",
+  KOTA_YOGYAKARTA: "Kota Yogyakarta",
+};
 
 interface Props {
   services: ServiceItem[];
@@ -94,7 +102,7 @@ export default function BookingListClient({ services, destinations }: Props) {
             <option value="">Semua Destinasi</option>
             {destinations.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.name}
+                {d.name} ({KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten})
               </option>
             ))}
           </select>

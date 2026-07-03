@@ -53,6 +53,7 @@ export default function LoginPage() {
       } else {
         router.push("/");
       }
+      router.refresh();
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");
       setLoading(false);
