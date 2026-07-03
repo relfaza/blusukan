@@ -3,8 +3,23 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import RupiahInput from "@/components/ui/rupiah-input";
+
+const MapPicker = dynamic(() => import("@/components/map-picker"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="w-full h-64 sm:h-80 flex items-center justify-center rounded-2xl"
+      style={{ background: "#f3f3f3", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <span className="text-sm" style={{ color: "#72796e" }}>
+        Memuat peta…
+      </span>
+    </div>
+  ),
+});
 
 const KABUPATEN_OPTIONS = [
   { value: "SLEMAN", label: "Sleman" },
@@ -43,8 +58,8 @@ export default function AjukanDestinasiFormClient() {
   const [name, setName] = useState("");
   const [kabupaten, setKabupaten] = useState("");
   const [kategori, setKategori] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [jamOperasional, setJamOperasional] = useState("");
   const [htmResmi, setHtmResmi] = useState<number | "">("");
   const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({});
@@ -69,8 +84,7 @@ export default function AjukanDestinasiFormClient() {
     if (!name.trim()) next.name = "Nama destinasi wajib diisi.";
     if (!kabupaten) next.kabupaten = "Pilih kabupaten.";
     if (!kategori) next.kategori = "Pilih kategori.";
-    if (latitude.trim() === "" || Number.isNaN(Number(latitude))) next.latitude = "Latitude wajib diisi dan berupa angka.";
-    if (longitude.trim() === "" || Number.isNaN(Number(longitude))) next.longitude = "Longitude wajib diisi dan berupa angka.";
+    if (latitude === null || longitude === null) next.koordinat = "Pilih lokasi di peta terlebih dahulu.";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -90,8 +104,8 @@ export default function AjukanDestinasiFormClient() {
           name: name.trim(),
           kabupaten,
           kategori,
-          latitude: Number(latitude),
-          longitude: Number(longitude),
+          latitude,
+          longitude,
           jamOperasional: jamOperasional.trim() === "" ? null : jamOperasional.trim(),
           htmResmi: htmResmi === "" ? 0 : htmResmi,
           hasToilet: fasilitas.hasToilet ?? false,
@@ -275,54 +289,19 @@ export default function AjukanDestinasiFormClient() {
           {/* Koordinat */}
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
-              Koordinat
+              Lokasi di Peta
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={latitude}
-                  onChange={(e) => setLatitude(e.target.value)}
-                  placeholder="Latitude, cth: -7.7956"
-                  className="w-full px-4 py-3.5 text-base"
-                  style={{
-                    border: `1px solid ${errors.latitude ? "var(--blusukan-error)" : "var(--blusukan-outline-variant)"}`,
-                    borderRadius: "8px",
-                    background: "#ffffff",
-                    color: "var(--blusukan-on-surface)",
-                  }}
-                />
-                {errors.latitude && (
-                  <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
-                    {errors.latitude}
-                  </p>
-                )}
-              </div>
-              <div>
-                <input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={longitude}
-                  onChange={(e) => setLongitude(e.target.value)}
-                  placeholder="Longitude, cth: 110.3695"
-                  className="w-full px-4 py-3.5 text-base"
-                  style={{
-                    border: `1px solid ${errors.longitude ? "var(--blusukan-error)" : "var(--blusukan-outline-variant)"}`,
-                    borderRadius: "8px",
-                    background: "#ffffff",
-                    color: "var(--blusukan-on-surface)",
-                  }}
-                />
-                {errors.longitude && (
-                  <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
-                    {errors.longitude}
-                  </p>
-                )}
-              </div>
-            </div>
+            <MapPicker
+              onLocationSelect={(lat, lng) => {
+                setLatitude(lat);
+                setLongitude(lng);
+              }}
+            />
+            {errors.koordinat && (
+              <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
+                {errors.koordinat}
+              </p>
+            )}
           </div>
 
           {/* Jam operasional */}
