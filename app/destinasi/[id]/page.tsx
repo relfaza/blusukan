@@ -12,7 +12,7 @@ interface Props {
 export default async function DestinasiDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const [raw, upvoteAgg, verifiedReportsCount, recentCrowdGroups] = await Promise.all([
+  const [raw, upvoteAgg, verifiedReportsCount, recentCrowdGroups, fasilitasList] = await Promise.all([
     prisma.destination.findFirst({
       where: { id, status: "APPROVED" },
       include: {
@@ -44,6 +44,8 @@ export default async function DestinasiDetailPage({ params }: Props) {
       where: { destinationId: id, createdAt: { gte: new Date(Date.now() - POPULARITY_WINDOW_MS) } },
       _count: { _all: true },
     }),
+    // Fasilitas yang bisa disewa untuk destinasi ini
+    prisma.fasilitas.findMany({ where: { destinationId: id }, orderBy: { nama: "asc" } }),
   ]);
 
   if (!raw) notFound();
@@ -99,6 +101,13 @@ export default async function DestinasiDetailPage({ params }: Props) {
         name: m.name,
         price: Number(m.price),
       })),
+    })),
+    fasilitas: fasilitasList.map((f) => ({
+      id: f.id,
+      nama: f.nama,
+      hargaSewa: Number(f.hargaSewa),
+      satuanWaktu: f.satuanWaktu,
+      jumlahUnit: f.jumlahUnit,
     })),
   };
 

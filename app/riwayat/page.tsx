@@ -19,6 +19,13 @@ function formatTanggal(date: Date): string {
   }).format(date);
 }
 
+function formatTanggalWaktu(date: Date): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Menunggu Konfirmasi",
   DIKONFIRMASI: "Dikonfirmasi",
@@ -78,6 +85,8 @@ export default async function RiwayatPage() {
             {transaksis.map((t) => {
               const totalTiket = t.items.reduce((sum, item) => sum + item.kuantitas, 0);
               const statusStyle = STATUS_STYLE[t.status] ?? STATUS_STYLE.PENDING;
+              const isFasilitas = t.type === "FASILITAS";
+              const namaItem = t.items[0]?.namaItem;
 
               return (
                 <div
@@ -105,6 +114,32 @@ export default async function RiwayatPage() {
                     </span>
                   </div>
 
+                  {isFasilitas && (
+                    <div
+                      className="flex items-center justify-between mb-3 pb-3"
+                      style={{ borderBottom: "1px dashed var(--blusukan-outline-variant)" }}
+                    >
+                      <div>
+                        <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                          Fasilitas
+                        </p>
+                        <p className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                          {namaItem}
+                        </p>
+                      </div>
+                      {t.jadwal && (
+                        <div className="text-right">
+                          <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                            Jadwal Booking
+                          </p>
+                          <p className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                            {formatTanggalWaktu(t.jadwal)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div
                     className="flex items-center justify-between pt-3"
                     style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}
@@ -122,7 +157,7 @@ export default async function RiwayatPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                        {totalTiket} tiket
+                        {isFasilitas ? `${totalTiket} unit` : `${totalTiket} tiket`}
                       </p>
                       <p className="text-sm font-bold" style={{ color: "var(--blusukan-primary)" }}>
                         {formatRupiah(Number(t.totalHarga))}

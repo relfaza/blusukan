@@ -20,6 +20,7 @@ function serializeTransaksi(t: {
   totalHarga: unknown;
   status: string;
   paymentMethod: string;
+  jadwal: Date | null;
   kodeTransaksi: string;
   createdAt: Date;
   items: { id: string; namaItem: string; hargaSatuan: unknown; kuantitas: number; subtotal: unknown }[];
@@ -32,6 +33,7 @@ function serializeTransaksi(t: {
     totalHarga: Number(t.totalHarga),
     status: t.status,
     paymentMethod: t.paymentMethod,
+    jadwal: t.jadwal ? t.jadwal.toISOString() : null,
     kodeTransaksi: t.kodeTransaksi,
     createdAt: t.createdAt.toISOString(),
     items: t.items.map((item) => ({
@@ -52,7 +54,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Anda harus masuk terlebih dahulu." }, { status: 401 });
   }
 
-  const { destinationId, kuantitas } = await req.json();
+  const body = await req.json();
+  const type = body.type === "FASILITAS" ? "FASILITAS" : "TIKET_MASUK";
+  const { destinationId, kuantitas } = body;
 
   if (typeof destinationId !== "string" || !destinationId) {
     return NextResponse.json({ message: "destinationId wajib diisi." }, { status: 400 });
@@ -63,16 +67,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Kuantitas tidak valid." }, { status: 400 });
   }
 
-  const destination = await prisma.destination.findUnique({
-    where: { id: destinationId },
-    select: { htmResmi: true },
-  });
+  let namaItem: string;
+  let hargaSatuan: number;
+  let jadwal: Date | null = null;
 
-  if (!destination) {
-    return NextResponse.json({ message: "Destinasi tidak ditemukan." }, { status: 404 });
+  if (type === "FASILITAS") {
+    const { fasilitasId } = body;
+
+    if (typeof fasilitasId !== "string" || !fasilitasId) {
+      return NextResponse.json({ message: "fasilitasId wajib diisi." }, { status: 400 });
+    }
+    if (typeof body.jadwal !== "string" || !body.jadwal) {
+      return NextResponse.json({ message: "Jadwal booking wajib diisi." }, { status: 400 });
+    }
+
+    const parsedJadwal = new Date(body.jadwal);
+    if (Number.isNaN(parsedJadwal.getTime())) {
+      return NextResponse.json({ message: "Format jadwal tidak valid." }, { status: 400 });
+    }
+
+    const fasilitas = await prisma.fasilitas.findFirst({
+      where: { id: fasilitasId, destinationId },
+    });
+
+    if (!fasilitas) {
+      return NextResponse.json({ message: "Fasilitas tidak ditemukan untuk destinasi ini." }, { status: 404 });
+    }
+
+    namaItem = fasilitas.nama;
+    hargaSatuan = Number(fasilitas.hargaSewa);
+    jadwal = parsedJadwal;
+  } else {
+    const destination = await prisma.destination.findUnique({
+      where: { id: destinationId },
+      select: { htmResmi: true },
+    });
+
+    if (!destination) {
+      return NextResponse.json({ message: "Destinasi tidak ditemukan." }, { status: 404 });
+    }
+
+    namaItem = "Tiket Masuk";
+    hargaSatuan = Number(destination.htmResmi);
   }
 
-  const hargaSatuan = Number(destination.htmResmi);
   const totalHarga = hargaSatuan * jumlah;
 
   const MAX_ATTEMPTS = 5;
@@ -83,14 +121,15 @@ export async function POST(req: Request) {
           data: {
             userId,
             destinationId,
-            type: "TIKET_MASUK",
+            type,
             status: "PENDING",
             paymentMethod: "COD",
             totalHarga,
+            jadwal,
             kodeTransaksi: generateKodeTransaksi(),
             items: {
               create: {
-                namaItem: "Tiket Masuk",
+                namaItem,
                 hargaSatuan,
                 kuantitas: jumlah,
                 subtotal: totalHarga,

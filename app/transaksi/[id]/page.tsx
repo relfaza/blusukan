@@ -18,6 +18,13 @@ function formatRupiah(n: number): string {
   }).format(n);
 }
 
+function formatTanggalWaktu(date: Date): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    dateStyle: "long",
+    timeStyle: "short",
+  }).format(date);
+}
+
 export default async function TransaksiDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
@@ -38,6 +45,8 @@ export default async function TransaksiDetailPage({ params }: Props) {
   if (!transaksi) notFound();
 
   const totalTiket = transaksi.items.reduce((sum, item) => sum + item.kuantitas, 0);
+  const isFasilitas = transaksi.type === "FASILITAS";
+  const namaItem = transaksi.items[0]?.namaItem;
 
   return (
     <div
@@ -89,14 +98,37 @@ export default async function TransaksiDetailPage({ params }: Props) {
               {transaksi.destination.name}
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-              Jumlah Tiket
-            </span>
-            <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
-              {totalTiket} tiket
-            </span>
-          </div>
+          {isFasilitas ? (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                  Fasilitas
+                </span>
+                <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                  {namaItem} ({totalTiket} unit)
+                </span>
+              </div>
+              {transaksi.jadwal && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    Jadwal Booking
+                  </span>
+                  <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                    {formatTanggalWaktu(transaksi.jadwal)}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex justify-between items-center">
+              <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Jumlah Tiket
+              </span>
+              <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                {totalTiket} tiket
+              </span>
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
               Total Harga
