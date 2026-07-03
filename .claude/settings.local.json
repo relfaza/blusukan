@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")",
+      "Bash(node -e \"const i=require\\('lucide-react'\\); console.log\\(['Bike','Car','Compass','UserRound','Users','MapPin','Phone','Calendar','StickyNote','MessageCircle','Filter'].map\\(n=>n+': '+\\(typeof i[n]\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(command -v n)",
+      "Bash(\"/mnt/c/Program Files/nodejs/node.exe\" -v)",
+      "Bash(\"/mnt/c/Program Files/nodejs/npm.cmd\" -v)",
+      "Bash(sudo -n true)",
+      "Bash(curl -sSL -o node.tar.xz https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz --max-time 60)",
+      "Bash(tar xf *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -o /tmp/home.html -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Read(//tmp/**)",
+      "Bash(git checkout *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s -X POST http://localhost:3000/api/register -H 'Content-Type: application/json' -d '{\"nama\":\"Test Booking User\",\"email\":\"test.booking.qa@example.com\",\"telepon\":\"081234567890\",\"password\":\"Password123!\",\"confirmPassword\":\"Password123!\",\"role\":\"WISATAWAN\",\"consent\":true}' -w '\\\\nHTTP:%{http_code}\\\\n')",
+      "Bash(curl -s http://localhost:3000/api/services)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>console.log\\(JSON.stringify\\(JSON.parse\\(d\\),null,2\\)\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3000/api/services?serviceType=JEEP\" -w \"\\\\nHTTP:%{http_code}\\\\n\")",
+      "Bash(node -e ' *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pkill -f \"next/dist/bin/next\")"
+    ]
+  }
+}
