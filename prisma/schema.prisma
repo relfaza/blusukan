@@ -80,6 +80,23 @@ enum VibeTag {
   QUIET_PLACE
 }
 
+enum TransaksiType {
+  TIKET_MASUK
+  FASILITAS
+}
+
+enum TransaksiStatus {
+  PENDING
+  DIKONFIRMASI
+  SELESAI
+  DIBATALKAN
+}
+
+enum PaymentMethod {
+  COD
+  TRANSFER_MANUAL
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -94,7 +111,8 @@ model User {
   bookings              Booking[]
   submittedDestinations Destination[]  @relation("SubmittedBy")
   approvedDestinations  Destination[]  @relation("ApprovedBy")
-  validatedServices     LocalService[] @relation("ValidatedBy")
+  validatedServices     LocalService[] @relation("ValidatedBy") 
+  transaksis Transaksi[]
 }
 
 model Destination {
@@ -127,6 +145,8 @@ model Destination {
   warungs       LocalWarung[]
   visitStats    VisitStat[]
   bookings      Booking[]
+  transaksis Transaksi[]
+  fasilitas  Fasilitas[]
 }
 
 model LocalService {
@@ -214,4 +234,42 @@ model Booking {
   estimatedArrivalTime String?
   status               BookingStatus @default(PENDING)
   createdAt            DateTime      @default(now())
+}
+
+model Transaksi {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id])
+  destinationId String
+  destination   Destination      @relation(fields: [destinationId], references: [id])
+  type          TransaksiType
+  items         TransaksiItem[]
+  totalHarga    Decimal
+  status        TransaksiStatus  @default(PENDING)
+  paymentMethod PaymentMethod    @default(COD)
+  jadwal        DateTime?
+  catatan       String?
+  kodeTransaksi String           @unique
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model TransaksiItem {
+  id          String    @id @default(cuid())
+  transaksiId String
+  transaksi   Transaksi @relation(fields: [transaksiId], references: [id], onDelete: Cascade)
+  namaItem    String
+  hargaSatuan Decimal
+  kuantitas   Int
+  subtotal    Decimal
+}
+
+model Fasilitas {
+  id            String      @id @default(cuid())
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  nama          String
+  hargaSewa     Decimal
+  satuanWaktu   String      @default("per jam")
+  jumlahUnit    Int         @default(1)
 }
