@@ -38,7 +38,6 @@ const ROLE_NAV_LINKS: Record<string, { href: string; label: string }[]> = {
   ],
   ADMIN: [
     { href: "/dashboard", label: "Dashboard Admin" },
-    { href: "/", label: "Jelajahi" },
   ],
 };
 
