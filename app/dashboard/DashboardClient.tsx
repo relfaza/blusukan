@@ -87,7 +87,8 @@ export default function DashboardClient() {
         <StatistikSection />
 
         <h2
-          className="text-lg font-bold mb-4"
+          id="persetujuan-destinasi"
+          className="text-lg font-bold mb-4 scroll-mt-20"
           style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
         >
           Persetujuan Destinasi

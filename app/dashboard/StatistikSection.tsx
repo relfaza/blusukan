@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   CartesianGrid,
   Line,
@@ -81,7 +82,7 @@ function ChartTooltip({
   );
 }
 
-/** Stat tile — label, value besar, ikon identitas dalam kotak warna */
+/** Stat tile — label, value besar, ikon identitas dalam kotak warna. Bisa diklik kalau diberi href. */
 function KpiCard({
   icon,
   label,
@@ -89,6 +90,7 @@ function KpiCard({
   subtitle,
   iconBg,
   iconColor,
+  href,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -96,11 +98,20 @@ function KpiCard({
   subtitle?: string;
   iconBg: string;
   iconColor: string;
+  href?: string;
 }) {
-  return (
+  const [hovered, setHovered] = useState(false);
+
+  const card = (
     <div
-      className="rounded-2xl p-5"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      className="rounded-2xl p-5 transition-shadow duration-150"
+      style={{
+        background: "#ffffff",
+        border: `1px solid ${hovered ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
+        boxShadow: hovered ? "0 4px 14px rgba(0,0,0,0.08)" : "none",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className="flex items-center gap-3 mb-3">
         <div
@@ -125,6 +136,14 @@ function KpiCard({
         </p>
       )}
     </div>
+  );
+
+  if (!href) return card;
+
+  return (
+    <Link href={href} className="block" style={{ textDecoration: "none" }}>
+      {card}
+    </Link>
   );
 }
 
@@ -326,6 +345,7 @@ export default function StatistikSection() {
           value={String(data.totalDestinasi)}
           iconBg="var(--blusukan-primary-container)"
           iconColor="var(--blusukan-primary)"
+          href="/dashboard/destinasi"
         />
         <KpiCard
           icon={<Clock size={18} />}
@@ -333,6 +353,7 @@ export default function StatistikSection() {
           value={String(data.totalPending)}
           iconBg="#fef3e7"
           iconColor="#805533"
+          href="/dashboard#persetujuan-destinasi"
         />
         <KpiCard
           icon={<MessageSquare size={18} />}
@@ -340,6 +361,7 @@ export default function StatistikSection() {
           value={String(data.totalLaporan)}
           iconBg="var(--blusukan-primary-container)"
           iconColor="var(--blusukan-primary)"
+          href="/dashboard/laporan"
         />
         <KpiCard
           icon={<Receipt size={18} />}
@@ -348,6 +370,7 @@ export default function StatistikSection() {
           subtitle={`Estimasi pendapatan: ${formatRupiah(data.totalPendapatanEstimasi)}`}
           iconBg="var(--blusukan-primary-container)"
           iconColor="var(--blusukan-primary)"
+          href="/dashboard/transaksi"
         />
       </div>
 
