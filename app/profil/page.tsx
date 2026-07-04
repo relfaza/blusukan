@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 const ROLE_LABEL: Record<string, string> = {
   WISATAWAN: "Wisatawan",
   PENGELOLA: "Pengelola Lokal",
   ADMIN: "Admin",
+};
+
+const ROLE_BACK_LINK: Record<string, string> = {
+  ADMIN: "/dashboard",
+  PENGELOLA: "/pengelola",
+  WISATAWAN: "/",
 };
 
 type ProfilData = {
@@ -175,12 +182,23 @@ export default function ProfilPage() {
       style={{ backgroundColor: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}
     >
       <div className="max-w-xl mx-auto space-y-6">
-        <h1
-          className="text-2xl font-bold"
-          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-        >
-          Profil Saya
-        </h1>
+        <div>
+          <Link
+            href={(profil?.role && ROLE_BACK_LINK[profil.role]) ?? "/"}
+            id="profil-back"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold mb-3 hover:opacity-70 transition-opacity"
+            style={{ color: "var(--blusukan-primary)" }}
+          >
+            <ArrowLeft size={16} />
+            Kembali
+          </Link>
+          <h1
+            className="text-2xl font-bold"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+          >
+            Profil Saya
+          </h1>
+        </div>
 
         {loadingProfil ? (
           <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>

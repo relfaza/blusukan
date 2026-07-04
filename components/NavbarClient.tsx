@@ -128,7 +128,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
 
         {/* ── Logo ── */}
         <Link
-          href="/"
+          href={dashboardLink?.href ?? "/"}
           id="nav-logo"
           className="flex items-center gap-1.5 shrink-0"
         >
