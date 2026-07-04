@@ -31,6 +31,12 @@ type RingkasanPengelola = {
   totalTransaksiSelesai: number;
 };
 
+type RingkasanAdmin = {
+  totalDisetujui: number;
+  totalDitolak: number;
+  totalMenungguKeseluruhan: number;
+};
+
 export default function ProfilPage() {
   const [profil, setProfil] = useState<ProfilData | null>(null);
   const [loadingProfil, setLoadingProfil] = useState(true);
@@ -48,6 +54,9 @@ export default function ProfilPage() {
 
   const [ringkasan, setRingkasan] = useState<RingkasanPengelola | null>(null);
   const [loadingRingkasan, setLoadingRingkasan] = useState(false);
+
+  const [ringkasanAdmin, setRingkasanAdmin] = useState<RingkasanAdmin | null>(null);
+  const [loadingRingkasanAdmin, setLoadingRingkasanAdmin] = useState(false);
 
   useEffect(() => {
     async function loadProfil() {
@@ -82,6 +91,24 @@ export default function ProfilPage() {
       }
     }
     loadRingkasan();
+  }, [profil?.role]);
+
+  useEffect(() => {
+    if (profil?.role !== "ADMIN") return;
+
+    async function loadRingkasanAdmin() {
+      setLoadingRingkasanAdmin(true);
+      try {
+        const res = await fetch("/api/profil/ringkasan-admin");
+        const data = await res.json();
+        if (res.ok) {
+          setRingkasanAdmin(data);
+        }
+      } finally {
+        setLoadingRingkasanAdmin(false);
+      }
+    }
+    loadRingkasanAdmin();
   }, [profil?.role]);
 
   async function handleSaveProfil(e: React.FormEvent) {
@@ -275,6 +302,74 @@ export default function ProfilPage() {
                   }}
                 >
                   Buka Dashboard Pengelola
+                </Link>
+              </div>
+            )}
+
+            {profil.role === "ADMIN" && (
+              <div
+                className="p-5 sm:p-6"
+                style={{
+                  backgroundColor: "var(--blusukan-surface-container-lowest)",
+                  border: "1px solid var(--blusukan-outline-variant)",
+                  borderRadius: "16px",
+                }}
+              >
+                <h2
+                  className="text-base font-semibold mb-4"
+                  style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+                >
+                  Ringkasan Admin
+                </h2>
+
+                {loadingRingkasanAdmin ? (
+                  <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    Memuat ringkasan...
+                  </p>
+                ) : !ringkasanAdmin ? (
+                  <p className="text-sm" style={{ color: "var(--blusukan-error)" }}>
+                    Gagal memuat ringkasan admin.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {[
+                      { label: "Disetujui (oleh saya)", value: ringkasanAdmin.totalDisetujui },
+                      { label: "Ditolak (oleh saya)", value: ringkasanAdmin.totalDitolak },
+                      { label: "Total Menunggu Persetujuan", value: ringkasanAdmin.totalMenungguKeseluruhan },
+                    ].map((kpi) => (
+                      <div
+                        key={kpi.label}
+                        className="p-3.5"
+                        style={{
+                          backgroundColor: "var(--blusukan-surface-container)",
+                          border: "1px solid var(--blusukan-outline-variant)",
+                          borderRadius: "12px",
+                        }}
+                      >
+                        <p
+                          className="text-xl font-bold"
+                          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-primary)" }}
+                        >
+                          {kpi.value}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                          {kpi.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Link
+                  href="/dashboard"
+                  className="inline-block w-full sm:w-auto text-center font-semibold px-6 py-2.5 transition-opacity"
+                  style={{
+                    backgroundColor: "var(--blusukan-primary)",
+                    color: "var(--blusukan-on-primary)",
+                    borderRadius: "8px",
+                  }}
+                >
+                  Buka Dashboard Admin
                 </Link>
               </div>
             )}
