@@ -66,9 +66,11 @@ export default async function DashboardDestinasiPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {destinations.map((d) => (
-              <div
+              <Link
                 key={d.id}
-                className="rounded-2xl p-5"
+                href={`/dashboard/destinasi/${d.id}`}
+                id={`card-destinasi-${d.id}`}
+                className="block rounded-2xl p-5 transition-shadow hover:shadow-md"
                 style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
               >
                 <div className="flex items-center gap-1.5 mb-2">
@@ -87,7 +89,7 @@ export default async function DashboardDestinasiPage() {
                 <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                   {KATEGORI_LABEL[d.kategori] ?? d.kategori} · Dikelola oleh {d.submittedBy.name}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         )}
