@@ -5,7 +5,7 @@ import BerandaClient, { type DestinationForClient } from "./beranda-client";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [rows, upvoteSums, verifiedCounts, recentCrowdGroups] = await Promise.all([
+  const [rows, upvoteSums, verifiedCounts, recentCrowdGroups, reviewAggs] = await Promise.all([
     prisma.destination.findMany({
       where: { status: "APPROVED" },
       include: {
@@ -37,6 +37,12 @@ export default async function Home() {
       where: { createdAt: { gte: new Date(Date.now() - POPULARITY_WINDOW_MS) } },
       _count: { _all: true },
     }),
+    // Rata-rata rating & total ulasan per destinasi
+    prisma.review.groupBy({
+      by: ["destinationId"],
+      _avg: { rating: true },
+      _count: { _all: true },
+    }),
   ]);
 
   const upvoteMap = new Map(
@@ -52,6 +58,9 @@ export default async function Home() {
     }
     crowdByDestination.get(g.destinationId)!.set(g.crowdLevel, g._count._all);
   }
+  const reviewMap = new Map(
+    reviewAggs.map((r) => [r.destinationId, { avg: r._avg.rating ?? 0, count: r._count._all }])
+  );
 
   // Serialize Prisma Decimal → plain number so the client component
   // receives JSON-safe props
@@ -73,6 +82,8 @@ export default async function Home() {
       totalUpvotes: upvoteMap.get(d.id) ?? 0,
       verifiedReportsCount: verifiedMap.get(d.id) ?? 0,
       populerMingguIni: majorityCrowd === "PADAT",
+      rataRataRating: reviewMap.get(d.id)?.avg ?? 0,
+      totalReview: reviewMap.get(d.id)?.count ?? 0,
       reports: d.reports.map((r) => ({
         signalStrength: r.signalStrength,
         crowdLevel: r.crowdLevel,
