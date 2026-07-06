@@ -54,7 +54,7 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
     return <TidakDiizinkan />;
   }
 
-  const [transaksis, fasilitasList] = await Promise.all([
+  const [transaksis, fasilitasList, warungList] = await Promise.all([
     prisma.transaksi.findMany({
       where: { destinationId: id },
       orderBy: { createdAt: "desc" },
@@ -64,6 +64,11 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
       },
     }),
     prisma.fasilitas.findMany({ where: { destinationId: id }, orderBy: { nama: "asc" } }),
+    prisma.localWarung.findMany({
+      where: { destinationId: id },
+      include: { menuItems: true },
+      orderBy: { updatedAt: "desc" },
+    }),
   ]);
 
   const sortedTransaksis = [...transaksis].sort((a, b) => STATUS_RANK[a.status] - STATUS_RANK[b.status]);
@@ -87,11 +92,25 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
     jumlahUnit: f.jumlahUnit,
   }));
 
+  const initialWarungs = warungList.map((w) => ({
+    id: w.id,
+    destinationId: w.destinationId,
+    name: w.name,
+    location: w.location,
+    menuItems: w.menuItems.map((m) => ({
+      id: m.id,
+      warungId: m.warungId,
+      name: m.name,
+      price: Number(m.price),
+    })),
+  }));
+
   return (
     <PengelolaDestinasiClient
       destination={{ id: destination.id, name: destination.name, status: destination.status }}
       initialTransaksis={initialTransaksis}
       initialFasilitas={initialFasilitas}
+      initialWarungs={initialWarungs}
     />
   );
 }
