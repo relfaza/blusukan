@@ -24,10 +24,26 @@ type FasilitasRow = {
   jumlahUnit: number;
 };
 
+type MenuItemRow = {
+  id: string;
+  warungId: string;
+  name: string;
+  price: number;
+};
+
+type WarungRow = {
+  id: string;
+  destinationId: string;
+  name: string;
+  location: string | null;
+  menuItems: MenuItemRow[];
+};
+
 interface Props {
   destination: { id: string; name: string; status: string };
   initialTransaksis: TransaksiRow[];
   initialFasilitas: FasilitasRow[];
+  initialWarungs: WarungRow[];
 }
 
 function formatRupiah(n: number): string {
@@ -489,8 +505,527 @@ function KelolaFasilitasSection({
   );
 }
 
-export default function PengelolaDestinasiClient({ destination, initialTransaksis, initialFasilitas }: Props) {
-  const [activeTab, setActiveTab] = useState<"transaksi" | "fasilitas">("transaksi");
+/** Form tambah/edit warung — dipakai untuk create maupun update */
+function WarungForm({
+  initial,
+  onCancel,
+  onSubmit,
+  submitting,
+}: {
+  initial?: { name: string; location: string | null };
+  onCancel: () => void;
+  onSubmit: (values: { name: string; location: string }) => void;
+  submitting: boolean;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [location, setLocation] = useState(initial?.location ?? "");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit({ name, location });
+  }
+
+  const inputStyle: React.CSSProperties = {
+    border: "1px solid var(--blusukan-outline-variant)",
+    borderRadius: "8px",
+    background: "#ffffff",
+    color: "var(--blusukan-on-surface)",
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl p-5 space-y-3"
+      style={{ background: "var(--blusukan-primary-container)", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div>
+        <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Nama Warung
+        </label>
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Contoh: Warung Bu Sri"
+          className="w-full px-3 py-2 text-sm"
+          style={inputStyle}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Lokasi
+        </label>
+        <input
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Contoh: Dekat pintu masuk"
+          className="w-full px-3 py-2 text-sm"
+          style={inputStyle}
+        />
+      </div>
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+        >
+          {submitting ? "Menyimpan..." : "Simpan"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="text-sm font-medium px-4 py-2 rounded-lg"
+          style={{ color: "var(--blusukan-on-surface-variant)" }}
+        >
+          Batal
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/** Form tambah/edit menu item — dipakai di dalam card warung */
+function MenuItemForm({
+  initial,
+  onCancel,
+  onSubmit,
+  submitting,
+}: {
+  initial?: { name: string; price: number };
+  onCancel: () => void;
+  onSubmit: (values: { name: string; price: number }) => void;
+  submitting: boolean;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [price, setPrice] = useState<number | "">(initial ? initial.price : "");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit({ name, price: Number(price) });
+  }
+
+  const inputStyle: React.CSSProperties = {
+    border: "1px solid var(--blusukan-outline-variant)",
+    borderRadius: "8px",
+    background: "#ffffff",
+    color: "var(--blusukan-on-surface)",
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-xl p-4 space-y-3"
+      style={{ background: "var(--blusukan-surface)", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Nama Menu
+          </label>
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Contoh: Mie Ayam"
+            className="w-full px-3 py-2 text-sm"
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Harga
+          </label>
+          <RupiahInput
+            id="menuPrice"
+            required
+            value={price}
+            onChange={setPrice}
+            className="w-full pl-9 pr-3 py-2 text-sm"
+            style={inputStyle}
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+        >
+          {submitting ? "Menyimpan..." : "Simpan"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="text-xs font-medium px-3 py-1.5 rounded-lg"
+          style={{ color: "var(--blusukan-on-surface-variant)" }}
+        >
+          Batal
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/** Card satu warung: info + daftar menu, dengan aksi edit/hapus untuk warung maupun tiap menu item */
+function WarungCard({
+  warung,
+  submitting,
+  onEditWarung,
+  onDeleteWarung,
+  onAddMenuItem,
+  onEditMenuItem,
+  onDeleteMenuItem,
+}: {
+  warung: WarungRow;
+  submitting: boolean;
+  onEditWarung: (values: { name: string; location: string }) => void;
+  onDeleteWarung: () => void;
+  onAddMenuItem: (values: { name: string; price: number }) => void;
+  onEditMenuItem: (menuItemId: string, values: { name: string; price: number }) => void;
+  onDeleteMenuItem: (menuItemId: string) => void;
+}) {
+  const [isEditingWarung, setIsEditingWarung] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
+
+  if (isEditingWarung) {
+    return (
+      <WarungForm
+        initial={{ name: warung.name, location: warung.location }}
+        onCancel={() => setIsEditingWarung(false)}
+        onSubmit={(values) => {
+          onEditWarung(values);
+          setIsEditingWarung(false);
+        }}
+        submitting={submitting}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="rounded-2xl p-5"
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
+            {warung.name}
+          </p>
+          {warung.location && (
+            <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+              {warung.location}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            id={`btn-edit-warung-${warung.id}`}
+            onClick={() => setIsEditingWarung(true)}
+            aria-label={`Edit ${warung.name}`}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+            style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-on-surface-variant)" }}
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            type="button"
+            id={`btn-hapus-warung-${warung.id}`}
+            onClick={onDeleteWarung}
+            disabled={submitting}
+            aria-label={`Hapus ${warung.name}`}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+            style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-2 pt-3" style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}>
+        {warung.menuItems.length === 0 && !showAddMenu && (
+          <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Belum ada menu.
+          </p>
+        )}
+        {warung.menuItems.map((m) =>
+          editingMenuId === m.id ? (
+            <MenuItemForm
+              key={m.id}
+              initial={{ name: m.name, price: m.price }}
+              onCancel={() => setEditingMenuId(null)}
+              onSubmit={(values) => {
+                onEditMenuItem(m.id, values);
+                setEditingMenuId(null);
+              }}
+              submitting={submitting}
+            />
+          ) : (
+            <div key={m.id} className="flex items-center justify-between gap-3 px-1">
+              <p className="text-sm" style={{ color: "var(--blusukan-on-surface)" }}>
+                {m.name}{" "}
+                <span style={{ color: "var(--blusukan-on-surface-variant)" }}>· {formatRupiah(m.price)}</span>
+              </p>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  id={`btn-edit-menu-${m.id}`}
+                  onClick={() => setEditingMenuId(m.id)}
+                  aria-label={`Edit ${m.name}`}
+                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+                  style={{ color: "var(--blusukan-on-surface-variant)" }}
+                >
+                  <Pencil size={12} />
+                </button>
+                <button
+                  type="button"
+                  id={`btn-hapus-menu-${m.id}`}
+                  onClick={() => onDeleteMenuItem(m.id)}
+                  disabled={submitting}
+                  aria-label={`Hapus ${m.name}`}
+                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+                  style={{ color: "var(--blusukan-error)" }}
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            </div>
+          )
+        )}
+
+        {showAddMenu ? (
+          <MenuItemForm
+            onCancel={() => setShowAddMenu(false)}
+            onSubmit={(values) => {
+              onAddMenuItem(values);
+              setShowAddMenu(false);
+            }}
+            submitting={submitting}
+          />
+        ) : (
+          <button
+            type="button"
+            id={`btn-tambah-menu-${warung.id}`}
+            onClick={() => setShowAddMenu(true)}
+            className="flex items-center gap-1 text-xs font-bold mt-1 hover:opacity-80 transition-opacity"
+            style={{ color: "var(--blusukan-primary)" }}
+          >
+            <Plus size={14} />
+            Tambah Menu
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Section: Kelola UMKM — CRUD warung lewat /api/pengelola/warung, menu item lewat /api/pengelola/menu-item */
+function KelolaUmkmSection({
+  destinationId,
+  initialWarungs,
+}: {
+  destinationId: string;
+  initialWarungs: WarungRow[];
+}) {
+  const [warungs, setWarungs] = useState(initialWarungs);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleAddWarung(values: { name: string; location: string }) {
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/pengelola/warung", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ destinationId, ...values }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal menambah warung.");
+        return;
+      }
+      setWarungs((prev) => [...prev, { ...data, menuItems: [] }]);
+      setShowAddForm(false);
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleEditWarung(id: string, values: { name: string; location: string }) {
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/pengelola/warung/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal memperbarui warung.");
+        return;
+      }
+      setWarungs((prev) => prev.map((w) => (w.id === id ? { ...w, name: data.name, location: data.location } : w)));
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDeleteWarung(id: string) {
+    if (!window.confirm("Hapus warung ini beserta semua menunya?")) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/pengelola/warung/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal menghapus warung.");
+        return;
+      }
+      setWarungs((prev) => prev.filter((w) => w.id !== id));
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleAddMenuItem(warungId: string, values: { name: string; price: number }) {
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/pengelola/menu-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ warungId, ...values }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal menambah menu.");
+        return;
+      }
+      setWarungs((prev) => prev.map((w) => (w.id === warungId ? { ...w, menuItems: [...w.menuItems, data] } : w)));
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleEditMenuItem(warungId: string, menuItemId: string, values: { name: string; price: number }) {
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/pengelola/menu-item/${menuItemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal memperbarui menu.");
+        return;
+      }
+      setWarungs((prev) =>
+        prev.map((w) =>
+          w.id === warungId ? { ...w, menuItems: w.menuItems.map((m) => (m.id === menuItemId ? data : m)) } : w
+        )
+      );
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDeleteMenuItem(warungId: string, menuItemId: string) {
+    if (!window.confirm("Hapus menu ini?")) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/pengelola/menu-item/${menuItemId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal menghapus menu.");
+        return;
+      }
+      setWarungs((prev) =>
+        prev.map((w) => (w.id === warungId ? { ...w, menuItems: w.menuItems.filter((m) => m.id !== menuItemId) } : w))
+      );
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {error && (
+        <p className="text-sm px-4 py-2.5 rounded-lg" style={{ background: "var(--blusukan-error-container)", color: "var(--blusukan-error)" }}>
+          {error}
+        </p>
+      )}
+
+      {!showAddForm && (
+        <button
+          type="button"
+          id="btn-tambah-warung"
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
+          style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+        >
+          <Plus size={16} />
+          Tambah Warung Baru
+        </button>
+      )}
+
+      {showAddForm && (
+        <WarungForm onCancel={() => setShowAddForm(false)} onSubmit={handleAddWarung} submitting={submitting} />
+      )}
+
+      {warungs.length === 0 && !showAddForm ? (
+        <div
+          className="rounded-2xl p-10 flex flex-col items-center text-center"
+          style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+        >
+          <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Belum ada warung UMKM yang ditambahkan.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {warungs.map((w) => (
+            <WarungCard
+              key={w.id}
+              warung={w}
+              submitting={submitting}
+              onEditWarung={(values) => handleEditWarung(w.id, values)}
+              onDeleteWarung={() => handleDeleteWarung(w.id)}
+              onAddMenuItem={(values) => handleAddMenuItem(w.id, values)}
+              onEditMenuItem={(menuItemId, values) => handleEditMenuItem(w.id, menuItemId, values)}
+              onDeleteMenuItem={(menuItemId) => handleDeleteMenuItem(w.id, menuItemId)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function PengelolaDestinasiClient({ destination, initialTransaksis, initialFasilitas, initialWarungs }: Props) {
+  const [activeTab, setActiveTab] = useState<"transaksi" | "fasilitas" | "umkm">("transaksi");
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
@@ -538,12 +1073,27 @@ export default function PengelolaDestinasiClient({ destination, initialTransaksi
           >
             Kelola Fasilitas
           </button>
+          <button
+            type="button"
+            id="tab-umkm"
+            onClick={() => setActiveTab("umkm")}
+            className="text-sm font-bold px-4 py-2 rounded-lg transition-colors"
+            style={
+              activeTab === "umkm"
+                ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
+                : { background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }
+            }
+          >
+            Kelola UMKM
+          </button>
         </div>
 
-        {activeTab === "transaksi" ? (
-          <TransaksiMasukSection initialTransaksis={initialTransaksis} />
-        ) : (
+        {activeTab === "transaksi" && <TransaksiMasukSection initialTransaksis={initialTransaksis} />}
+        {activeTab === "fasilitas" && (
           <KelolaFasilitasSection destinationId={destination.id} initialFasilitas={initialFasilitas} />
+        )}
+        {activeTab === "umkm" && (
+          <KelolaUmkmSection destinationId={destination.id} initialWarungs={initialWarungs} />
         )}
       </div>
     </div>
