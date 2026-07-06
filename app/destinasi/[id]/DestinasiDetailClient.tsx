@@ -65,7 +65,7 @@ type LocalService = {
 };
 
 type MenuItem = { id: string; name: string; price: number };
-type Warung = { id: string; name: string; menuItems: MenuItem[] };
+type Warung = { id: string; name: string; location: string | null; menuItems: MenuItem[] };
 
 type SewaFasilitas = {
   id: string;
@@ -608,6 +608,242 @@ function FasilitasBookingRow({
   );
 }
 
+/** Satu baris menu dengan quantity stepper kecil, dipakai dalam WarungOrderCard */
+function MenuItemRow({
+  item,
+  kuantitas,
+  onChange,
+}: {
+  item: MenuItem;
+  kuantitas: number;
+  onChange: (q: number) => void;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between py-1.5 border-b last:border-0"
+      style={{ borderColor: "#f0f0f0" }}
+    >
+      <div>
+        <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+          {item.name}
+        </p>
+        <p className="text-xs" style={{ color: "#72796e" }}>
+          {formatRupiah(item.price)}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, kuantitas - 1))}
+          disabled={kuantitas <= 0}
+          aria-label={`Kurangi jumlah ${item.name}`}
+          className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+        >
+          <Minus size={12} />
+        </button>
+        <span className="w-5 text-center text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+          {kuantitas}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(kuantitas + 1)}
+          aria-label={`Tambah jumlah ${item.name}`}
+          className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+        >
+          <Plus size={12} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Kartu pesan per warung — pre-order menu dan/atau reservasi tempat, checkout langsung ke satu warung */
+function WarungOrderCard({ destinationId, warung }: { destinationId: string; warung: Warung }) {
+  const router = useRouter();
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [reservasiTempat, setReservasiTempat] = useState(false);
+  const [jadwal, setJadwal] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const minJadwal = toLocalInputValue(new Date());
+
+  const selectedItems = warung.menuItems
+    .map((m) => ({ menuItem: m, kuantitas: quantities[m.id] ?? 0 }))
+    .filter((x) => x.kuantitas > 0);
+
+  const total = selectedItems.reduce((sum, x) => sum + x.menuItem.price * x.kuantitas, 0);
+
+  const hasSelection = selectedItems.length > 0;
+  const reservasiSiap = reservasiTempat && jadwal.trim() !== "";
+  const bisaPesan = hasSelection || reservasiSiap;
+
+  function setQuantity(menuItemId: string, q: number) {
+    setQuantities((prev) => ({ ...prev, [menuItemId]: q }));
+  }
+
+  async function handlePesan() {
+    if (!bisaPesan) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/transaksi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "UMKM",
+          destinationId,
+          warungId: warung.id,
+          items: selectedItems.map((x) => ({ menuItemId: x.menuItem.id, kuantitas: x.kuantitas })),
+          reservasiTempat,
+          jadwal: reservasiTempat ? new Date(jadwal).toISOString() : null,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Gagal membuat pesanan. Coba lagi.");
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/transaksi/${data.id}`);
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl p-4" style={{ border: "1px solid #e8e8e8" }}>
+      <p
+        className="font-semibold text-sm mb-1"
+        style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+      >
+        {warung.name}
+      </p>
+      {warung.location && (
+        <p className="text-xs mb-3 flex items-center gap-1" style={{ color: "#72796e" }}>
+          <MapPin size={12} />
+          {warung.location}
+        </p>
+      )}
+
+      {warung.menuItems.length > 0 ? (
+        <div className="mb-3">
+          {warung.menuItems.map((m) => (
+            <MenuItemRow
+              key={m.id}
+              item={m}
+              kuantitas={quantities[m.id] ?? 0}
+              onChange={(q) => setQuantity(m.id, q)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm mb-3" style={{ color: "#72796e" }}>
+          Menu belum tersedia
+        </p>
+      )}
+
+      <label
+        htmlFor={`reservasi-${warung.id}`}
+        className="flex items-center gap-2 mb-3 cursor-pointer"
+      >
+        <input
+          id={`reservasi-${warung.id}`}
+          type="checkbox"
+          checked={reservasiTempat}
+          onChange={(e) => setReservasiTempat(e.target.checked)}
+          className="w-4 h-4"
+          style={{ accentColor: "var(--blusukan-primary)" }}
+        />
+        <span className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+          Reservasi tempat duduk
+        </span>
+      </label>
+
+      {reservasiTempat && (
+        <div className="mb-3">
+          <label
+            htmlFor={`jadwal-umkm-${warung.id}`}
+            className="block text-xs font-medium mb-1"
+            style={{ color: "#72796e" }}
+          >
+            Jadwal Kedatangan
+          </label>
+          <input
+            id={`jadwal-umkm-${warung.id}`}
+            type="datetime-local"
+            value={jadwal}
+            min={minJadwal}
+            onChange={(e) => setJadwal(e.target.value)}
+            className="w-full px-3 py-2 text-sm"
+            style={{
+              border: "1px solid var(--blusukan-outline-variant)",
+              borderRadius: "8px",
+              color: "var(--blusukan-on-surface)",
+            }}
+          />
+        </div>
+      )}
+
+      {hasSelection && (
+        <div className="rounded-xl p-3 mb-3" style={{ background: "#f0f8f0" }}>
+          <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+            Total Menu: <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+          {error}
+        </p>
+      )}
+
+      <button
+        type="button"
+        id={`btn-pesan-umkm-${warung.id}`}
+        onClick={handlePesan}
+        disabled={!bisaPesan || loading}
+        className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+      >
+        {loading ? "Memproses..." : "Pesan"}
+      </button>
+      {!bisaPesan && (
+        <p className="text-xs mt-2 text-center" style={{ color: "#72796e" }}>
+          Pilih menu atau centang reservasi tempat
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Section UMKM & Kuliner Lokal — pre-order menu dan/atau reservasi tempat per warung, disembunyikan kalau belum ada warung */
+function UmkmKulinerSection({ destinationId, warungs }: { destinationId: string; warungs: Warung[] }) {
+  if (warungs.length === 0) return null;
+
+  return (
+    <SectionCard>
+      <SectionTitle>
+        <span className="flex items-center gap-2">
+          <Utensils size={18} />
+          UMKM & Kuliner Lokal
+        </span>
+      </SectionTitle>
+      <div className="space-y-4">
+        {warungs.map((w) => (
+          <WarungOrderCard key={w.id} destinationId={destinationId} warung={w} />
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
 /** Baris bintang untuk menampilkan rating (read-only) */
 function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
@@ -1102,54 +1338,8 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
               </div>
             </SectionCard>
 
-            {/* Card Warung Sekitar */}
-            {d.warungs.length > 0 && (
-              <SectionCard>
-                <SectionTitle>
-                  <span className="flex items-center gap-2">
-                    <Utensils size={18} />
-                    Warung Sekitar
-                  </span>
-                </SectionTitle>
-                <div className="space-y-4">
-                  {d.warungs.map((w) => (
-                    <div key={w.id}>
-                      <p
-                        className="font-semibold text-sm mb-2.5"
-                        style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
-                      >
-                        {w.name}
-                      </p>
-                      {w.menuItems.length > 0 ? (
-                        <div className="space-y-1.5">
-                          {w.menuItems.map((m) => (
-                            <div
-                              key={m.id}
-                              className="flex justify-between items-center py-1.5 border-b last:border-0"
-                              style={{ borderColor: "#f0f0f0" }}
-                            >
-                              <span className="text-sm" style={{ color: "#42493e" }}>
-                                {m.name}
-                              </span>
-                              <span
-                                className="text-sm font-semibold"
-                                style={{ color: "#2d5a27" }}
-                              >
-                                {formatRupiah(m.price)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm" style={{ color: "#72796e" }}>
-                          Menu belum tersedia
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
-            )}
+            {/* Section UMKM & Kuliner Lokal — pre-order menu dan/atau reservasi tempat, disembunyikan kalau belum ada warung */}
+            <UmkmKulinerSection destinationId={d.id} warungs={d.warungs} />
 
             {/* Section Laporan Wisatawan */}
             <div>
