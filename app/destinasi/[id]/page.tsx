@@ -128,6 +128,7 @@ export default async function DestinasiDetailPage({ params }: Props) {
     warungs: raw.warungs.map((w) => ({
       id: w.id,
       name: w.name,
+      location: w.location,
       menuItems: w.menuItems.map((m) => ({
         id: m.id,
         name: m.name,

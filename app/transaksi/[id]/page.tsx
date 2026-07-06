@@ -60,7 +60,9 @@ export default async function TransaksiDetailPage({ params }: Props) {
 
   const totalTiket = transaksi.items.reduce((sum, item) => sum + item.kuantitas, 0);
   const isFasilitas = transaksi.type === "FASILITAS";
+  const isUmkm = transaksi.type === "UMKM";
   const namaItem = transaksi.items[0]?.namaItem;
+  const menuItems = transaksi.items.filter((item) => !item.namaItem.startsWith("Reservasi Tempat"));
 
   return (
     <div
@@ -112,7 +114,45 @@ export default async function TransaksiDetailPage({ params }: Props) {
               {transaksi.destination.name}
             </span>
           </div>
-          {isFasilitas ? (
+          {isUmkm ? (
+            <>
+              {menuItems.length > 0 && (
+                <div>
+                  <span
+                    className="text-sm block mb-2"
+                    style={{ color: "var(--blusukan-on-surface-variant)" }}
+                  >
+                    Menu Dipesan
+                  </span>
+                  <div className="space-y-1.5">
+                    {menuItems.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center">
+                        <span className="text-sm" style={{ color: "var(--blusukan-on-surface)" }}>
+                          {item.namaItem} x{item.kuantitas}
+                        </span>
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--blusukan-on-surface)" }}
+                        >
+                          {formatRupiah(Number(item.subtotal))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {transaksi.jadwal && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    Jadwal Kedatangan
+                  </span>
+                  <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                    {formatTanggalWaktu(transaksi.jadwal)}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : isFasilitas ? (
             <>
               <div className="flex justify-between items-center">
                 <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>

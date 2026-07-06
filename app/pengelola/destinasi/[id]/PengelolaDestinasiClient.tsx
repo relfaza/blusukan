@@ -57,6 +57,7 @@ function formatRupiah(n: number): string {
 const TYPE_LABEL: Record<string, string> = {
   TIKET_MASUK: "Tiket Masuk",
   FASILITAS: "Fasilitas",
+  UMKM: "UMKM",
 };
 
 const STATUS_LABEL: Record<string, string> = {
