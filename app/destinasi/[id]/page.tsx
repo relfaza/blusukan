@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { POPULARITY_WINDOW_MS, pickMajorityCrowdLevel } from "@/lib/popularity";
 import DestinasiDetailClient from "./DestinasiDetailClient";
 
@@ -12,7 +13,19 @@ interface Props {
 export default async function DestinasiDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const [raw, upvoteAgg, verifiedReportsCount, recentCrowdGroups, fasilitasList] = await Promise.all([
+  const session = await auth();
+  const userId = (session?.user as { id?: string } | undefined)?.id;
+
+  const [
+    raw,
+    upvoteAgg,
+    verifiedReportsCount,
+    recentCrowdGroups,
+    fasilitasList,
+    reviews,
+    reviewAgg,
+    myReview,
+  ] = await Promise.all([
     prisma.destination.findFirst({
       where: { id, status: "APPROVED" },
       include: {
@@ -46,6 +59,24 @@ export default async function DestinasiDetailPage({ params }: Props) {
     }),
     // Fasilitas yang bisa disewa untuk destinasi ini
     prisma.fasilitas.findMany({ where: { destinationId: id }, orderBy: { nama: "asc" } }),
+    // Ulasan wisatawan untuk destinasi ini
+    prisma.review.findMany({
+      where: { destinationId: id },
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: { name: true } } },
+    }),
+    // Rata-rata rating & total ulasan
+    prisma.review.aggregate({
+      where: { destinationId: id },
+      _avg: { rating: true },
+      _count: { _all: true },
+    }),
+    // Review milik user yang sedang login (kalau ada) — untuk prefill form edit
+    userId
+      ? prisma.review.findUnique({
+          where: { userId_destinationId: { userId, destinationId: id } },
+        })
+      : Promise.resolve(null),
   ]);
 
   if (!raw) notFound();
@@ -110,6 +141,17 @@ export default async function DestinasiDetailPage({ params }: Props) {
       satuanWaktu: f.satuanWaktu,
       jumlahUnit: f.jumlahUnit,
     })),
+    reviews: reviews.map((r) => ({
+      id: r.id,
+      userName: r.user.name,
+      rating: r.rating,
+      komentar: r.komentar,
+      createdAt: r.createdAt.toISOString(),
+    })),
+    rataRataRating: reviewAgg._avg.rating ?? 0,
+    totalReview: reviewAgg._count._all,
+    isLoggedIn: Boolean(userId),
+    myReview: myReview ? { rating: myReview.rating, komentar: myReview.komentar } : null,
   };
 
   return <DestinasiDetailClient destination={destination} />;

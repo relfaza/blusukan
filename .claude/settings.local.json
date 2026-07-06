@@ -27,7 +27,8 @@
       "Bash(echo \"exit:$?\")",
       "Bash(curl -s http://localhost:3000 -o /tmp/claude-1000/-home-farrel-project-blusukan/9a0ef657-1c3c-422a-9d7b-88f69df65c5b/scratchpad/home.html)",
       "Bash(curl -s \"http://localhost:3000/destinasi/cmr1s4dwr00073tu2oq8tafg2\" -o /tmp/claude-1000/-home-farrel-project-blusukan/9a0ef657-1c3c-422a-9d7b-88f69df65c5b/scratchpad/detail.html)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(npx prisma *)"
     ]
   }
 }

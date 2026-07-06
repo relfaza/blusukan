@@ -75,6 +75,16 @@ type SewaFasilitas = {
   jumlahUnit: number;
 };
 
+type Review = {
+  id: string;
+  userName: string;
+  rating: number;
+  komentar: string | null;
+  createdAt: string;
+};
+
+type MyReview = { rating: number; komentar: string | null } | null;
+
 export type DestinasiDetail = {
   id: string;
   name: string;
@@ -99,6 +109,11 @@ export type DestinasiDetail = {
   localServices: LocalService[];
   warungs: Warung[];
   fasilitas: SewaFasilitas[];
+  reviews: Review[];
+  rataRataRating: number;
+  totalReview: number;
+  isLoggedIn: boolean;
+  myReview: MyReview;
 };
 
 interface Props {
@@ -593,6 +608,237 @@ function FasilitasBookingRow({
   );
 }
 
+/** Baris bintang untuk menampilkan rating (read-only) */
+function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`Rating ${rating} dari 5`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          size={size}
+          fill={rating >= n ? "#f5a623" : "none"}
+          style={{ color: rating >= n ? "#f5a623" : "var(--blusukan-outline-variant)" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Star picker interaktif untuk form ulasan — klik bintang ke-n untuk memilih rating n */
+function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="flex items-center gap-1" role="radiogroup" aria-label="Pilih rating bintang">
+      {[1, 2, 3, 4, 5].map((n) => {
+        const filled = (hover || value) >= n;
+        return (
+          <button
+            key={n}
+            type="button"
+            id={`star-${n}`}
+            onClick={() => onChange(n)}
+            onMouseEnter={() => setHover(n)}
+            onMouseLeave={() => setHover(0)}
+            aria-label={`Beri rating ${n} bintang`}
+            aria-pressed={value === n}
+            className="p-0.5 transition-transform hover:scale-110"
+          >
+            <Star
+              size={28}
+              fill={filled ? "#f5a623" : "none"}
+              style={{ color: filled ? "#f5a623" : "var(--blusukan-outline-variant)" }}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Form tambah/perbarui ulasan — hanya untuk user yang sudah login */
+function ReviewFormCard({
+  destinationId,
+  isLoggedIn,
+  myReview,
+}: {
+  destinationId: string;
+  isLoggedIn: boolean;
+  myReview: MyReview;
+}) {
+  const router = useRouter();
+  const [rating, setRating] = useState(myReview?.rating ?? 0);
+  const [komentar, setKomentar] = useState(myReview?.komentar ?? "");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  if (!isLoggedIn) {
+    return (
+      <SectionCard>
+        <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          <Link
+            href="/login"
+            id="link-login-review"
+            className="font-semibold hover:underline"
+            style={{ color: "var(--blusukan-primary)" }}
+          >
+            Login
+          </Link>{" "}
+          untuk memberi ulasan destinasi ini.
+        </p>
+      </SectionCard>
+    );
+  }
+
+  async function handleSubmit() {
+    if (rating < 1) {
+      setError("Pilih rating bintang terlebih dahulu.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setSuccess(false);
+    try {
+      const res = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ destinationId, rating, komentar }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Gagal mengirim ulasan. Coba lagi.");
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(true);
+      setLoading(false);
+      router.refresh();
+    } catch {
+      setError("Terjadi kesalahan jaringan. Coba lagi.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <SectionCard>
+      <SectionTitle>{myReview ? "Perbarui Ulasan Anda" : "Beri Ulasan"}</SectionTitle>
+      <div className="mb-4">
+        <StarPicker value={rating} onChange={setRating} />
+      </div>
+      <textarea
+        id="input-komentar-review"
+        value={komentar ?? ""}
+        onChange={(e) => setKomentar(e.target.value)}
+        placeholder="Bagikan pengalaman Anda di destinasi ini (opsional)"
+        rows={3}
+        className="w-full px-3 py-2 text-sm mb-3 resize-none focus:outline-none"
+        style={{
+          border: "1px solid var(--blusukan-outline-variant)",
+          borderRadius: "8px",
+          color: "var(--blusukan-on-surface)",
+          background: "var(--blusukan-surface)",
+          fontFamily: "Inter, sans-serif",
+        }}
+      />
+      {error && (
+        <p className="text-xs mb-3" style={{ color: "var(--blusukan-error)" }}>
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="text-xs mb-3" style={{ color: "var(--blusukan-primary)" }}>
+          Ulasan berhasil disimpan.
+        </p>
+      )}
+      <button
+        type="button"
+        id="btn-submit-review"
+        onClick={handleSubmit}
+        disabled={loading}
+        className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+      >
+        {loading ? "Mengirim..." : myReview ? "Perbarui Ulasan" : "Kirim Ulasan"}
+      </button>
+    </SectionCard>
+  );
+}
+
+/** Section "Ulasan Wisatawan" — form + daftar review, terpisah dari laporan kondisi lapangan */
+function UlasanWisatawanSection({
+  destinationId,
+  reviews,
+  isLoggedIn,
+  myReview,
+}: {
+  destinationId: string;
+  reviews: Review[];
+  isLoggedIn: boolean;
+  myReview: MyReview;
+}) {
+  return (
+    <div>
+      <h2
+        className="text-base font-bold mb-4"
+        style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+      >
+        Ulasan Wisatawan
+      </h2>
+      <div className="space-y-4">
+        <ReviewFormCard destinationId={destinationId} isLoggedIn={isLoggedIn} myReview={myReview} />
+
+        {reviews.length === 0 ? (
+          <SectionCard>
+            <div className="text-center py-6">
+              <Star size={36} className="mx-auto mb-3" style={{ color: "#c2c9bb" }} />
+              <p className="text-sm font-medium" style={{ color: "#42493e" }}>
+                Belum ada ulasan
+              </p>
+              <p className="text-xs mt-1" style={{ color: "#72796e" }}>
+                Jadilah wisatawan pertama yang memberi ulasan untuk destinasi ini
+              </p>
+            </div>
+          </SectionCard>
+        ) : (
+          reviews.map((r) => (
+            <SectionCard key={r.id}>
+              <div className="flex items-start gap-3 mb-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                  style={{ background: "#e3efe0", color: "#2d5a27" }}
+                >
+                  {getInitials(r.userName)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                  >
+                    {r.userName}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <StarRow rating={r.rating} size={13} />
+                    <span className="text-xs" style={{ color: "#72796e" }}>
+                      {timeAgo(r.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {r.komentar && (
+                <p className="text-sm leading-relaxed" style={{ color: "#42493e" }}>
+                  {r.komentar}
+                </p>
+              )}
+            </SectionCard>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Section sewa fasilitas — disembunyikan total kalau destinasi belum punya Fasilitas */
 function SewaFasilitasSection({
   destinationId,
@@ -779,11 +1025,24 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
             >
               {d.name}
             </h1>
-            <div className="flex items-center gap-1.5">
-              <MapPin size={15} style={{ color: "#72796e" }} />
-              <span className="text-sm" style={{ color: "#72796e" }}>
-                {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, Daerah Istimewa Yogyakarta
-              </span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <MapPin size={15} style={{ color: "#72796e" }} />
+                <span className="text-sm" style={{ color: "#72796e" }}>
+                  {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, Daerah Istimewa Yogyakarta
+                </span>
+              </div>
+              {d.totalReview > 0 && (
+                <div className="flex items-center gap-1.5" id="rating-ringkasan">
+                  <Star size={15} fill="#f5a623" style={{ color: "#f5a623" }} />
+                  <span className="text-sm font-bold" style={{ color: "#1a1c1c" }}>
+                    {d.rataRataRating.toFixed(1)}
+                  </span>
+                  <span className="text-sm" style={{ color: "#72796e" }}>
+                    ({d.totalReview} ulasan)
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -1009,6 +1268,14 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                 </div>
               )}
             </div>
+
+            {/* Section Ulasan Wisatawan — rating bintang & komentar, terpisah dari laporan lapangan */}
+            <UlasanWisatawanSection
+              destinationId={d.id}
+              reviews={d.reviews}
+              isLoggedIn={d.isLoggedIn}
+              myReview={d.myReview}
+            />
           </div>
 
           {/* ══ KOLOM KANAN — sidebar sticky ══ */}

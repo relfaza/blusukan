@@ -114,6 +114,7 @@ model User {
   validatedServices     LocalService[] @relation("ValidatedBy")
   transaksis Transaksi[]
   notifikasis Notifikasi[]
+  reviews     Review[]
 }
 
 model Destination {
@@ -149,6 +150,7 @@ model Destination {
   bookings      Booking[]
   transaksis Transaksi[]
   fasilitas  Fasilitas[]
+  reviews    Review[]
 }
 
 model LocalService {
@@ -285,4 +287,17 @@ model Notifikasi {
   link      String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  rating        Int
+  komentar      String?
+  createdAt     DateTime    @default(now())
+
+  @@unique([userId, destinationId])
 }

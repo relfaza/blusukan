@@ -63,6 +63,8 @@ export type DestinationForClient = {
   totalUpvotes: number;
   verifiedReportsCount: number;
   populerMingguIni: boolean;
+  rataRataRating: number;
+  totalReview: number;
   reports: Array<{
     signalStrength: string | null;
     crowdLevel: string | null;
@@ -484,15 +486,26 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                         {" · "}
                         {KABUPATEN_LABEL[dest.kabupaten] ?? dest.kabupaten}
                       </p>
-                      <h3
-                        className="text-lg font-bold leading-tight mb-3"
-                        style={{
-                          color: "#1a1c1c",
-                          fontFamily: "Montserrat, sans-serif",
-                        }}
-                      >
-                        {dest.name}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-3">
+                        <h3
+                          className="text-lg font-bold leading-tight"
+                          style={{
+                            color: "#1a1c1c",
+                            fontFamily: "Montserrat, sans-serif",
+                          }}
+                        >
+                          {dest.name}
+                        </h3>
+                        {dest.totalReview > 0 && (
+                          <span
+                            className="inline-flex items-center gap-1 text-xs font-bold shrink-0"
+                            style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                          >
+                            <Star size={13} fill="#f5a623" style={{ color: "#f5a623" }} />
+                            {dest.rataRataRating.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
 
                       {/* Popularitas — dari upvote & laporan terverifikasi komunitas */}
                       {popularityBadge && (
