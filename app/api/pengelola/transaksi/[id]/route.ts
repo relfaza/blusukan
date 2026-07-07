@@ -9,6 +9,12 @@ function isAllowedStatus(value: unknown): value is AllowedStatus {
   return typeof value === "string" && (ALLOWED_STATUS as readonly string[]).includes(value);
 }
 
+const STATUS_TIMESTAMP_FIELD: Record<AllowedStatus, "dikonfirmasiAt" | "selesaiAt" | "dibatalkanAt"> = {
+  DIKONFIRMASI: "dikonfirmasiAt",
+  SELESAI: "selesaiAt",
+  DIBATALKAN: "dibatalkanAt",
+};
+
 const NOTIFIKASI_CONTENT: Record<
   AllowedStatus,
   (kodeTransaksi: string, namaDestinasi: string) => { judul: string; pesan: string }
@@ -59,7 +65,7 @@ export async function PATCH(req: Request, { params }: Props) {
 
   const updated = await prisma.transaksi.update({
     where: { id },
-    data: { status },
+    data: { status, [STATUS_TIMESTAMP_FIELD[status]]: new Date() },
   });
 
   const { judul, pesan } = NOTIFIKASI_CONTENT[status](

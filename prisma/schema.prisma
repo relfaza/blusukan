@@ -257,9 +257,12 @@ model Transaksi {
   paymentMethod PaymentMethod    @default(COD)
   jadwal        DateTime?
   catatan       String?
-  kodeTransaksi String           @unique
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  kodeTransaksi  String          @unique
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  dikonfirmasiAt DateTime?
+  selesaiAt      DateTime?
+  dibatalkanAt   DateTime?
 }
 
 model TransaksiItem {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Circle, XCircle } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -63,6 +63,21 @@ export default async function TransaksiDetailPage({ params }: Props) {
   const isUmkm = transaksi.type === "UMKM";
   const namaItem = transaksi.items[0]?.namaItem;
   const menuItems = transaksi.items.filter((item) => !item.namaItem.startsWith("Reservasi Tempat"));
+
+  const isDibatalkan = transaksi.status === "DIBATALKAN";
+
+  type TimelineStep = { label: string; at: Date; final?: boolean };
+  const timelineSteps: TimelineStep[] = [{ label: "Dipesan", at: transaksi.createdAt }];
+  if (transaksi.dikonfirmasiAt) {
+    timelineSteps.push({ label: "Dikonfirmasi", at: transaksi.dikonfirmasiAt });
+  }
+  if (isDibatalkan && transaksi.dibatalkanAt) {
+    timelineSteps.push({ label: "Dibatalkan", at: transaksi.dibatalkanAt, final: true });
+  } else if (transaksi.selesaiAt) {
+    timelineSteps.push({ label: "Selesai", at: transaksi.selesaiAt, final: true });
+  }
+  const isTimelineFinal = timelineSteps[timelineSteps.length - 1]?.final ?? false;
+  const pendingLabel = transaksi.dikonfirmasiAt ? "Menunggu Penyelesaian" : "Menunggu Konfirmasi";
 
   return (
     <div
@@ -202,6 +217,68 @@ export default async function TransaksiDetailPage({ params }: Props) {
               {STATUS_LABEL[transaksi.status] ?? transaksi.status}
             </span>
           </div>
+        </div>
+      </div>
+
+      <div
+        className="w-full max-w-md rounded-2xl p-6 mt-4"
+        style={{
+          background: "#ffffff",
+          border: "1px solid var(--blusukan-outline-variant)",
+        }}
+      >
+        <p
+          className="text-sm font-bold mb-4"
+          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+        >
+          Riwayat Status
+        </p>
+        <div className="space-y-0">
+          {timelineSteps.map((step, index) => {
+            const isCancelled = isDibatalkan && step.label === "Dibatalkan";
+            const isLastStep = index === timelineSteps.length - 1;
+            const showConnector = !(isLastStep && isTimelineFinal);
+            const dotColor = isCancelled ? "var(--blusukan-error)" : "var(--blusukan-primary)";
+            return (
+              <div key={step.label} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  {isCancelled ? (
+                    <XCircle size={20} style={{ color: dotColor }} />
+                  ) : (
+                    <CheckCircle2 size={20} style={{ color: dotColor }} />
+                  )}
+                  {showConnector && (
+                    <span
+                      className="w-0.5 flex-1 my-0.5"
+                      style={{
+                        background: isCancelled ? "var(--blusukan-error)" : "var(--blusukan-outline-variant)",
+                        minHeight: "1.5rem",
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="pb-4">
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: isCancelled ? "var(--blusukan-error)" : "var(--blusukan-on-surface)" }}
+                  >
+                    {step.label}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    {formatTanggalWaktu(step.at)}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+          {!isTimelineFinal && (
+            <div className="flex gap-3">
+              <Circle size={20} style={{ color: "var(--blusukan-outline)" }} />
+              <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                {pendingLabel}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
