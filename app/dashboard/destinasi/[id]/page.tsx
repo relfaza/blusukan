@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, UserCircle, ShieldCheck, ImageOff, MessageCircle, Package } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import ApprovalActions from "./ApprovalActions";
 
 export const dynamic = "force-dynamic";
 
@@ -165,6 +166,8 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
         </div>
 
         <div className="space-y-6">
+          {d.status === "PENDING" && <ApprovalActions destinationId={d.id} />}
+
           {/* Galeri foto — read-only */}
           {d.photoUrls.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
