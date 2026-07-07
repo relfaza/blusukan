@@ -99,14 +99,16 @@ enum PaymentMethod {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  phone        String?
-  passwordHash String
-  nikEncrypted String?
-  role         Role
-  createdAt    DateTime @default(now())
+  id                String    @id @default(cuid())
+  name              String
+  email             String    @unique
+  phone             String?
+  passwordHash      String
+  nikEncrypted      String?
+  role              Role
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
 
   reports               UserReport[]
   bookings              Booking[]

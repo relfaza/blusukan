@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 // Ikon mata (show/hide password)
@@ -19,7 +19,17 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resetSuccess = searchParams.get("reset") === "success";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -133,6 +143,21 @@ export default function LoginPage() {
           <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
             Selamat datang kembali
           </p>
+
+          {/* Sukses reset password */}
+          {resetSuccess && (
+            <div
+              className="text-sm rounded-lg px-4 py-3 mb-6"
+              style={{
+                backgroundColor: "var(--blusukan-surface-container-lowest)",
+                border: "1px solid var(--blusukan-outline-variant)",
+                color: "var(--blusukan-on-surface)",
+                borderRadius: "8px",
+              }}
+            >
+              Password berhasil direset. Silakan masuk dengan password baru Anda.
+            </div>
+          )}
 
           {/* Error */}
           {error && (

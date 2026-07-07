@@ -109,7 +109,12 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
   const dashboardLink = user?.role ? ROLE_DASHBOARD_LINK[user.role] : undefined;
 
   // Halaman pre-login tidak menampilkan header aplikasi
-  if (pathname === "/login" || pathname === "/register") {
+  if (
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/lupa-password" ||
+    pathname?.startsWith("/reset-password")
+  ) {
     return null;
   }
 
