@@ -202,6 +202,7 @@ async function handleUmkmTransaksi({
             judul: "Pesanan Baru Masuk",
             pesan,
             link: `/pengelola/destinasi/${destinationId}`,
+            kategori: "UMKM",
           },
         });
 
@@ -344,6 +345,7 @@ export async function POST(req: Request) {
             judul: "Pesanan Baru Masuk",
             pesan: `${namaPembeli} memesan ${namaItem} di ${destination.name}. Kode: ${created.kodeTransaksi}`,
             link: `/pengelola/destinasi/${destinationId}`,
+            kategori: type === "FASILITAS" ? "FASILITAS" : "TIKET",
           },
         });
 

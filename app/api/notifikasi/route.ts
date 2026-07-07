@@ -25,6 +25,7 @@ export async function GET() {
       judul: n.judul,
       pesan: n.pesan,
       link: n.link,
+      kategori: n.kategori,
       isRead: n.isRead,
       createdAt: n.createdAt.toISOString(),
     }))
