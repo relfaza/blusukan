@@ -6,6 +6,14 @@ const KABUPATEN_VALUES = ["SLEMAN", "GUNUNGKIDUL", "BANTUL", "KULON_PROGO", "KOT
 const KATEGORI_VALUES = ["PANTAI", "AIR_TERJUN", "GUNUNG", "BUKIT", "TEBING"] as const;
 const VIBE_VALUES = ["SUNSET", "SUNRISE", "SPOT_FOTO", "QUIET_PLACE"] as const;
 
+const KABUPATEN_LABEL: Record<string, string> = {
+  SLEMAN: "Sleman",
+  GUNUNGKIDUL: "Gunungkidul",
+  BANTUL: "Bantul",
+  KULON_PROGO: "Kulon Progo",
+  KOTA_YOGYAKARTA: "Kota Yogyakarta",
+};
+
 function isOneOf<T extends string>(value: unknown, allowed: readonly T[]): value is T {
   return typeof value === "string" && (allowed as readonly string[]).includes(value);
 }
@@ -119,6 +127,24 @@ export async function POST(req: Request) {
       submittedById: authResult.userId,
     },
   });
+
+  const [pengelola, admins] = await Promise.all([
+    prisma.user.findUnique({ where: { id: authResult.userId }, select: { name: true } }),
+    prisma.user.findMany({ where: { role: "ADMIN" }, select: { id: true } }),
+  ]);
+
+  if (admins.length > 0) {
+    await prisma.notifikasi.createMany({
+      data: admins.map((admin) => ({
+        userId: admin.id,
+        judul: "Pengajuan Destinasi Baru",
+        pesan: `${pengelola?.name ?? "Pengelola"} mengajukan destinasi ${destination.name} di ${
+          KABUPATEN_LABEL[destination.kabupaten] ?? destination.kabupaten
+        }`,
+        link: `/dashboard/destinasi/${destination.id}`,
+      })),
+    });
+  }
 
   return NextResponse.json({ id: destination.id, status: destination.status }, { status: 201 });
 }

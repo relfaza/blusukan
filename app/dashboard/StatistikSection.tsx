@@ -353,7 +353,7 @@ export default function StatistikSection() {
           value={String(data.totalPending)}
           iconBg="#fef3e7"
           iconColor="#805533"
-          href="/dashboard#persetujuan-destinasi"
+          href="/dashboard/persetujuan"
         />
         <KpiCard
           icon={<MessageSquare size={18} />}
