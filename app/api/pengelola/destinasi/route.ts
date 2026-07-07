@@ -142,6 +142,7 @@ export async function POST(req: Request) {
           KABUPATEN_LABEL[destination.kabupaten] ?? destination.kabupaten
         }`,
         link: `/dashboard/destinasi/${destination.id}`,
+        kategori: "DESTINASI",
       })),
     });
   }

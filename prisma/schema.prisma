@@ -292,6 +292,7 @@ model Notifikasi {
   judul     String
   pesan     String
   link      String?
+  kategori  String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }

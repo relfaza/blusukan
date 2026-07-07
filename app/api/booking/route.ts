@@ -42,9 +42,14 @@ const BOOKING_INCLUDE = {
   destination: { select: { name: true } },
 } as const;
 
+function formatTanggalNotif(date: Date): string {
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(date);
+}
+
 export async function POST(req: Request) {
   const session = await auth();
   const userId = (session?.user as { id?: string } | undefined)?.id;
+  const namaPemesan = (session?.user as { name?: string } | undefined)?.name ?? "Wisatawan";
 
   if (!userId) {
     return NextResponse.json({ message: "Anda harus masuk terlebih dahulu." }, { status: 401 });
@@ -73,6 +78,7 @@ export async function POST(req: Request) {
 
   const service = await prisma.localService.findFirst({
     where: { id: serviceId, destinationId, isValidated: true },
+    include: { destination: { select: { name: true, submittedById: true } } },
   });
 
   if (!service) {
@@ -95,6 +101,16 @@ export async function POST(req: Request) {
       status: "PENDING",
     },
     include: BOOKING_INCLUDE,
+  });
+
+  await prisma.notifikasi.create({
+    data: {
+      userId: service.destination.submittedById,
+      judul: "Booking Transport Baru",
+      pesan: `${namaPemesan} booking ${service.providerName} (${service.serviceType}) di ${service.destination.name} untuk tanggal ${formatTanggalNotif(parsedDate)}.`,
+      link: `/pengelola/destinasi/${destinationId}`,
+      kategori: "TRANSPORT",
+    },
   });
 
   return NextResponse.json(serializeBooking(booking), { status: 201 });

@@ -62,6 +62,7 @@ export async function POST(req: Request) {
       judul: "Ulasan Baru Masuk",
       pesan: `${review.user.name} memberi rating ${rating} bintang untuk ${destination.name}.`,
       link: `/pengelola/destinasi/${destinationId}`,
+      kategori: "REVIEW",
     },
   });
 

@@ -133,6 +133,7 @@ export async function PATCH(req: Request, { params }: Props) {
       judul,
       pesan,
       link: "/pengelola",
+      kategori: "DESTINASI",
     },
   });
 

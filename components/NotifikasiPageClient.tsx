@@ -11,11 +11,23 @@ type NotifikasiItem = {
   judul: string;
   pesan: string;
   link: string | null;
+  kategori: string | null;
   isRead: boolean;
   createdAt: string;
 };
 
 type Tab = "notifikasi" | "riwayat";
+
+type KategoriFilter = "SEMUA" | "TIKET" | "FASILITAS" | "TRANSPORT" | "UMKM" | "REVIEW";
+
+const KATEGORI_CHIPS: { key: KategoriFilter; label: string }[] = [
+  { key: "SEMUA", label: "Semua" },
+  { key: "TIKET", label: "Tiket" },
+  { key: "FASILITAS", label: "Fasilitas" },
+  { key: "TRANSPORT", label: "Transport" },
+  { key: "UMKM", label: "UMKM" },
+  { key: "REVIEW", label: "Ulasan" },
+];
 
 // Waktu relatif ringkas ala "2 jam lalu"
 function formatRelativeTime(iso: string): string {
@@ -43,6 +55,7 @@ export default function NotifikasiPageClient({
   const initialTab: Tab = !isPengelola && searchParams.get("tab") === "riwayat" ? "riwayat" : "notifikasi";
   const [tab, setTab] = useState<Tab>(initialTab);
   const [notifications, setNotifications] = useState<NotifikasiItem[] | null>(null);
+  const [kategoriFilter, setKategoriFilter] = useState<KategoriFilter>("SEMUA");
 
   useEffect(() => {
     fetch("/api/notifikasi")
@@ -76,6 +89,13 @@ export default function NotifikasiPageClient({
     { key: "notifikasi", label: "Notifikasi" },
     { key: "riwayat", label: "Riwayat Transaksi" },
   ];
+
+  const filteredNotifications =
+    notifications === null
+      ? null
+      : kategoriFilter === "SEMUA"
+        ? notifications
+        : notifications.filter((n) => n.kategori === kategoriFilter);
 
   return (
     <div
@@ -128,55 +148,81 @@ export default function NotifikasiPageClient({
             <p className="text-sm text-center py-10" style={{ color: "var(--blusukan-on-surface-variant)" }}>
               Memuat notifikasi...
             </p>
-          ) : notifications.length === 0 ? (
-            <div
-              className="rounded-2xl p-10 flex flex-col items-center text-center"
-              style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
-            >
-              <Bell size={40} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
-              <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                Belum ada notifikasi
-              </p>
-            </div>
           ) : (
-            <div className="space-y-3">
-              {notifications.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  id={`notifikasi-item-${n.id}`}
-                  onClick={() => handleNotifClick(n)}
-                  className="w-full text-left rounded-2xl p-4 transition-colors hover:opacity-90"
-                  style={{
-                    background: n.isRead ? "#ffffff" : "var(--blusukan-primary-container)",
-                    border: "1px solid var(--blusukan-outline-variant)",
-                  }}
+            <>
+              <div className="flex items-center gap-2 mb-6 flex-wrap">
+                {KATEGORI_CHIPS.map((c) => {
+                  const active = kategoriFilter === c.key;
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      id={`chip-kategori-${c.key.toLowerCase()}`}
+                      onClick={() => setKategoriFilter(c.key)}
+                      className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                      style={{
+                        background: active ? "var(--blusukan-primary)" : "#ffffff",
+                        color: active ? "var(--blusukan-on-primary)" : "var(--blusukan-on-surface-variant)",
+                        border: `1px solid ${active ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
+                      }}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {filteredNotifications && filteredNotifications.length === 0 ? (
+                <div
+                  className="rounded-2xl p-10 flex flex-col items-center text-center"
+                  style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
                 >
-                  <div className="flex items-start gap-3">
-                    {!n.isRead && (
-                      <span
-                        className="w-2 h-2 rounded-full mt-1.5 shrink-0"
-                        style={{ background: "var(--blusukan-primary)" }}
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm font-bold"
-                        style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-                      >
-                        {n.judul}
-                      </p>
-                      <p className="text-sm mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                        {n.pesan}
-                      </p>
-                      <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-outline)" }}>
-                        {formatRelativeTime(n.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  <Bell size={40} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
+                  <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    {kategoriFilter === "SEMUA" ? "Belum ada notifikasi" : "Tidak ada notifikasi untuk kategori ini"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredNotifications!.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      id={`notifikasi-item-${n.id}`}
+                      onClick={() => handleNotifClick(n)}
+                      className="w-full text-left rounded-2xl p-4 transition-colors hover:opacity-90"
+                      style={{
+                        background: n.isRead ? "#ffffff" : "var(--blusukan-primary-container)",
+                        border: "1px solid var(--blusukan-outline-variant)",
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        {!n.isRead && (
+                          <span
+                            className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                            style={{ background: "var(--blusukan-primary)" }}
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="text-sm font-bold"
+                            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+                          >
+                            {n.judul}
+                          </p>
+                          <p className="text-sm mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                            {n.pesan}
+                          </p>
+                          <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-outline)" }}>
+                            {formatRelativeTime(n.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )
         ) : (
           <RiwayatTransaksiList transaksis={transaksis} />

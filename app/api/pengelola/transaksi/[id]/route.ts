@@ -15,6 +15,12 @@ const STATUS_TIMESTAMP_FIELD: Record<AllowedStatus, "dikonfirmasiAt" | "selesaiA
   DIBATALKAN: "dibatalkanAt",
 };
 
+const TRANSAKSI_TYPE_KATEGORI: Record<string, string> = {
+  TIKET_MASUK: "TIKET",
+  FASILITAS: "FASILITAS",
+  UMKM: "UMKM",
+};
+
 const NOTIFIKASI_CONTENT: Record<
   AllowedStatus,
   (kodeTransaksi: string, namaDestinasi: string) => { judul: string; pesan: string }
@@ -78,6 +84,7 @@ export async function PATCH(req: Request, { params }: Props) {
       judul,
       pesan,
       link: `/transaksi/${transaksi.id}`,
+      kategori: TRANSAKSI_TYPE_KATEGORI[transaksi.type] ?? null,
     },
   });
 
