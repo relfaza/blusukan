@@ -56,6 +56,15 @@ export async function POST(req: Request) {
     include: { user: { select: { name: true } } },
   });
 
+  await prisma.notifikasi.create({
+    data: {
+      userId: destination.submittedById,
+      judul: "Ulasan Baru Masuk",
+      pesan: `${review.user.name} memberi rating ${rating} bintang untuk ${destination.name}.`,
+      link: `/pengelola/destinasi/${destinationId}`,
+    },
+  });
+
   return NextResponse.json(serializeReview(review), { status: 201 });
 }
 

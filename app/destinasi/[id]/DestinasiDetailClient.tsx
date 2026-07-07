@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import DateTimePicker from "@/components/ui/datetime-picker";
 import {
   ArrowLeft,
   Clock,
@@ -566,18 +567,11 @@ function FasilitasBookingRow({
         >
           Jadwal Booking
         </label>
-        <input
+        <DateTimePicker
           id={`jadwal-${fasilitas.id}`}
-          type="datetime-local"
           value={jadwal}
           min={minJadwal}
-          onChange={(e) => setJadwal(e.target.value)}
-          className="w-full px-3 py-2 text-sm"
-          style={{
-            border: "1px solid var(--blusukan-outline-variant)",
-            borderRadius: "8px",
-            color: "var(--blusukan-on-surface)",
-          }}
+          onChange={setJadwal}
         />
       </div>
 
@@ -774,18 +768,11 @@ function WarungOrderCard({ destinationId, warung }: { destinationId: string; war
           >
             Jadwal Kedatangan
           </label>
-          <input
+          <DateTimePicker
             id={`jadwal-umkm-${warung.id}`}
-            type="datetime-local"
             value={jadwal}
             min={minJadwal}
-            onChange={(e) => setJadwal(e.target.value)}
-            className="w-full px-3 py-2 text-sm"
-            style={{
-              border: "1px solid var(--blusukan-outline-variant)",
-              borderRadius: "8px",
-              color: "var(--blusukan-on-surface)",
-            }}
+            onChange={setJadwal}
           />
         </div>
       )}
@@ -1328,7 +1315,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
 
             {/* Card Fasilitas */}
             <SectionCard>
-              <SectionTitle>Fasilitas Tersedia</SectionTitle>
+              <SectionTitle>Fasilitas Umum (Gratis)</SectionTitle>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <FasilitasItem label="Toilet" value={d.hasToilet} icon={<CheckCircle2 size={16} />} />
                 <FasilitasItem label="Parkir" value={d.hasParkir} icon={<Car size={16} />} />

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import RiwayatTransaksiList, { type RiwayatTransaksiItem } from "./RiwayatTransaksiList";
 
 type NotifikasiItem = {
@@ -82,6 +83,15 @@ export default function NotifikasiPageClient({
       style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}
     >
       <div className="max-w-3xl mx-auto px-4 lg:px-8 py-10">
+        <Link
+          href="/"
+          id="notifikasi-back-home"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold mb-4 hover:opacity-70 transition-opacity"
+          style={{ color: "var(--blusukan-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Kembali ke Beranda
+        </Link>
         <h1
           className="text-2xl font-bold mb-6"
           style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
