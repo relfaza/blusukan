@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { isJamBukaValid } from "@/lib/jam-operasional";
 
 const KODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -59,7 +60,13 @@ async function handleUmkmTransaksi({
 }: {
   body: { warungId?: unknown; items?: unknown; reservasiTempat?: unknown; jadwal?: unknown };
   destinationId: string;
-  destination: { name: string; submittedById: string };
+  destination: {
+    name: string;
+    submittedById: string;
+    jamBuka: string | null;
+    jamTutup: string | null;
+    buka24Jam: boolean;
+  };
   userId: string;
   namaPembeli: string;
 }) {
@@ -102,6 +109,14 @@ async function handleUmkmTransaksi({
     const parsedJadwal = new Date(jadwalRaw);
     if (Number.isNaN(parsedJadwal.getTime())) {
       return NextResponse.json({ message: "Format jadwal tidak valid." }, { status: 400 });
+    }
+    if (!isJamBukaValid(destination, parsedJadwal)) {
+      return NextResponse.json(
+        {
+          message: `Destinasi tutup pada jam yang dipilih. Jam operasional: ${destination.jamBuka} - ${destination.jamTutup}`,
+        },
+        { status: 400 }
+      );
     }
     jadwal = parsedJadwal;
   }
@@ -225,7 +240,14 @@ export async function POST(req: Request) {
 
   const destination = await prisma.destination.findUnique({
     where: { id: destinationId },
-    select: { name: true, htmResmi: true, submittedById: true },
+    select: {
+      name: true,
+      htmResmi: true,
+      submittedById: true,
+      jamBuka: true,
+      jamTutup: true,
+      buka24Jam: true,
+    },
   });
 
   if (!destination) {
@@ -259,6 +281,14 @@ export async function POST(req: Request) {
     const parsedJadwal = new Date(body.jadwal);
     if (Number.isNaN(parsedJadwal.getTime())) {
       return NextResponse.json({ message: "Format jadwal tidak valid." }, { status: 400 });
+    }
+    if (!isJamBukaValid(destination, parsedJadwal)) {
+      return NextResponse.json(
+        {
+          message: `Destinasi tutup pada jam yang dipilih. Jam operasional: ${destination.jamBuka} - ${destination.jamTutup}`,
+        },
+        { status: 400 }
+      );
     }
 
     const fasilitas = await prisma.fasilitas.findFirst({

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
+import { formatJamOperasionalLabel, isJamBukaValid, type JamOperasionalDestination } from "@/lib/jam-operasional";
 
 // Leaflet browser-only
 const DestinationMap = dynamic(() => import("@/components/DestinationMap"), {
@@ -95,6 +96,9 @@ export type DestinasiDetail = {
   longitude: number;
   routeStatus: string;
   jamOperasional: string | null;
+  jamBuka: string | null;
+  jamTutup: string | null;
+  buka24Jam: boolean;
   htmResmi: number | null;
   hasToilet: boolean;
   hasParkir: boolean;
@@ -473,9 +477,11 @@ function toLocalInputValue(date: Date): string {
 function FasilitasBookingRow({
   destinationId,
   fasilitas,
+  jamOperasional,
 }: {
   destinationId: string;
   fasilitas: SewaFasilitas;
+  jamOperasional: JamOperasionalDestination;
 }) {
   const router = useRouter();
   const [jumlah, setJumlah] = useState(1);
@@ -485,10 +491,17 @@ function FasilitasBookingRow({
 
   const total = fasilitas.hargaSewa * jumlah;
   const minJadwal = toLocalInputValue(new Date());
+  const jamLabel = formatJamOperasionalLabel(jamOperasional);
 
   async function handleKonfirmasi() {
     if (!jadwal) {
       setError("Pilih jadwal booking terlebih dahulu.");
+      return;
+    }
+    if (!isJamBukaValid(jamOperasional, new Date(jadwal))) {
+      setError(
+        `Destinasi tutup pada jam yang dipilih. Jam operasional: ${jamOperasional.jamBuka} - ${jamOperasional.jamTutup}`
+      );
       return;
     }
 
@@ -573,6 +586,11 @@ function FasilitasBookingRow({
           min={minJadwal}
           onChange={setJadwal}
         />
+        {jamLabel && (
+          <p className="text-xs mt-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            {jamLabel}
+          </p>
+        )}
       </div>
 
       <div className="rounded-xl p-3 mb-3" style={{ background: "#f0f8f0" }}>
@@ -654,7 +672,15 @@ function MenuItemRow({
 }
 
 /** Kartu pesan per warung — pre-order menu dan/atau reservasi tempat, checkout langsung ke satu warung */
-function WarungOrderCard({ destinationId, warung }: { destinationId: string; warung: Warung }) {
+function WarungOrderCard({
+  destinationId,
+  warung,
+  jamOperasional,
+}: {
+  destinationId: string;
+  warung: Warung;
+  jamOperasional: JamOperasionalDestination;
+}) {
   const router = useRouter();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [reservasiTempat, setReservasiTempat] = useState(false);
@@ -663,6 +689,7 @@ function WarungOrderCard({ destinationId, warung }: { destinationId: string; war
   const [error, setError] = useState("");
 
   const minJadwal = toLocalInputValue(new Date());
+  const jamLabel = formatJamOperasionalLabel(jamOperasional);
 
   const selectedItems = warung.menuItems
     .map((m) => ({ menuItem: m, kuantitas: quantities[m.id] ?? 0 }))
@@ -680,6 +707,12 @@ function WarungOrderCard({ destinationId, warung }: { destinationId: string; war
 
   async function handlePesan() {
     if (!bisaPesan) return;
+    if (reservasiTempat && !isJamBukaValid(jamOperasional, new Date(jadwal))) {
+      setError(
+        `Destinasi tutup pada jam yang dipilih. Jam operasional: ${jamOperasional.jamBuka} - ${jamOperasional.jamTutup}`
+      );
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -774,6 +807,11 @@ function WarungOrderCard({ destinationId, warung }: { destinationId: string; war
             min={minJadwal}
             onChange={setJadwal}
           />
+          {jamLabel && (
+            <p className="text-xs mt-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+              {jamLabel}
+            </p>
+          )}
         </div>
       )}
 
@@ -811,7 +849,15 @@ function WarungOrderCard({ destinationId, warung }: { destinationId: string; war
 }
 
 /** Section UMKM & Kuliner Lokal — pre-order menu dan/atau reservasi tempat per warung, disembunyikan kalau belum ada warung */
-function UmkmKulinerSection({ destinationId, warungs }: { destinationId: string; warungs: Warung[] }) {
+function UmkmKulinerSection({
+  destinationId,
+  warungs,
+  jamOperasional,
+}: {
+  destinationId: string;
+  warungs: Warung[];
+  jamOperasional: JamOperasionalDestination;
+}) {
   if (warungs.length === 0) return null;
 
   return (
@@ -824,7 +870,7 @@ function UmkmKulinerSection({ destinationId, warungs }: { destinationId: string;
       </SectionTitle>
       <div className="space-y-4">
         {warungs.map((w) => (
-          <WarungOrderCard key={w.id} destinationId={destinationId} warung={w} />
+          <WarungOrderCard key={w.id} destinationId={destinationId} warung={w} jamOperasional={jamOperasional} />
         ))}
       </div>
     </SectionCard>
@@ -1066,9 +1112,11 @@ function UlasanWisatawanSection({
 function SewaFasilitasSection({
   destinationId,
   fasilitasList,
+  jamOperasional,
 }: {
   destinationId: string;
   fasilitasList: SewaFasilitas[];
+  jamOperasional: JamOperasionalDestination;
 }) {
   if (fasilitasList.length === 0) return null;
 
@@ -1077,7 +1125,12 @@ function SewaFasilitasSection({
       <SectionTitle>Sewa Fasilitas</SectionTitle>
       <div className="space-y-4">
         {fasilitasList.map((f) => (
-          <FasilitasBookingRow key={f.id} destinationId={destinationId} fasilitas={f} />
+          <FasilitasBookingRow
+            key={f.id}
+            destinationId={destinationId}
+            fasilitas={f}
+            jamOperasional={jamOperasional}
+          />
         ))}
       </div>
     </SectionCard>
@@ -1326,7 +1379,11 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
             </SectionCard>
 
             {/* Section UMKM & Kuliner Lokal — pre-order menu dan/atau reservasi tempat, disembunyikan kalau belum ada warung */}
-            <UmkmKulinerSection destinationId={d.id} warungs={d.warungs} />
+            <UmkmKulinerSection
+              destinationId={d.id}
+              warungs={d.warungs}
+              jamOperasional={{ jamBuka: d.jamBuka, jamTutup: d.jamTutup, buka24Jam: d.buka24Jam }}
+            />
 
             {/* Section Laporan Wisatawan */}
             <div>
@@ -1463,7 +1520,11 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
               <CheckoutTiketCard destinationId={d.id} htmResmi={d.htmResmi} />
 
               {/* Card Sewa Fasilitas — disembunyikan otomatis kalau belum ada Fasilitas */}
-              <SewaFasilitasSection destinationId={d.id} fasilitasList={d.fasilitas} />
+              <SewaFasilitasSection
+                destinationId={d.id}
+                fasilitasList={d.fasilitas}
+                jamOperasional={{ jamBuka: d.jamBuka, jamTutup: d.jamTutup, buka24Jam: d.buka24Jam }}
+              />
 
               {/* Card Peta Lokasi */}
               <SectionCard className="!p-0 overflow-hidden">
