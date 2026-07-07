@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ReceiptText } from "lucide-react";
 
 export type RiwayatTransaksiItem = {
@@ -67,9 +68,11 @@ export default function RiwayatTransaksiList({ transaksis }: { transaksis: Riway
         const namaItem = t.items[0]?.namaItem;
 
         return (
-          <div
+          <Link
             key={t.id}
-            className="rounded-2xl p-5"
+            href={`/transaksi/${t.id}`}
+            id={`riwayat-item-${t.id}`}
+            className="block rounded-2xl p-5 transition-opacity hover:opacity-90"
             style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
@@ -142,7 +145,7 @@ export default function RiwayatTransaksiList({ transaksis }: { transaksis: Riway
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>
