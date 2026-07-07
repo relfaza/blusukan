@@ -10,6 +10,12 @@ function isOneOf<T extends string>(value: unknown, allowed: readonly T[]): value
   return typeof value === "string" && (allowed as readonly string[]).includes(value);
 }
 
+const JAM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+function isValidJam(value: unknown): value is string {
+  return typeof value === "string" && JAM_REGEX.test(value);
+}
+
 export async function POST(req: Request) {
   const authResult = await requirePengelolaApi();
   if (!authResult.ok) {
@@ -24,6 +30,9 @@ export async function POST(req: Request) {
     latitude,
     longitude,
     jamOperasional,
+    jamBuka,
+    jamTutup,
+    buka24Jam,
     htmResmi,
     hasToilet,
     hasParkir,
@@ -56,6 +65,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "HTM tidak valid." }, { status: 400 });
   }
 
+  const buka24JamValue = Boolean(buka24Jam);
+  let jamBukaValue: string | null = null;
+  let jamTutupValue: string | null = null;
+  if (!buka24JamValue) {
+    if (jamBuka !== undefined && jamBuka !== null && jamBuka !== "") {
+      if (!isValidJam(jamBuka)) {
+        return NextResponse.json({ message: "Format jam buka tidak valid." }, { status: 400 });
+      }
+      jamBukaValue = jamBuka;
+    }
+    if (jamTutup !== undefined && jamTutup !== null && jamTutup !== "") {
+      if (!isValidJam(jamTutup)) {
+        return NextResponse.json({ message: "Format jam tutup tidak valid." }, { status: 400 });
+      }
+      jamTutupValue = jamTutup;
+    }
+  }
+
   const vibeTagsInput = Array.isArray(vibeTags) ? vibeTags : [];
   if (!vibeTagsInput.every((tag) => isOneOf(tag, VIBE_VALUES))) {
     return NextResponse.json({ message: "Vibe tag tidak valid." }, { status: 400 });
@@ -76,6 +103,9 @@ export async function POST(req: Request) {
       latitude: lat,
       longitude: lng,
       jamOperasional: typeof jamOperasional === "string" && jamOperasional.trim() !== "" ? jamOperasional.trim() : null,
+      jamBuka: jamBukaValue,
+      jamTutup: jamTutupValue,
+      buka24Jam: buka24JamValue,
       htmResmi: htm,
       hasToilet: Boolean(hasToilet),
       hasParkir: Boolean(hasParkir),

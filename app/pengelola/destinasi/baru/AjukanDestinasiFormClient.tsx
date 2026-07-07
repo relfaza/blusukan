@@ -66,7 +66,9 @@ export default function AjukanDestinasiFormClient() {
   const [kategori, setKategori] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
-  const [jamOperasional, setJamOperasional] = useState("");
+  const [buka24Jam, setBuka24Jam] = useState(false);
+  const [jamBuka, setJamBuka] = useState("");
+  const [jamTutup, setJamTutup] = useState("");
   const [htmResmi, setHtmResmi] = useState<number | "">("");
   const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({});
   const [aksesibilitas, setAksesibilitas] = useState("");
@@ -129,6 +131,10 @@ export default function AjukanDestinasiFormClient() {
     if (!kabupaten) next.kabupaten = "Pilih kabupaten.";
     if (!kategori) next.kategori = "Pilih kategori.";
     if (latitude === null || longitude === null) next.koordinat = "Pilih lokasi di peta terlebih dahulu.";
+    if (!buka24Jam) {
+      if (!jamBuka) next.jamBuka = "Jam buka wajib diisi.";
+      if (!jamTutup) next.jamTutup = "Jam tutup wajib diisi.";
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -160,6 +166,12 @@ export default function AjukanDestinasiFormClient() {
         setUploadProgress(null);
       }
 
+      const jamOperasionalDerived = buka24Jam
+        ? "Buka 24 Jam"
+        : jamBuka && jamTutup
+          ? `${jamBuka} - ${jamTutup}`
+          : null;
+
       const res = await fetch("/api/pengelola/destinasi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,7 +181,10 @@ export default function AjukanDestinasiFormClient() {
           kategori,
           latitude,
           longitude,
-          jamOperasional: jamOperasional.trim() === "" ? null : jamOperasional.trim(),
+          jamOperasional: jamOperasionalDerived,
+          jamBuka: buka24Jam ? null : jamBuka || null,
+          jamTutup: buka24Jam ? null : jamTutup || null,
+          buka24Jam,
           htmResmi: htmResmi === "" ? 0 : htmResmi,
           hasToilet: fasilitas.hasToilet ?? false,
           hasParkir: fasilitas.hasParkir ?? false,
@@ -372,23 +387,76 @@ export default function AjukanDestinasiFormClient() {
 
           {/* Jam operasional */}
           <div>
-            <label htmlFor="jamOperasional" className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
-              Jam Operasional (opsional)
+            <label className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
+              Jam Operasional
             </label>
-            <input
-              id="jamOperasional"
-              type="text"
-              value={jamOperasional}
-              onChange={(e) => setJamOperasional(e.target.value)}
-              placeholder="Contoh: 08.00 - 17.00 WIB"
-              className="w-full px-4 py-3.5 text-base"
-              style={{
-                border: "1px solid var(--blusukan-outline-variant)",
-                borderRadius: "8px",
-                background: "#ffffff",
-                color: "var(--blusukan-on-surface)",
-              }}
-            />
+            <label
+              htmlFor="buka24Jam"
+              className="flex items-center gap-2 mb-3 cursor-pointer"
+            >
+              <input
+                id="buka24Jam"
+                type="checkbox"
+                checked={buka24Jam}
+                onChange={(e) => setBuka24Jam(e.target.checked)}
+                className="w-4 h-4"
+                style={{ accentColor: "var(--blusukan-primary)" }}
+              />
+              <span className="text-sm" style={{ color: "var(--blusukan-on-surface)" }}>
+                Buka 24 Jam
+              </span>
+            </label>
+
+            {!buka24Jam && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="jamBuka" className="block text-xs font-medium mb-1.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    Jam Buka <span style={{ color: "var(--blusukan-error)" }}>*</span>
+                  </label>
+                  <input
+                    id="jamBuka"
+                    type="time"
+                    value={jamBuka}
+                    onChange={(e) => setJamBuka(e.target.value)}
+                    className="w-full px-4 py-3.5 text-base"
+                    style={{
+                      border: "1px solid var(--blusukan-outline-variant)",
+                      borderRadius: "8px",
+                      background: "#ffffff",
+                      color: "var(--blusukan-on-surface)",
+                    }}
+                  />
+                  {errors.jamBuka && (
+                    <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
+                      {errors.jamBuka}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="jamTutup" className="block text-xs font-medium mb-1.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    Jam Tutup <span style={{ color: "var(--blusukan-error)" }}>*</span>
+                  </label>
+                  <input
+                    id="jamTutup"
+                    type="time"
+                    value={jamTutup}
+                    onChange={(e) => setJamTutup(e.target.value)}
+                    className="w-full px-4 py-3.5 text-base"
+                    style={{
+                      border: "1px solid var(--blusukan-outline-variant)",
+                      borderRadius: "8px",
+                      background: "#ffffff",
+                      color: "var(--blusukan-on-surface)",
+                    }}
+                  />
+                  {errors.jamTutup && (
+                    <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
+                      {errors.jamTutup}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* HTM */}

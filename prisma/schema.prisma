@@ -126,6 +126,9 @@ model Destination {
   latitude           Float
   longitude          Float
   jamOperasional     String?
+  jamBuka            String?
+  jamTutup           String?
+  buka24Jam          Boolean           @default(false)
   htmResmi           Decimal           @default(0)
   hasToilet          Boolean           @default(false)
   hasParkir          Boolean           @default(false)
