@@ -409,7 +409,7 @@ export default function AjukanDestinasiFormClient() {
           {/* Fasilitas */}
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
-              Fasilitas yang tersedia
+              Fasilitas Umum (Gratis)
             </label>
             <div
               className="rounded-2xl overflow-hidden"

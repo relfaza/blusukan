@@ -171,10 +171,7 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return destinations.filter((d) => {
-      const matchSearch =
-        !q ||
-        d.name.toLowerCase().includes(q) ||
-        KABUPATEN_LABEL[d.kabupaten]?.toLowerCase().includes(q);
+      const matchSearch = !q || d.name.toLowerCase().includes(q);
       const matchWilayah =
         selectedWilayah === "ALL" || d.kabupaten === selectedWilayah;
       const matchKategori =
