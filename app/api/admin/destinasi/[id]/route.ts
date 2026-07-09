@@ -139,3 +139,62 @@ export async function PATCH(req: Request, { params }: Props) {
 
   return NextResponse.json({ id: updated.id, status: updated.status });
 }
+
+/**
+ * Hapus permanen — hanya Admin. Ditolak kalau destinasi masih punya riwayat Transaksi,
+ * UserReport, atau Review (data historis yang tidak boleh hilang begitu saja). Kalau
+ * ketiganya kosong, Fasilitas/LocalWarung(+MenuItem)/LocalService(+Booking)/VisitStat
+ * ikut dibersihkan dalam satu transaksi supaya tidak menabrak foreign key constraint.
+ */
+export async function DELETE(_req: Request, { params }: Props) {
+  const authResult = await requireAdminApi();
+  if (!authResult.ok) {
+    return NextResponse.json({ message: authResult.message }, { status: authResult.status });
+  }
+
+  const { id } = await params;
+
+  const destination = await prisma.destination.findUnique({
+    where: { id },
+    select: { id: true, name: true },
+  });
+
+  if (!destination) {
+    return NextResponse.json({ message: "Destinasi tidak ditemukan." }, { status: 404 });
+  }
+
+  const [transaksiCount, reportCount, reviewCount] = await Promise.all([
+    prisma.transaksi.count({ where: { destinationId: id } }),
+    prisma.userReport.count({ where: { destinationId: id } }),
+    prisma.review.count({ where: { destinationId: id } }),
+  ]);
+
+  if (transaksiCount > 0 || reportCount > 0 || reviewCount > 0) {
+    return NextResponse.json(
+      {
+        message:
+          "Destinasi ini memiliki riwayat transaksi/laporan/ulasan, tidak dapat dihapus permanen. Gunakan opsi Nonaktifkan sebagai gantinya.",
+      },
+      { status: 409 }
+    );
+  }
+
+  const localServiceIds = (
+    await prisma.localService.findMany({ where: { destinationId: id }, select: { id: true } })
+  ).map((s) => s.id);
+  const warungIds = (
+    await prisma.localWarung.findMany({ where: { destinationId: id }, select: { id: true } })
+  ).map((w) => w.id);
+
+  await prisma.$transaction([
+    prisma.booking.deleteMany({ where: { serviceId: { in: localServiceIds } } }),
+    prisma.localService.deleteMany({ where: { destinationId: id } }),
+    prisma.menuItem.deleteMany({ where: { warungId: { in: warungIds } } }),
+    prisma.localWarung.deleteMany({ where: { destinationId: id } }),
+    prisma.fasilitas.deleteMany({ where: { destinationId: id } }),
+    prisma.visitStat.deleteMany({ where: { destinationId: id } }),
+    prisma.destination.delete({ where: { id } }),
+  ]);
+
+  return NextResponse.json({ success: true });
+}

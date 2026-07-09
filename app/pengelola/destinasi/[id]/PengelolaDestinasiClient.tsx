@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ticket, Pencil, Trash2, Plus, X, ImageOff, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Ticket, Pencil, Trash2, Plus, X, ImageOff, User, Power, PowerOff } from "lucide-react";
 import RupiahInput from "@/components/ui/rupiah-input";
 
 type TransaksiRow = {
@@ -72,6 +73,20 @@ function KategoriUmkmBadge({ kategori }: { kategori: string }) {
     </span>
   );
 }
+
+const DESTINASI_STATUS_LABEL: Record<string, string> = {
+  PENDING: "Menunggu Persetujuan",
+  APPROVED: "Disetujui",
+  REJECTED: "Ditolak",
+  NONAKTIF: "Nonaktif",
+};
+
+const DESTINASI_STATUS_STYLE: Record<string, { background: string; color: string }> = {
+  PENDING: { background: "#fef3e7", color: "#805533" },
+  APPROVED: { background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
+  REJECTED: { background: "var(--blusukan-error-container)", color: "var(--blusukan-error)" },
+  NONAKTIF: { background: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
+};
 
 interface Props {
   destination: { id: string; name: string; status: string };
@@ -1441,6 +1456,82 @@ function KelolaUmkmSection({
   );
 }
 
+/** Tombol Edit Destinasi + toggle Aktifkan/Nonaktifkan — hanya untuk destinasi APPROVED/NONAKTIF (PENDING/REJECTED murni wewenang Admin) */
+function DestinasiStatusActions({ destinationId, status }: { destinationId: string; status: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const isNonaktif = status === "NONAKTIF";
+  const canToggle = status === "APPROVED" || status === "NONAKTIF";
+
+  async function handleToggleStatus() {
+    const nextStatus = isNonaktif ? "APPROVED" : "NONAKTIF";
+    const confirmMessage = isNonaktif
+      ? "Yakin ingin mengaktifkan kembali destinasi ini? Destinasi akan tampil lagi di pencarian publik."
+      : "Yakin ingin menonaktifkan? Destinasi tidak akan tampil di pencarian publik sampai diaktifkan kembali.";
+    if (!window.confirm(confirmMessage)) return;
+
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/pengelola/destinasi/${destinationId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal memperbarui status destinasi.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-2 shrink-0">
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/pengelola/destinasi/${destinationId}/edit`}
+          id="btn-edit-destinasi"
+          className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
+          style={{ background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }}
+        >
+          <Pencil size={14} />
+          Edit Destinasi
+        </Link>
+        {canToggle && (
+          <button
+            type="button"
+            id="btn-toggle-status-destinasi"
+            onClick={handleToggleStatus}
+            disabled={busy}
+            className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={
+              isNonaktif
+                ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
+                : { border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "#ffffff" }
+            }
+          >
+            {isNonaktif ? <Power size={14} /> : <PowerOff size={14} />}
+            {isNonaktif ? "Aktifkan Kembali" : "Nonaktifkan Destinasi"}
+          </button>
+        )}
+      </div>
+      {error && (
+        <p className="text-xs" style={{ color: "var(--blusukan-error)" }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function PengelolaDestinasiClient({ destination, initialTransaksis, initialFasilitas, initialWarungs }: Props) {
   const [activeTab, setActiveTab] = useState<"transaksi" | "fasilitas" | "umkm">("transaksi");
 
@@ -1456,12 +1547,23 @@ export default function PengelolaDestinasiClient({ destination, initialTransaksi
           Kembali ke Dashboard
         </Link>
 
-        <h1
-          className="text-2xl font-bold mb-6"
-          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-        >
-          {destination.name}
-        </h1>
+        <div className="flex items-start justify-between gap-3 mb-6 flex-wrap">
+          <div>
+            <h1
+              className="text-2xl font-bold"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            >
+              {destination.name}
+            </h1>
+            <span
+              className="inline-block text-xs font-bold px-2.5 py-1 rounded-full mt-2"
+              style={DESTINASI_STATUS_STYLE[destination.status] ?? DESTINASI_STATUS_STYLE.PENDING}
+            >
+              {DESTINASI_STATUS_LABEL[destination.status] ?? destination.status}
+            </span>
+          </div>
+          <DestinasiStatusActions destinationId={destination.id} status={destination.status} />
+        </div>
 
         <div className="flex gap-2 mb-6">
           <button
