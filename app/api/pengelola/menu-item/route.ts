@@ -34,10 +34,10 @@ export async function POST(req: Request) {
   });
 
   if (!warung) {
-    return NextResponse.json({ message: "Warung tidak ditemukan." }, { status: 404 });
+    return NextResponse.json({ message: "UMKM tidak ditemukan." }, { status: 404 });
   }
   if (warung.destination.submittedById !== authResult.userId) {
-    return NextResponse.json({ message: "Anda tidak memiliki akses ke warung ini." }, { status: 403 });
+    return NextResponse.json({ message: "Anda tidak memiliki akses ke UMKM ini." }, { status: 403 });
   }
 
   const menuItem = await prisma.menuItem.create({

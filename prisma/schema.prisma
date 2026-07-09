@@ -206,7 +206,8 @@ model LocalWarung {
   location      String?
   kategori      KategoriUmkm @default(LAINNYA)
   namaPemilik   String?
-  fotoUrl       String?
+  photoUrls     String[]     @default([])
+  bisaBooking   Boolean      @default(true)
   updatedAt     DateTime     @updatedAt
 
   menuItems MenuItem[]

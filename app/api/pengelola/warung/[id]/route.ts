@@ -19,7 +19,8 @@ function serializeWarung(w: {
   location: string | null;
   kategori: string;
   namaPemilik: string | null;
-  fotoUrl: string | null;
+  photoUrls: string[];
+  bisaBooking: boolean;
 }) {
   return {
     id: w.id,
@@ -28,7 +29,8 @@ function serializeWarung(w: {
     location: w.location,
     kategori: w.kategori,
     namaPemilik: w.namaPemilik,
-    fotoUrl: w.fotoUrl,
+    photoUrls: w.photoUrls,
+    bisaBooking: w.bisaBooking,
   };
 }
 
@@ -39,7 +41,7 @@ export async function PATCH(req: Request, { params }: Props) {
   }
 
   const { id } = await params;
-  const { name, location, kategori, namaPemilik, fotoUrl } = await req.json();
+  const { name, location, kategori, namaPemilik, photoUrls, bisaBooking } = await req.json();
 
   const existing = await prisma.localWarung.findUnique({
     where: { id },
@@ -47,10 +49,10 @@ export async function PATCH(req: Request, { params }: Props) {
   });
 
   if (!existing) {
-    return NextResponse.json({ message: "Warung tidak ditemukan." }, { status: 404 });
+    return NextResponse.json({ message: "UMKM tidak ditemukan." }, { status: 404 });
   }
   if (existing.destination.submittedById !== authResult.userId) {
-    return NextResponse.json({ message: "Anda tidak memiliki akses ke warung ini." }, { status: 403 });
+    return NextResponse.json({ message: "Anda tidak memiliki akses ke UMKM ini." }, { status: 403 });
   }
 
   const data: {
@@ -58,7 +60,8 @@ export async function PATCH(req: Request, { params }: Props) {
     location?: string | null;
     kategori?: (typeof KATEGORI_UMKM_VALUES)[number];
     namaPemilik?: string | null;
-    fotoUrl?: string | null;
+    photoUrls?: string[];
+    bisaBooking?: boolean;
   } = {};
 
   if (name !== undefined) {
@@ -85,11 +88,21 @@ export async function PATCH(req: Request, { params }: Props) {
     }
     data.namaPemilik = typeof namaPemilik === "string" && namaPemilik.trim() ? namaPemilik.trim() : null;
   }
-  if (fotoUrl !== undefined) {
-    if (fotoUrl !== null && typeof fotoUrl !== "string") {
+  if (photoUrls !== undefined) {
+    if (!Array.isArray(photoUrls)) {
       return NextResponse.json({ message: "Foto tidak valid." }, { status: 400 });
     }
-    data.fotoUrl = typeof fotoUrl === "string" && fotoUrl.trim() ? fotoUrl.trim() : null;
+    const photoUrlsInput = photoUrls.filter((url): url is string => typeof url === "string" && url.trim() !== "");
+    if (photoUrlsInput.length > 5) {
+      return NextResponse.json({ message: "Maksimal 5 foto." }, { status: 400 });
+    }
+    data.photoUrls = photoUrlsInput;
+  }
+  if (bisaBooking !== undefined) {
+    if (typeof bisaBooking !== "boolean") {
+      return NextResponse.json({ message: "bisaBooking tidak valid." }, { status: 400 });
+    }
+    data.bisaBooking = bisaBooking;
   }
 
   const updated = await prisma.localWarung.update({ where: { id }, data });
@@ -111,10 +124,10 @@ export async function DELETE(_req: Request, { params }: Props) {
   });
 
   if (!existing) {
-    return NextResponse.json({ message: "Warung tidak ditemukan." }, { status: 404 });
+    return NextResponse.json({ message: "UMKM tidak ditemukan." }, { status: 404 });
   }
   if (existing.destination.submittedById !== authResult.userId) {
-    return NextResponse.json({ message: "Anda tidak memiliki akses ke warung ini." }, { status: 403 });
+    return NextResponse.json({ message: "Anda tidak memiliki akses ke UMKM ini." }, { status: 403 });
   }
 
   // Skema belum punya onDelete: Cascade untuk MenuItem->LocalWarung, jadi hapus manual dalam satu transaksi
