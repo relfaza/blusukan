@@ -247,6 +247,7 @@ export async function POST(req: Request) {
     select: {
       name: true,
       htmResmi: true,
+      htmAnak: true,
       submittedById: true,
       jamBuka: true,
       jamTutup: true,
@@ -262,18 +263,16 @@ export async function POST(req: Request) {
     return handleUmkmTransaksi({ body, destinationId, destination, userId, namaPembeli });
   }
 
-  const { kuantitas } = body;
-  const jumlah = Number(kuantitas);
-  if (!Number.isInteger(jumlah) || jumlah < 1) {
-    return NextResponse.json({ message: "Kuantitas tidak valid." }, { status: 400 });
-  }
-
-  let namaItem: string;
-  let hargaSatuan: number;
+  let itemsData: { namaItem: string; hargaSatuan: number; kuantitas: number; subtotal: number }[] = [];
+  let namaItemNotif: string;
   let jadwal: Date | null = null;
 
   if (type === "FASILITAS") {
-    const { fasilitasId } = body;
+    const { fasilitasId, kuantitas } = body;
+    const jumlah = Number(kuantitas);
+    if (!Number.isInteger(jumlah) || jumlah < 1) {
+      return NextResponse.json({ message: "Kuantitas tidak valid." }, { status: 400 });
+    }
 
     if (typeof fasilitasId !== "string" || !fasilitasId) {
       return NextResponse.json({ message: "fasilitasId wajib diisi." }, { status: 400 });
@@ -303,15 +302,56 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Fasilitas tidak ditemukan untuk destinasi ini." }, { status: 404 });
     }
 
-    namaItem = fasilitas.nama;
-    hargaSatuan = Number(fasilitas.hargaSewa);
+    const hargaSatuan = Number(fasilitas.hargaSewa);
+    itemsData = [{ namaItem: fasilitas.nama, hargaSatuan, kuantitas: jumlah, subtotal: hargaSatuan * jumlah }];
+    namaItemNotif = fasilitas.nama;
     jadwal = parsedJadwal;
   } else {
-    namaItem = "Tiket Masuk";
-    hargaSatuan = Number(destination.htmResmi);
+    const kuantitasDewasa = Number(body.kuantitasDewasa);
+    const kuantitasAnakRaw = body.kuantitasAnak;
+    const kuantitasAnak =
+      kuantitasAnakRaw === undefined || kuantitasAnakRaw === null ? 0 : Number(kuantitasAnakRaw);
+
+    if (!Number.isInteger(kuantitasDewasa) || kuantitasDewasa < 0) {
+      return NextResponse.json({ message: "Kuantitas tiket dewasa tidak valid." }, { status: 400 });
+    }
+    if (!Number.isInteger(kuantitasAnak) || kuantitasAnak < 0) {
+      return NextResponse.json({ message: "Kuantitas tiket anak-anak tidak valid." }, { status: 400 });
+    }
+    if (kuantitasDewasa === 0 && kuantitasAnak === 0) {
+      return NextResponse.json({ message: "Pilih minimal 1 tiket." }, { status: 400 });
+    }
+    if (kuantitasAnak > 0 && destination.htmAnak == null) {
+      return NextResponse.json(
+        { message: "Destinasi ini tidak menyediakan harga tiket anak-anak." },
+        { status: 400 }
+      );
+    }
+
+    const hargaDewasa = Number(destination.htmResmi);
+    const hargaAnak = destination.htmAnak != null ? Number(destination.htmAnak) : 0;
+
+    if (kuantitasDewasa > 0) {
+      itemsData.push({
+        namaItem: "Tiket Masuk Dewasa",
+        hargaSatuan: hargaDewasa,
+        kuantitas: kuantitasDewasa,
+        subtotal: hargaDewasa * kuantitasDewasa,
+      });
+    }
+    if (kuantitasAnak > 0) {
+      itemsData.push({
+        namaItem: "Tiket Masuk Anak-anak",
+        hargaSatuan: hargaAnak,
+        kuantitas: kuantitasAnak,
+        subtotal: hargaAnak * kuantitasAnak,
+      });
+    }
+
+    namaItemNotif = itemsData.map((it) => `${it.kuantitas} ${it.namaItem}`).join(" + ");
   }
 
-  const totalHarga = hargaSatuan * jumlah;
+  const totalHarga = itemsData.reduce((sum, it) => sum + it.subtotal, 0);
 
   const MAX_ATTEMPTS = 5;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -328,12 +368,7 @@ export async function POST(req: Request) {
             jadwal,
             kodeTransaksi: generateKodeTransaksi(),
             items: {
-              create: {
-                namaItem,
-                hargaSatuan,
-                kuantitas: jumlah,
-                subtotal: totalHarga,
-              },
+              create: itemsData,
             },
           },
           include: {
@@ -346,7 +381,7 @@ export async function POST(req: Request) {
           data: {
             userId: destination.submittedById,
             judul: "Pesanan Baru Masuk",
-            pesan: `${namaPembeli} memesan ${namaItem} di ${destination.name}. Kode: ${created.kodeTransaksi}`,
+            pesan: `${namaPembeli} memesan ${namaItemNotif} di ${destination.name}. Kode: ${created.kodeTransaksi}`,
             link: `/pengelola/destinasi/${destinationId}`,
             kategori: type === "FASILITAS" ? "FASILITAS" : "TIKET",
           },

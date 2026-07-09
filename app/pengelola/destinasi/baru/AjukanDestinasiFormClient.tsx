@@ -70,6 +70,7 @@ export default function AjukanDestinasiFormClient() {
   const [jamBuka, setJamBuka] = useState("");
   const [jamTutup, setJamTutup] = useState("");
   const [htmResmi, setHtmResmi] = useState<number | "">("");
+  const [htmAnak, setHtmAnak] = useState<number | "">("");
   const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({});
   const [aksesibilitas, setAksesibilitas] = useState("");
   const [vibeTags, setVibeTags] = useState<string[]>([]);
@@ -186,6 +187,7 @@ export default function AjukanDestinasiFormClient() {
           jamTutup: buka24Jam ? null : jamTutup || null,
           buka24Jam,
           htmResmi: htmResmi === "" ? 0 : htmResmi,
+          htmAnak: htmAnak === "" ? null : htmAnak,
           hasToilet: fasilitas.hasToilet ?? false,
           hasParkir: fasilitas.hasParkir ?? false,
           hasTempatIbadah: fasilitas.hasTempatIbadah ?? false,
@@ -460,18 +462,36 @@ export default function AjukanDestinasiFormClient() {
           </div>
 
           {/* HTM */}
-          <div>
-            <label htmlFor="htmResmi" className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
-              Harga Tiket Masuk (opsional)
-            </label>
-            <RupiahInput
-              id="htmResmi"
-              value={htmResmi}
-              onChange={setHtmResmi}
-              placeholder="0"
-              className="w-full pl-11 pr-4 py-3.5 text-base"
-              style={{ fontSize: "1rem" }}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="htmResmi" className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
+                Harga Tiket Dewasa (opsional)
+              </label>
+              <RupiahInput
+                id="htmResmi"
+                value={htmResmi}
+                onChange={setHtmResmi}
+                placeholder="0"
+                className="w-full pl-11 pr-4 py-3.5 text-base"
+                style={{ fontSize: "1rem" }}
+              />
+            </div>
+            <div>
+              <label htmlFor="htmAnak" className="block text-sm font-semibold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
+                Harga Tiket Anak-anak (opsional)
+              </label>
+              <RupiahInput
+                id="htmAnak"
+                value={htmAnak}
+                onChange={setHtmAnak}
+                placeholder="0"
+                className="w-full pl-11 pr-4 py-3.5 text-base"
+                style={{ fontSize: "1rem" }}
+              />
+              <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Kosongkan kalau destinasi tidak membedakan harga anak-anak.
+              </p>
+            </div>
           </div>
 
           {/* Fasilitas */}

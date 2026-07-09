@@ -140,6 +140,7 @@ export type DestinasiDetail = {
   jamTutup: string | null;
   buka24Jam: boolean;
   htmResmi: number | null;
+  htmAnak: number | null;
   hasToilet: boolean;
   hasParkir: boolean;
   hasTempatIbadah: boolean;
@@ -361,22 +362,84 @@ function FasilitasItem({ label, value, icon }: { label: string; value: boolean; 
   );
 }
 
+/** Satu baris tiket dengan quantity stepper — dipakai untuk baris Dewasa maupun Anak-anak */
+function TiketStepperRow({
+  label,
+  harga,
+  jumlah,
+  onChange,
+  min = 0,
+}: {
+  label: string;
+  harga: number;
+  jumlah: number;
+  onChange: (next: number) => void;
+  min?: number;
+}) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <div>
+        <p className="text-sm font-semibold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+          {label}
+        </p>
+        <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+          {formatRupiah(harga)} / orang
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, jumlah - 1))}
+          disabled={jumlah <= min}
+          aria-label={`Kurangi jumlah ${label}`}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+        >
+          <Minus size={14} />
+        </button>
+        <span className="w-6 text-center text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+          {jumlah}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(jumlah + 1)}
+          aria-label={`Tambah jumlah ${label}`}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /** Checkout tiket masuk — buat transaksi COD sungguhan lewat /api/transaksi */
 function CheckoutTiketCard({
   destinationId,
   htmResmi,
+  htmAnak,
 }: {
   destinationId: string;
   htmResmi: number | null;
+  htmAnak: number | null;
 }) {
   const router = useRouter();
   const [jumlah, setJumlah] = useState(1);
+  const [jumlahDewasa, setJumlahDewasa] = useState(0);
+  const [jumlahAnak, setJumlahAnak] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isGratis = htmResmi === 0;
+  const adaHargaAnak = htmAnak !== null;
+  const isGratis = htmResmi === 0 && (htmAnak == null || htmAnak === 0);
   const isTidakTersedia = htmResmi == null;
+
   const total = (htmResmi ?? 0) * jumlah;
+  const totalDewasa = (htmResmi ?? 0) * jumlahDewasa;
+  const totalAnak = (htmAnak ?? 0) * jumlahAnak;
+  const totalGabungan = totalDewasa + totalAnak;
+  const bisaCheckoutGabungan = jumlahDewasa > 0 || jumlahAnak > 0;
 
   async function handleKonfirmasi() {
     setLoading(true);
@@ -385,7 +448,11 @@ function CheckoutTiketCard({
       const res = await fetch("/api/transaksi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ destinationId, kuantitas: jumlah }),
+        body: JSON.stringify(
+          adaHargaAnak
+            ? { destinationId, kuantitasDewasa: jumlahDewasa, kuantitasAnak: jumlahAnak }
+            : { destinationId, kuantitasDewasa: jumlah }
+        ),
       });
       const data = await res.json();
 
@@ -429,6 +496,54 @@ function CheckoutTiketCard({
         <p className="text-sm" style={{ color: "#42493e" }}>
           Tidak ada biaya masuk untuk destinasi ini.
         </p>
+      ) : adaHargaAnak ? (
+        <>
+          <TiketStepperRow label="Tiket Dewasa" harga={htmResmi ?? 0} jumlah={jumlahDewasa} onChange={setJumlahDewasa} />
+          <TiketStepperRow label="Tiket Anak-anak" harga={htmAnak ?? 0} jumlah={jumlahAnak} onChange={setJumlahAnak} />
+
+          {/* Live price breakdown */}
+          <div className="rounded-xl p-4 mb-3 space-y-1" style={{ background: "#f0f8f0" }}>
+            {jumlahDewasa > 0 && (
+              <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+                {jumlahDewasa} x {formatRupiah(htmResmi ?? 0)} (Dewasa) = {formatRupiah(totalDewasa)}
+              </p>
+            )}
+            {jumlahAnak > 0 && (
+              <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+                {jumlahAnak} x {formatRupiah(htmAnak ?? 0)} (Anak-anak) = {formatRupiah(totalAnak)}
+              </p>
+            )}
+            <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+              Total: <strong style={{ color: "#2d5a27" }}>{formatRupiah(totalGabungan)}</strong>
+            </p>
+          </div>
+
+          {error && (
+            <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            type="button"
+            id="btn-konfirmasi-pesanan"
+            onClick={handleKonfirmasi}
+            disabled={loading || !bisaCheckoutGabungan}
+            className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+          >
+            {loading ? "Memproses..." : "Konfirmasi Pesanan"}
+          </button>
+          {!bisaCheckoutGabungan && (
+            <p className="text-xs mt-2 text-center" style={{ color: "#72796e" }}>
+              Pilih minimal 1 tiket Dewasa atau Anak-anak
+            </p>
+          )}
+
+          <p className="text-xs mt-3" style={{ color: "#72796e" }}>
+            Pembayaran dilakukan tunai di lokasi (COD). Tunjukkan kode pesanan ke petugas.
+          </p>
+        </>
       ) : (
         <>
           {/* Baris item + stepper */}
@@ -1695,7 +1810,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
             <div className="space-y-5 lg:sticky lg:top-28">
 
               {/* Card Checkout Tiket Masuk */}
-              <CheckoutTiketCard destinationId={d.id} htmResmi={d.htmResmi} />
+              <CheckoutTiketCard destinationId={d.id} htmResmi={d.htmResmi} htmAnak={d.htmAnak} />
 
               {/* Card Sewa Fasilitas — disembunyikan otomatis kalau belum ada Fasilitas */}
               <SewaFasilitasSection

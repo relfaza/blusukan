@@ -101,6 +101,7 @@ export default async function DestinasiDetailPage({ params }: Props) {
     jamTutup: raw.jamTutup,
     buka24Jam: raw.buka24Jam,
     htmResmi: raw.htmResmi ? Number(raw.htmResmi) : null,
+    htmAnak: raw.htmAnak ? Number(raw.htmAnak) : null,
     hasToilet: raw.hasToilet,
     hasParkir: raw.hasParkir,
     hasTempatIbadah: raw.hasTempatIbadah,

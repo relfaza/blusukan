@@ -132,6 +132,7 @@ model Destination {
   jamTutup           String?
   buka24Jam          Boolean           @default(false)
   htmResmi           Decimal           @default(0)
+  htmAnak            Decimal?
   hasToilet          Boolean           @default(false)
   hasParkir          Boolean           @default(false)
   hasTempatIbadah    Boolean           @default(false)
