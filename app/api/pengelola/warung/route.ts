@@ -23,7 +23,8 @@ function serializeWarung(w: {
   location: string | null;
   kategori: string;
   namaPemilik: string | null;
-  fotoUrl: string | null;
+  photoUrls: string[];
+  bisaBooking: boolean;
   menuItems?: { id: string; warungId: string; name: string; price: unknown }[];
 }) {
   return {
@@ -33,7 +34,8 @@ function serializeWarung(w: {
     location: w.location,
     kategori: w.kategori,
     namaPemilik: w.namaPemilik,
-    fotoUrl: w.fotoUrl,
+    photoUrls: w.photoUrls,
+    bisaBooking: w.bisaBooking,
     menuItems: (w.menuItems ?? []).map(serializeMenuItem),
   };
 }
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: authResult.message }, { status: authResult.status });
   }
 
-  const { destinationId, name, location, kategori, namaPemilik, fotoUrl, items } = await req.json();
+  const { destinationId, name, location, kategori, namaPemilik, photoUrls, bisaBooking, items } = await req.json();
 
   if (typeof destinationId !== "string" || !destinationId) {
     return NextResponse.json({ message: "destinationId wajib diisi." }, { status: 400 });
@@ -88,8 +90,17 @@ export async function POST(req: Request) {
   if (namaPemilik !== undefined && namaPemilik !== null && typeof namaPemilik !== "string") {
     return NextResponse.json({ message: "Nama pemilik tidak valid." }, { status: 400 });
   }
-  if (fotoUrl !== undefined && fotoUrl !== null && typeof fotoUrl !== "string") {
+  if (photoUrls !== undefined && !Array.isArray(photoUrls)) {
     return NextResponse.json({ message: "Foto tidak valid." }, { status: 400 });
+  }
+  const photoUrlsInput: string[] = Array.isArray(photoUrls)
+    ? photoUrls.filter((url): url is string => typeof url === "string" && url.trim() !== "")
+    : [];
+  if (photoUrlsInput.length > 5) {
+    return NextResponse.json({ message: "Maksimal 5 foto." }, { status: 400 });
+  }
+  if (bisaBooking !== undefined && typeof bisaBooking !== "boolean") {
+    return NextResponse.json({ message: "bisaBooking tidak valid." }, { status: 400 });
   }
   if (!Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ message: "Minimal 1 produk wajib diisi." }, { status: 400 });
@@ -116,7 +127,8 @@ export async function POST(req: Request) {
         location: typeof location === "string" && location.trim() ? location.trim() : null,
         kategori: isOneOf(kategori, KATEGORI_UMKM_VALUES) ? kategori : "LAINNYA",
         namaPemilik: typeof namaPemilik === "string" && namaPemilik.trim() ? namaPemilik.trim() : null,
-        fotoUrl: typeof fotoUrl === "string" && fotoUrl.trim() ? fotoUrl.trim() : null,
+        photoUrls: photoUrlsInput,
+        bisaBooking: typeof bisaBooking === "boolean" ? bisaBooking : true,
       },
     });
 

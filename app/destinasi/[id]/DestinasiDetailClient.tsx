@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DateTimePicker from "@/components/ui/datetime-picker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft,
   Clock,
@@ -32,6 +33,7 @@ import {
   TrendingUp,
   ImageOff,
   User,
+  X,
 } from "lucide-react";
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
@@ -74,7 +76,8 @@ type Warung = {
   location: string | null;
   kategori: string;
   namaPemilik: string | null;
-  fotoUrl: string | null;
+  photoUrls: string[];
+  bisaBooking: boolean;
   menuItems: MenuItem[];
 };
 
@@ -708,17 +711,66 @@ function MenuItemRow({
   );
 }
 
-/** Kartu pesan per warung — pre-order menu dan/atau reservasi tempat, checkout langsung ke satu warung */
-function WarungOrderCard({
+/** Kartu ringkas UMKM dalam grid — foto, nama, pemilik, badge kategori saja. Klik untuk buka detail. */
+function UmkmCard({ warung, onClick }: { warung: Warung; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      id={`card-umkm-${warung.id}`}
+      onClick={onClick}
+      className="text-left rounded-2xl overflow-hidden flex flex-col transition-all hover:shadow-md"
+      style={{ background: "#ffffff", border: "1px solid #e8e8e8" }}
+    >
+      <div className="h-28 relative w-full" style={{ background: "#e0e0e0" }}>
+        {warung.photoUrls[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={warung.photoUrls[0]} alt={warung.name} className="w-full h-full object-cover" />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
+          >
+            <ImageOff size={24} style={{ color: "rgba(21,66,18,0.35)" }} />
+          </div>
+        )}
+      </div>
+      <div className="p-3">
+        <div className="mb-1">
+          <KategoriUmkmBadge kategori={warung.kategori} />
+        </div>
+        <p
+          className="text-sm font-bold leading-tight"
+          style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+        >
+          {warung.name}
+        </p>
+        {warung.namaPemilik && (
+          <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#72796e" }}>
+            <User size={11} />
+            {warung.namaPemilik}
+          </p>
+        )}
+      </div>
+    </button>
+  );
+}
+
+/** Dialog detail UMKM — galeri foto, lokasi, daftar produk dengan stepper, reservasi tempat (kalau bisaBooking), tombol Pesan */
+function UmkmDetailDialog({
   destinationId,
   warung,
   jamOperasional,
+  open,
+  onOpenChange,
 }: {
   destinationId: string;
   warung: Warung;
   jamOperasional: JamOperasionalDestination;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [reservasiTempat, setReservasiTempat] = useState(false);
   const [jadwal, setJadwal] = useState("");
@@ -735,7 +787,7 @@ function WarungOrderCard({
   const total = selectedItems.reduce((sum, x) => sum + x.menuItem.price * x.kuantitas, 0);
 
   const hasSelection = selectedItems.length > 0;
-  const reservasiSiap = reservasiTempat && jadwal.trim() !== "";
+  const reservasiSiap = warung.bisaBooking && reservasiTempat && jadwal.trim() !== "";
   const bisaPesan = hasSelection || reservasiSiap;
 
   function setQuantity(menuItemId: string, q: number) {
@@ -744,7 +796,8 @@ function WarungOrderCard({
 
   async function handlePesan() {
     if (!bisaPesan) return;
-    if (reservasiTempat && !isJamBukaValid(jamOperasional, new Date(jadwal))) {
+    const reservasiAktif = warung.bisaBooking && reservasiTempat;
+    if (reservasiAktif && !isJamBukaValid(jamOperasional, new Date(jadwal))) {
       setError(
         `Destinasi tutup pada jam yang dipilih. Jam operasional: ${jamOperasional.jamBuka} - ${jamOperasional.jamTutup}`
       );
@@ -761,8 +814,8 @@ function WarungOrderCard({
           destinationId,
           warungId: warung.id,
           items: selectedItems.map((x) => ({ menuItemId: x.menuItem.id, kuantitas: x.kuantitas })),
-          reservasiTempat,
-          jadwal: reservasiTempat ? new Date(jadwal).toISOString() : null,
+          reservasiTempat: reservasiAktif,
+          jadwal: reservasiAktif ? new Date(jadwal).toISOString() : null,
         }),
       });
       const data = await res.json();
@@ -781,33 +834,74 @@ function WarungOrderCard({
   }
 
   return (
-    <div className="rounded-xl p-4" style={{ border: "1px solid #e8e8e8" }}>
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "#e0e0e0" }}>
-          {warung.fotoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={warung.fotoUrl} alt={warung.name} className="w-full h-full object-cover" />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
-            >
-              <ImageOff size={18} style={{ color: "rgba(21,66,18,0.35)" }} />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="!max-w-lg !w-[calc(100vw-2rem)] !max-h-[85vh] !p-0 overflow-hidden flex flex-col"
+      >
+        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: "#e8e8e8" }}>
+          <DialogTitle className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}>
+            {warung.name}
+          </DialogTitle>
+          <button
+            type="button"
+            id="btn-tutup-detail-umkm"
+            onClick={() => onOpenChange(false)}
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
+            style={{ color: "#42493e" }}
+            aria-label="Tutup detail UMKM"
+          >
+            <X size={16} />
+          </button>
+        </DialogHeader>
+
+        <div className="overflow-y-auto p-4">
+          {/* Galeri foto */}
+          <div className="h-40 rounded-xl overflow-hidden mb-2" style={{ background: "#e0e0e0" }}>
+            {warung.photoUrls[activePhotoIdx] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={warung.photoUrls[activePhotoIdx]}
+                alt={`${warung.name} — foto ${activePhotoIdx + 1}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
+              >
+                <ImageOff size={28} style={{ color: "rgba(21,66,18,0.35)" }} />
+              </div>
+            )}
+          </div>
+          {warung.photoUrls.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar mb-3 pb-1">
+              {warung.photoUrls.map((url, idx) => (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => setActivePhotoIdx(idx)}
+                  aria-label={`Tampilkan foto ${idx + 1}`}
+                  aria-current={idx === activePhotoIdx}
+                  className="relative shrink-0 rounded-lg overflow-hidden"
+                  style={{
+                    width: 56,
+                    height: 42,
+                    border: idx === activePhotoIdx ? "2px solid var(--blusukan-primary)" : "1px solid #e8e8e8",
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt={`${warung.name} — thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
             </div>
           )}
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <p
-              className="font-semibold text-sm"
-              style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
-            >
-              {warung.name}
-            </p>
+
+          <div className="flex items-center gap-2 flex-wrap mb-1">
             <KategoriUmkmBadge kategori={warung.kategori} />
           </div>
           {warung.namaPemilik && (
-            <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#72796e" }}>
+            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#72796e" }}>
               <User size={11} />
               {warung.namaPemilik}
             </p>
@@ -818,100 +912,106 @@ function WarungOrderCard({
               {warung.location}
             </p>
           )}
+
+          <div className="mt-3 pt-3" style={{ borderTop: "1px dashed #e8e8e8" }}>
+            {warung.menuItems.length > 0 ? (
+              <div className="mb-3">
+                {warung.menuItems.map((m) => (
+                  <MenuItemRow
+                    key={m.id}
+                    item={m}
+                    kuantitas={quantities[m.id] ?? 0}
+                    onChange={(q) => setQuantity(m.id, q)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm mb-3" style={{ color: "#72796e" }}>
+                Menu belum tersedia
+              </p>
+            )}
+
+            {warung.bisaBooking && (
+              <>
+                <label
+                  htmlFor={`reservasi-${warung.id}`}
+                  className="flex items-center gap-2 mb-3 cursor-pointer"
+                >
+                  <input
+                    id={`reservasi-${warung.id}`}
+                    type="checkbox"
+                    checked={reservasiTempat}
+                    onChange={(e) => setReservasiTempat(e.target.checked)}
+                    className="w-4 h-4"
+                    style={{ accentColor: "var(--blusukan-primary)" }}
+                  />
+                  <span className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+                    Reservasi tempat duduk
+                  </span>
+                </label>
+
+                {reservasiTempat && (
+                  <div className="mb-3">
+                    <label
+                      htmlFor={`jadwal-umkm-${warung.id}`}
+                      className="block text-xs font-medium mb-1"
+                      style={{ color: "#72796e" }}
+                    >
+                      Jadwal Kedatangan
+                    </label>
+                    <DateTimePicker
+                      id={`jadwal-umkm-${warung.id}`}
+                      value={jadwal}
+                      min={minJadwal}
+                      onChange={setJadwal}
+                    />
+                    {jamLabel && (
+                      <p className="text-xs mt-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                        {jamLabel}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {hasSelection && (
+              <div className="rounded-xl p-3 mb-3" style={{ background: "#f0f8f0" }}>
+                <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+                  Total Menu: <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+                {error}
+              </p>
+            )}
+
+            <button
+              type="button"
+              id={`btn-pesan-umkm-${warung.id}`}
+              onClick={handlePesan}
+              disabled={!bisaPesan || loading}
+              className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+            >
+              {loading ? "Memproses..." : "Pesan"}
+            </button>
+            {!bisaPesan && (
+              <p className="text-xs mt-2 text-center" style={{ color: "#72796e" }}>
+                {warung.bisaBooking ? "Pilih menu atau centang reservasi tempat" : "Pilih menu terlebih dahulu"}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
-
-      {warung.menuItems.length > 0 ? (
-        <div className="mb-3">
-          {warung.menuItems.map((m) => (
-            <MenuItemRow
-              key={m.id}
-              item={m}
-              kuantitas={quantities[m.id] ?? 0}
-              onChange={(q) => setQuantity(m.id, q)}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm mb-3" style={{ color: "#72796e" }}>
-          Menu belum tersedia
-        </p>
-      )}
-
-      <label
-        htmlFor={`reservasi-${warung.id}`}
-        className="flex items-center gap-2 mb-3 cursor-pointer"
-      >
-        <input
-          id={`reservasi-${warung.id}`}
-          type="checkbox"
-          checked={reservasiTempat}
-          onChange={(e) => setReservasiTempat(e.target.checked)}
-          className="w-4 h-4"
-          style={{ accentColor: "var(--blusukan-primary)" }}
-        />
-        <span className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
-          Reservasi tempat duduk
-        </span>
-      </label>
-
-      {reservasiTempat && (
-        <div className="mb-3">
-          <label
-            htmlFor={`jadwal-umkm-${warung.id}`}
-            className="block text-xs font-medium mb-1"
-            style={{ color: "#72796e" }}
-          >
-            Jadwal Kedatangan
-          </label>
-          <DateTimePicker
-            id={`jadwal-umkm-${warung.id}`}
-            value={jadwal}
-            min={minJadwal}
-            onChange={setJadwal}
-          />
-          {jamLabel && (
-            <p className="text-xs mt-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-              {jamLabel}
-            </p>
-          )}
-        </div>
-      )}
-
-      {hasSelection && (
-        <div className="rounded-xl p-3 mb-3" style={{ background: "#f0f8f0" }}>
-          <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
-            Total Menu: <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
-          </p>
-        </div>
-      )}
-
-      {error && (
-        <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
-          {error}
-        </p>
-      )}
-
-      <button
-        type="button"
-        id={`btn-pesan-umkm-${warung.id}`}
-        onClick={handlePesan}
-        disabled={!bisaPesan || loading}
-        className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
-        style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
-      >
-        {loading ? "Memproses..." : "Pesan"}
-      </button>
-      {!bisaPesan && (
-        <p className="text-xs mt-2 text-center" style={{ color: "#72796e" }}>
-          Pilih menu atau centang reservasi tempat
-        </p>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-/** Section UMKM & Kuliner Lokal — pre-order menu dan/atau reservasi tempat per warung, disembunyikan kalau belum ada warung */
+/** Section UMKM & Kuliner Lokal — grid card ringkas, klik untuk buka detail lengkap + pemesanan. Disembunyikan kalau belum ada UMKM. */
 function UmkmKulinerSection({
   destinationId,
   warungs,
@@ -921,6 +1021,9 @@ function UmkmKulinerSection({
   warungs: Warung[];
   jamOperasional: JamOperasionalDestination;
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedWarung = warungs.find((w) => w.id === selectedId) ?? null;
+
   if (warungs.length === 0) return null;
 
   return (
@@ -931,11 +1034,23 @@ function UmkmKulinerSection({
           UMKM & Kuliner Lokal
         </span>
       </SectionTitle>
-      <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {warungs.map((w) => (
-          <WarungOrderCard key={w.id} destinationId={destinationId} warung={w} jamOperasional={jamOperasional} />
+          <UmkmCard key={w.id} warung={w} onClick={() => setSelectedId(w.id)} />
         ))}
       </div>
+
+      {selectedWarung && (
+        <UmkmDetailDialog
+          destinationId={destinationId}
+          warung={selectedWarung}
+          jamOperasional={jamOperasional}
+          open={selectedId !== null}
+          onOpenChange={(open) => {
+            if (!open) setSelectedId(null);
+          }}
+        />
+      )}
     </SectionCard>
   );
 }

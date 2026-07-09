@@ -123,7 +123,10 @@ async function handleUmkmTransaksi({
 
   const warung = await prisma.localWarung.findFirst({ where: { id: warungId, destinationId } });
   if (!warung) {
-    return NextResponse.json({ message: "Warung tidak ditemukan untuk destinasi ini." }, { status: 404 });
+    return NextResponse.json({ message: "UMKM tidak ditemukan untuk destinasi ini." }, { status: 404 });
+  }
+  if (reservasiTempat && !warung.bisaBooking) {
+    return NextResponse.json({ message: "UMKM ini tidak menyediakan reservasi tempat" }, { status: 400 });
   }
 
   const menuItemIds = items.map((i) => i.menuItemId);
@@ -136,7 +139,7 @@ async function handleUmkmTransaksi({
   for (const id of menuItemIds) {
     if (!menuItemMap.has(id)) {
       return NextResponse.json(
-        { message: "Menu tidak ditemukan untuk warung ini." },
+        { message: "Menu tidak ditemukan untuk UMKM ini." },
         { status: 404 }
       );
     }
