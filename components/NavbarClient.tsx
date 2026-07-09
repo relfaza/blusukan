@@ -27,7 +27,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 const NAV_LINKS = [
   { href: "/", label: "Beranda" },
-  { href: "/laporan", label: "Laporan" },
+  { href: "/info", label: "Info & Update" },
   { href: "/booking", label: "Booking" },
 ];
 

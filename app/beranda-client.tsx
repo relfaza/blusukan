@@ -21,6 +21,7 @@ import {
   Star,
   TrendingUp,
   ImageOff,
+  Sparkles,
 } from "lucide-react";
 import {
   Dialog,
@@ -612,18 +613,18 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
           </span>
         </Link>
 
-        {/* Laporan */}
+        {/* Info & Update */}
         <Link
-          href="/laporan"
-          id="nav-laporan"
+          href="/info"
+          id="nav-info"
           className="flex flex-col items-center justify-center px-4 py-1 rounded-full hover:bg-[#e8e8e8] transition-colors"
         >
-          <AlertTriangle size={22} style={{ color: "#42493e" }} />
+          <Sparkles size={22} style={{ color: "#42493e" }} />
           <span
             className="text-xs font-semibold mt-0.5"
             style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
           >
-            Laporan
+            Info
           </span>
         </Link>
 
