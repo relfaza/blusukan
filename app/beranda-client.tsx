@@ -8,7 +8,6 @@ import {
   Search,
   Home,
   AlertTriangle,
-  CalendarCheck,
   User,
   CheckCircle,
   Droplets,
@@ -625,21 +624,6 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
             style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
           >
             Info
-          </span>
-        </Link>
-
-        {/* Booking */}
-        <Link
-          href="/booking"
-          id="nav-booking"
-          className="flex flex-col items-center justify-center px-4 py-1 rounded-full hover:bg-[#e8e8e8] transition-colors"
-        >
-          <CalendarCheck size={22} style={{ color: "#42493e" }} />
-          <span
-            className="text-xs font-semibold mt-0.5"
-            style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
-          >
-            Booking
           </span>
         </Link>
 

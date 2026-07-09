@@ -28,7 +28,6 @@ const ROLE_LABEL: Record<string, string> = {
 const NAV_LINKS = [
   { href: "/", label: "Beranda" },
   { href: "/info", label: "Info & Update" },
-  { href: "/booking", label: "Booking" },
 ];
 
 // Menu navigasi & shortcut dashboard khusus per role — WISATAWAN pakai NAV_LINKS default
