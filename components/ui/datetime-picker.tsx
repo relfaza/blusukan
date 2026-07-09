@@ -121,7 +121,7 @@ export default function DateTimePicker({ id, value, min, onChange, placeholder =
 
       {open && (
         <div
-          className="absolute z-40 mt-1 w-full min-w-[260px] rounded-xl p-3 shadow-lg"
+          className="absolute z-[1100] mt-1 w-full min-w-[260px] rounded-xl p-3 shadow-lg"
           style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
         >
           <div className="flex items-center justify-between mb-2">
