@@ -199,14 +199,25 @@ model UserReport {
 }
 
 model LocalWarung {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   destinationId String
-  destination   Destination @relation(fields: [destinationId], references: [id])
+  destination   Destination  @relation(fields: [destinationId], references: [id])
   name          String
   location      String?
-  updatedAt     DateTime    @updatedAt
+  kategori      KategoriUmkm @default(LAINNYA)
+  namaPemilik   String?
+  fotoUrl       String?
+  updatedAt     DateTime     @updatedAt
 
   menuItems MenuItem[]
+}
+
+enum KategoriUmkm {
+  KULINER
+  KERAJINAN
+  FASHION
+  JASA
+  LAINNYA
 }
 
 model MenuItem {

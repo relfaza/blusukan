@@ -31,6 +31,7 @@ import {
   Minus,
   TrendingUp,
   ImageOff,
+  User,
 } from "lucide-react";
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
@@ -67,7 +68,43 @@ type LocalService = {
 };
 
 type MenuItem = { id: string; name: string; price: number };
-type Warung = { id: string; name: string; location: string | null; menuItems: MenuItem[] };
+type Warung = {
+  id: string;
+  name: string;
+  location: string | null;
+  kategori: string;
+  namaPemilik: string | null;
+  fotoUrl: string | null;
+  menuItems: MenuItem[];
+};
+
+const KATEGORI_UMKM_LABEL: Record<string, string> = {
+  KULINER: "Kuliner",
+  KERAJINAN: "Kerajinan",
+  FASHION: "Fashion",
+  JASA: "Jasa",
+  LAINNYA: "Lainnya",
+};
+
+const KATEGORI_UMKM_STYLE: Record<string, { bg: string; color: string }> = {
+  KULINER: { bg: "#fef3e7", color: "#805533" },
+  KERAJINAN: { bg: "rgba(45,90,39,0.1)", color: "#154212" },
+  FASHION: { bg: "#f3e8fd", color: "#6b21a8" },
+  JASA: { bg: "#e3f2fd", color: "#1565c0" },
+  LAINNYA: { bg: "#f0f0f0", color: "#72796e" },
+};
+
+function KategoriUmkmBadge({ kategori }: { kategori: string }) {
+  const style = KATEGORI_UMKM_STYLE[kategori] ?? KATEGORI_UMKM_STYLE.LAINNYA;
+  return (
+    <span
+      className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+      style={{ background: style.bg, color: style.color }}
+    >
+      {KATEGORI_UMKM_LABEL[kategori] ?? kategori}
+    </span>
+  );
+}
 
 type SewaFasilitas = {
   id: string;
@@ -745,18 +782,44 @@ function WarungOrderCard({
 
   return (
     <div className="rounded-xl p-4" style={{ border: "1px solid #e8e8e8" }}>
-      <p
-        className="font-semibold text-sm mb-1"
-        style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
-      >
-        {warung.name}
-      </p>
-      {warung.location && (
-        <p className="text-xs mb-3 flex items-center gap-1" style={{ color: "#72796e" }}>
-          <MapPin size={12} />
-          {warung.location}
-        </p>
-      )}
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "#e0e0e0" }}>
+          {warung.fotoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={warung.fotoUrl} alt={warung.name} className="w-full h-full object-cover" />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
+            >
+              <ImageOff size={18} style={{ color: "rgba(21,66,18,0.35)" }} />
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <p
+              className="font-semibold text-sm"
+              style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+            >
+              {warung.name}
+            </p>
+            <KategoriUmkmBadge kategori={warung.kategori} />
+          </div>
+          {warung.namaPemilik && (
+            <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#72796e" }}>
+              <User size={11} />
+              {warung.namaPemilik}
+            </p>
+          )}
+          {warung.location && (
+            <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#72796e" }}>
+              <MapPin size={12} />
+              {warung.location}
+            </p>
+          )}
+        </div>
+      </div>
 
       {warung.menuItems.length > 0 ? (
         <div className="mb-3">

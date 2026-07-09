@@ -97,6 +97,9 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
     destinationId: w.destinationId,
     name: w.name,
     location: w.location,
+    kategori: w.kategori,
+    namaPemilik: w.namaPemilik,
+    fotoUrl: w.fotoUrl,
     menuItems: w.menuItems.map((m) => ({
       id: m.id,
       warungId: m.warungId,

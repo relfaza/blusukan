@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ticket, Pencil, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, Ticket, Pencil, Trash2, Plus, X, ImageOff, User } from "lucide-react";
 import RupiahInput from "@/components/ui/rupiah-input";
 
 type TransaksiRow = {
@@ -36,8 +36,41 @@ type WarungRow = {
   destinationId: string;
   name: string;
   location: string | null;
+  kategori: string;
+  namaPemilik: string | null;
+  fotoUrl: string | null;
   menuItems: MenuItemRow[];
 };
+
+const KATEGORI_UMKM_VALUES = ["KULINER", "KERAJINAN", "FASHION", "JASA", "LAINNYA"] as const;
+
+const KATEGORI_UMKM_LABEL: Record<string, string> = {
+  KULINER: "Kuliner",
+  KERAJINAN: "Kerajinan",
+  FASHION: "Fashion",
+  JASA: "Jasa",
+  LAINNYA: "Lainnya",
+};
+
+const KATEGORI_UMKM_STYLE: Record<string, { bg: string; color: string }> = {
+  KULINER: { bg: "#fef3e7", color: "#805533" },
+  KERAJINAN: { bg: "rgba(45,90,39,0.1)", color: "#154212" },
+  FASHION: { bg: "#f3e8fd", color: "#6b21a8" },
+  JASA: { bg: "#e3f2fd", color: "#1565c0" },
+  LAINNYA: { bg: "#f0f0f0", color: "#72796e" },
+};
+
+function KategoriUmkmBadge({ kategori }: { kategori: string }) {
+  const style = KATEGORI_UMKM_STYLE[kategori] ?? KATEGORI_UMKM_STYLE.LAINNYA;
+  return (
+    <span
+      className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+      style={{ background: style.bg, color: style.color }}
+    >
+      {KATEGORI_UMKM_LABEL[kategori] ?? kategori}
+    </span>
+  );
+}
 
 interface Props {
   destination: { id: string; name: string; status: string };
@@ -506,24 +539,127 @@ function KelolaFasilitasSection({
   );
 }
 
-/** Form tambah/edit warung — dipakai untuk create maupun update */
+const UMKM_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const UMKM_PHOTO_MAX_BYTES = 5 * 1024 * 1024; // 5MB
+
+/** Upload satu foto UMKM lewat endpoint upload yang sama dipakai foto destinasi */
+async function uploadFotoUmkm(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/upload", { method: "POST", body: formData });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || "Gagal mengunggah foto.");
+  }
+  return data.url as string;
+}
+
+/** Input upload 1 foto dengan preview — dipakai form tambah maupun edit UMKM */
+function FotoUmkmField({
+  fotoUrl,
+  onChange,
+  error,
+  disabled,
+}: {
+  fotoUrl: string | null;
+  onChange: (url: string | null) => void;
+  error?: string;
+  disabled?: boolean;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!UMKM_PHOTO_TYPES.includes(file.type) || file.size > UMKM_PHOTO_MAX_BYTES) {
+      onChange(null);
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const url = await uploadFotoUmkm(file);
+      onChange(url);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        Foto UMKM (opsional)
+      </label>
+      {fotoUrl ? (
+        <div className="relative w-24 h-24 rounded-lg overflow-hidden" style={{ border: "1px solid var(--blusukan-outline-variant)" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={fotoUrl} alt="Preview foto UMKM" className="w-full h-full object-cover" />
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            disabled={disabled}
+            aria-label="Hapus foto"
+            className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.6)", color: "#ffffff" }}
+          >
+            <X size={12} />
+          </button>
+        </div>
+      ) : (
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileChange}
+          disabled={disabled || uploading}
+          className="w-full text-sm"
+          style={{ color: "var(--blusukan-on-surface-variant)" }}
+        />
+      )}
+      {uploading && (
+        <p className="text-xs mt-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Mengunggah foto...
+        </p>
+      )}
+      {error && (
+        <p className="text-xs mt-1" style={{ color: "var(--blusukan-error)" }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+type WarungFormValues = {
+  name: string;
+  location: string;
+  kategori: string;
+  namaPemilik: string;
+  fotoUrl: string | null;
+};
+
+/** Form edit UMKM — nama/lokasi/kategori/pemilik/foto milik UMKM yang sudah ada (produk dikelola terpisah) */
 function WarungForm({
   initial,
   onCancel,
   onSubmit,
   submitting,
 }: {
-  initial?: { name: string; location: string | null };
+  initial?: { name: string; location: string | null; kategori: string; namaPemilik: string | null; fotoUrl: string | null };
   onCancel: () => void;
-  onSubmit: (values: { name: string; location: string }) => void;
+  onSubmit: (values: WarungFormValues) => void;
   submitting: boolean;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [location, setLocation] = useState(initial?.location ?? "");
+  const [kategori, setKategori] = useState(initial?.kategori ?? "LAINNYA");
+  const [namaPemilik, setNamaPemilik] = useState(initial?.namaPemilik ?? "");
+  const [fotoUrl, setFotoUrl] = useState<string | null>(initial?.fotoUrl ?? null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, location });
+    onSubmit({ name, location, kategori, namaPemilik, fotoUrl });
   }
 
   const inputStyle: React.CSSProperties = {
@@ -541,7 +677,7 @@ function WarungForm({
     >
       <div>
         <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-          Nama Warung
+          Nama UMKM
         </label>
         <input
           required
@@ -551,6 +687,37 @@ function WarungForm({
           className="w-full px-3 py-2 text-sm"
           style={inputStyle}
         />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Nama Pemilik
+          </label>
+          <input
+            value={namaPemilik}
+            onChange={(e) => setNamaPemilik(e.target.value)}
+            placeholder="Contoh: Bu Sri"
+            className="w-full px-3 py-2 text-sm"
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Kategori
+          </label>
+          <select
+            value={kategori}
+            onChange={(e) => setKategori(e.target.value)}
+            className="w-full px-3 py-2 text-sm"
+            style={inputStyle}
+          >
+            {KATEGORI_UMKM_VALUES.map((k) => (
+              <option key={k} value={k}>
+                {KATEGORI_UMKM_LABEL[k]}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div>
         <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -564,6 +731,214 @@ function WarungForm({
           style={inputStyle}
         />
       </div>
+      <FotoUmkmField fotoUrl={fotoUrl} onChange={setFotoUrl} disabled={submitting} />
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+        >
+          {submitting ? "Menyimpan..." : "Simpan"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="text-sm font-medium px-4 py-2 rounded-lg"
+          style={{ color: "var(--blusukan-on-surface-variant)" }}
+        >
+          Batal
+        </button>
+      </div>
+    </form>
+  );
+}
+
+type ProdukDraft = { key: number; nama: string; harga: number | "" };
+
+/** Form tambah UMKM baru — data UMKM + minimal 1 produk sekaligus, dikirim satu kali ke API */
+function TambahUmkmForm({
+  onCancel,
+  onSubmit,
+  submitting,
+}: {
+  onCancel: () => void;
+  onSubmit: (values: {
+    name: string;
+    location: string;
+    kategori: string;
+    namaPemilik: string;
+    fotoUrl: string | null;
+    items: { nama: string; harga: number }[];
+  }) => void;
+  submitting: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [namaPemilik, setNamaPemilik] = useState("");
+  const [kategori, setKategori] = useState("LAINNYA");
+  const [location, setLocation] = useState("");
+  const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const [produk, setProduk] = useState<ProdukDraft[]>([{ key: 0, nama: "", harga: "" }]);
+  const [nextKey, setNextKey] = useState(1);
+  const [produkError, setProdukError] = useState("");
+
+  function updateProduk(key: number, patch: Partial<ProdukDraft>) {
+    setProduk((prev) => prev.map((p) => (p.key === key ? { ...p, ...patch } : p)));
+  }
+
+  function addProdukRow() {
+    setProduk((prev) => [...prev, { key: nextKey, nama: "", harga: "" }]);
+    setNextKey((k) => k + 1);
+  }
+
+  function removeProdukRow(key: number) {
+    setProduk((prev) => (prev.length > 1 ? prev.filter((p) => p.key !== key) : prev));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    const items = produk
+      .filter((p) => p.nama.trim() !== "" || p.harga !== "")
+      .map((p) => ({ nama: p.nama.trim(), harga: Number(p.harga) }));
+
+    if (items.length === 0 || items.some((it) => !it.nama || !Number.isFinite(it.harga) || it.harga < 0)) {
+      setProdukError("Minimal 1 produk dengan nama dan harga yang valid wajib diisi.");
+      return;
+    }
+    setProdukError("");
+
+    onSubmit({ name, location, kategori, namaPemilik, fotoUrl, items });
+  }
+
+  const inputStyle: React.CSSProperties = {
+    border: "1px solid var(--blusukan-outline-variant)",
+    borderRadius: "8px",
+    background: "#ffffff",
+    color: "var(--blusukan-on-surface)",
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl p-5 space-y-4"
+      style={{ background: "var(--blusukan-primary-container)", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div>
+        <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Nama UMKM
+        </label>
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Contoh: Warung Bu Sri"
+          className="w-full px-3 py-2 text-sm"
+          style={inputStyle}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Nama Pemilik
+          </label>
+          <input
+            value={namaPemilik}
+            onChange={(e) => setNamaPemilik(e.target.value)}
+            placeholder="Contoh: Bu Sri"
+            className="w-full px-3 py-2 text-sm"
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Kategori
+          </label>
+          <select
+            value={kategori}
+            onChange={(e) => setKategori(e.target.value)}
+            className="w-full px-3 py-2 text-sm"
+            style={inputStyle}
+          >
+            {KATEGORI_UMKM_VALUES.map((k) => (
+              <option key={k} value={k}>
+                {KATEGORI_UMKM_LABEL[k]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Lokasi
+        </label>
+        <input
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Contoh: Dekat pintu masuk"
+          className="w-full px-3 py-2 text-sm"
+          style={inputStyle}
+        />
+      </div>
+
+      <FotoUmkmField fotoUrl={fotoUrl} onChange={setFotoUrl} disabled={submitting} />
+
+      <div className="pt-2" style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}>
+        <p className="text-sm font-bold mb-2" style={{ color: "var(--blusukan-on-surface)" }}>
+          Daftar Produk/Menu
+        </p>
+        <div className="space-y-2">
+          {produk.map((p, idx) => (
+            <div key={p.key} className="grid grid-cols-2 gap-2 items-start">
+              <input
+                required
+                value={p.nama}
+                onChange={(e) => updateProduk(p.key, { nama: e.target.value })}
+                placeholder="Nama Produk"
+                className="w-full px-3 py-2 text-sm"
+                style={inputStyle}
+              />
+              <div className="flex items-center gap-1.5">
+                <RupiahInput
+                  value={p.harga}
+                  onChange={(harga) => updateProduk(p.key, { harga })}
+                  className="w-full pl-9 pr-3 py-2 text-sm"
+                  style={inputStyle}
+                />
+                {produk.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeProdukRow(p.key)}
+                    aria-label={`Hapus produk ${idx + 1}`}
+                    className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8]"
+                    style={{ color: "var(--blusukan-error)" }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {produkError && (
+          <p className="text-xs mt-2" style={{ color: "var(--blusukan-error)" }}>
+            {produkError}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={addProdukRow}
+          className="flex items-center gap-1 text-xs font-bold mt-2 hover:opacity-80 transition-opacity"
+          style={{ color: "var(--blusukan-primary)" }}
+        >
+          <Plus size={14} />
+          Tambah Produk Lain
+        </button>
+      </div>
+
       <div className="flex items-center gap-2 pt-1">
         <button
           type="submit"
@@ -683,7 +1058,7 @@ function WarungCard({
 }: {
   warung: WarungRow;
   submitting: boolean;
-  onEditWarung: (values: { name: string; location: string }) => void;
+  onEditWarung: (values: WarungFormValues) => void;
   onDeleteWarung: () => void;
   onAddMenuItem: (values: { name: string; price: number }) => void;
   onEditMenuItem: (menuItemId: string, values: { name: string; price: number }) => void;
@@ -696,7 +1071,13 @@ function WarungCard({
   if (isEditingWarung) {
     return (
       <WarungForm
-        initial={{ name: warung.name, location: warung.location }}
+        initial={{
+          name: warung.name,
+          location: warung.location,
+          kategori: warung.kategori,
+          namaPemilik: warung.namaPemilik,
+          fotoUrl: warung.fotoUrl,
+        }}
         onCancel={() => setIsEditingWarung(false)}
         onSubmit={(values) => {
           onEditWarung(values);
@@ -713,15 +1094,42 @@ function WarungCard({
       style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <p className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
-            {warung.name}
-          </p>
-          {warung.location && (
-            <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-              {warung.location}
-            </p>
-          )}
+        <div className="flex items-start gap-3 min-w-0">
+          <div
+            className="w-14 h-14 rounded-xl overflow-hidden shrink-0"
+            style={{ background: "#e0e0e0" }}
+          >
+            {warung.fotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={warung.fotoUrl} alt={warung.name} className="w-full h-full object-cover" />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
+              >
+                <ImageOff size={18} style={{ color: "rgba(21,66,18,0.35)" }} />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+              <p className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
+                {warung.name}
+              </p>
+              <KategoriUmkmBadge kategori={warung.kategori} />
+            </div>
+            {warung.namaPemilik && (
+              <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                <User size={11} />
+                {warung.namaPemilik}
+              </p>
+            )}
+            {warung.location && (
+              <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                {warung.location}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
@@ -838,7 +1246,14 @@ function KelolaUmkmSection({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleAddWarung(values: { name: string; location: string }) {
+  async function handleAddWarung(values: {
+    name: string;
+    location: string;
+    kategori: string;
+    namaPemilik: string;
+    fotoUrl: string | null;
+    items: { nama: string; harga: number }[];
+  }) {
     setSubmitting(true);
     setError("");
     try {
@@ -849,10 +1264,10 @@ function KelolaUmkmSection({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Gagal menambah warung.");
+        setError(data.message || "Gagal menambah UMKM.");
         return;
       }
-      setWarungs((prev) => [...prev, { ...data, menuItems: [] }]);
+      setWarungs((prev) => [...prev, data]);
       setShowAddForm(false);
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");
@@ -861,7 +1276,7 @@ function KelolaUmkmSection({
     }
   }
 
-  async function handleEditWarung(id: string, values: { name: string; location: string }) {
+  async function handleEditWarung(id: string, values: WarungFormValues) {
     setSubmitting(true);
     setError("");
     try {
@@ -872,10 +1287,23 @@ function KelolaUmkmSection({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Gagal memperbarui warung.");
+        setError(data.message || "Gagal memperbarui UMKM.");
         return;
       }
-      setWarungs((prev) => prev.map((w) => (w.id === id ? { ...w, name: data.name, location: data.location } : w)));
+      setWarungs((prev) =>
+        prev.map((w) =>
+          w.id === id
+            ? {
+                ...w,
+                name: data.name,
+                location: data.location,
+                kategori: data.kategori,
+                namaPemilik: data.namaPemilik,
+                fotoUrl: data.fotoUrl,
+              }
+            : w
+        )
+      );
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");
     } finally {
@@ -884,14 +1312,14 @@ function KelolaUmkmSection({
   }
 
   async function handleDeleteWarung(id: string) {
-    if (!window.confirm("Hapus warung ini beserta semua menunya?")) return;
+    if (!window.confirm("Hapus UMKM ini beserta semua produknya?")) return;
     setSubmitting(true);
     setError("");
     try {
       const res = await fetch(`/api/pengelola/warung/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Gagal menghapus warung.");
+        setError(data.message || "Gagal menghapus UMKM.");
         return;
       }
       setWarungs((prev) => prev.filter((w) => w.id !== id));
@@ -988,12 +1416,12 @@ function KelolaUmkmSection({
           style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
         >
           <Plus size={16} />
-          Tambah Warung Baru
+          Tambah UMKM Baru
         </button>
       )}
 
       {showAddForm && (
-        <WarungForm onCancel={() => setShowAddForm(false)} onSubmit={handleAddWarung} submitting={submitting} />
+        <TambahUmkmForm onCancel={() => setShowAddForm(false)} onSubmit={handleAddWarung} submitting={submitting} />
       )}
 
       {warungs.length === 0 && !showAddForm ? (
@@ -1002,7 +1430,7 @@ function KelolaUmkmSection({
           style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
         >
           <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-            Belum ada warung UMKM yang ditambahkan.
+            Belum ada UMKM yang ditambahkan.
           </p>
         </div>
       ) : (

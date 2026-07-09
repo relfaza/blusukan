@@ -6,8 +6,30 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-function serializeWarung(w: { id: string; destinationId: string; name: string; location: string | null }) {
-  return { id: w.id, destinationId: w.destinationId, name: w.name, location: w.location };
+const KATEGORI_UMKM_VALUES = ["KULINER", "KERAJINAN", "FASHION", "JASA", "LAINNYA"] as const;
+
+function isOneOf<T extends string>(value: unknown, allowed: readonly T[]): value is T {
+  return typeof value === "string" && (allowed as readonly string[]).includes(value);
+}
+
+function serializeWarung(w: {
+  id: string;
+  destinationId: string;
+  name: string;
+  location: string | null;
+  kategori: string;
+  namaPemilik: string | null;
+  fotoUrl: string | null;
+}) {
+  return {
+    id: w.id,
+    destinationId: w.destinationId,
+    name: w.name,
+    location: w.location,
+    kategori: w.kategori,
+    namaPemilik: w.namaPemilik,
+    fotoUrl: w.fotoUrl,
+  };
 }
 
 export async function PATCH(req: Request, { params }: Props) {
@@ -17,7 +39,7 @@ export async function PATCH(req: Request, { params }: Props) {
   }
 
   const { id } = await params;
-  const { name, location } = await req.json();
+  const { name, location, kategori, namaPemilik, fotoUrl } = await req.json();
 
   const existing = await prisma.localWarung.findUnique({
     where: { id },
@@ -31,11 +53,17 @@ export async function PATCH(req: Request, { params }: Props) {
     return NextResponse.json({ message: "Anda tidak memiliki akses ke warung ini." }, { status: 403 });
   }
 
-  const data: { name?: string; location?: string | null } = {};
+  const data: {
+    name?: string;
+    location?: string | null;
+    kategori?: (typeof KATEGORI_UMKM_VALUES)[number];
+    namaPemilik?: string | null;
+    fotoUrl?: string | null;
+  } = {};
 
   if (name !== undefined) {
     if (typeof name !== "string" || !name.trim()) {
-      return NextResponse.json({ message: "Nama warung tidak valid." }, { status: 400 });
+      return NextResponse.json({ message: "Nama UMKM tidak valid." }, { status: 400 });
     }
     data.name = name.trim();
   }
@@ -44,6 +72,24 @@ export async function PATCH(req: Request, { params }: Props) {
       return NextResponse.json({ message: "Lokasi tidak valid." }, { status: 400 });
     }
     data.location = typeof location === "string" && location.trim() ? location.trim() : null;
+  }
+  if (kategori !== undefined) {
+    if (!isOneOf(kategori, KATEGORI_UMKM_VALUES)) {
+      return NextResponse.json({ message: "Kategori tidak valid." }, { status: 400 });
+    }
+    data.kategori = kategori;
+  }
+  if (namaPemilik !== undefined) {
+    if (namaPemilik !== null && typeof namaPemilik !== "string") {
+      return NextResponse.json({ message: "Nama pemilik tidak valid." }, { status: 400 });
+    }
+    data.namaPemilik = typeof namaPemilik === "string" && namaPemilik.trim() ? namaPemilik.trim() : null;
+  }
+  if (fotoUrl !== undefined) {
+    if (fotoUrl !== null && typeof fotoUrl !== "string") {
+      return NextResponse.json({ message: "Foto tidak valid." }, { status: 400 });
+    }
+    data.fotoUrl = typeof fotoUrl === "string" && fotoUrl.trim() ? fotoUrl.trim() : null;
   }
 
   const updated = await prisma.localWarung.update({ where: { id }, data });
