@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { POPULARITY_WINDOW_MS, pickMajorityCrowdLevel } from "@/lib/popularity";
 import BerandaClient, { type DestinationForClient } from "./beranda-client";
@@ -5,6 +7,16 @@ import BerandaClient, { type DestinationForClient } from "./beranda-client";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const session = await auth();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+
+  if (role === "ADMIN") {
+    redirect("/dashboard");
+  }
+  if (role === "PENGELOLA") {
+    redirect("/pengelola");
+  }
+
   const [rows, upvoteSums, verifiedCounts, recentCrowdGroups, reviewAggs] = await Promise.all([
     prisma.destination.findMany({
       where: { status: "APPROVED" },
