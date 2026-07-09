@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 export default function HapusPermanenAction({
   destinationId,
@@ -14,13 +15,10 @@ export default function HapusPermanenAction({
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function handleDelete() {
-    const confirmed = window.confirm(
-      `Yakin ingin menghapus "${destinationName}" secara PERMANEN? Tindakan ini TIDAK BISA dibatalkan. Semua data fasilitas dan UMKM terkait juga akan ikut terhapus.`
-    );
-    if (!confirmed) return;
-
+    setConfirmOpen(false);
     setBusy(true);
     setError("");
     try {
@@ -62,13 +60,23 @@ export default function HapusPermanenAction({
         type="button"
         id="btn-hapus-permanen"
         disabled={busy}
-        onClick={handleDelete}
+        onClick={() => setConfirmOpen(true)}
         className="flex items-center gap-1.5 text-sm font-bold px-4 py-2.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
         style={{ background: "var(--blusukan-error)", color: "#ffffff" }}
       >
         <Trash2 size={16} />
         {busy ? "Menghapus..." : "Hapus Permanen"}
       </button>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Hapus Destinasi Permanen"
+        message={`Yakin ingin menghapus "${destinationName}" secara PERMANEN? Tindakan ini TIDAK BISA dibatalkan. Semua data fasilitas dan UMKM terkait juga akan ikut terhapus.`}
+        confirmLabel="Ya, Hapus Permanen"
+        isDestructive
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

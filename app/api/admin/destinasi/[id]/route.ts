@@ -59,6 +59,7 @@ export async function GET(_req: Request, { params }: Props) {
     longitude: destination.longitude,
     jamOperasional: destination.jamOperasional,
     htmResmi: Number(destination.htmResmi),
+    htmAnak: destination.htmAnak != null ? Number(destination.htmAnak) : null,
     hasToilet: destination.hasToilet,
     hasParkir: destination.hasParkir,
     hasTempatIbadah: destination.hasTempatIbadah,
