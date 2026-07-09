@@ -25,6 +25,7 @@ export default async function DestinasiDetailPage({ params }: Props) {
     reviews,
     reviewAgg,
     myReview,
+    userProfile,
   ] = await Promise.all([
     prisma.destination.findFirst({
       where: { id, status: "APPROVED" },
@@ -76,6 +77,10 @@ export default async function DestinasiDetailPage({ params }: Props) {
       ? prisma.review.findUnique({
           where: { userId_destinationId: { userId, destinationId: id } },
         })
+      : Promise.resolve(null),
+    // Nomor telepon user (untuk prefill nomor kontak form booking transport)
+    userId
+      ? prisma.user.findUnique({ where: { id: userId }, select: { phone: true } })
       : Promise.resolve(null),
   ]);
 
@@ -161,6 +166,7 @@ export default async function DestinasiDetailPage({ params }: Props) {
     totalReview: reviewAgg._count._all,
     isLoggedIn: Boolean(userId),
     myReview: myReview ? { rating: myReview.rating, komentar: myReview.komentar } : null,
+    userPhone: userProfile?.phone ?? null,
   };
 
   return <DestinasiDetailClient destination={destination} />;

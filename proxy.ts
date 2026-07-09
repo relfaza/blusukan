@@ -9,7 +9,7 @@ export async function proxy(req: NextRequest) {
     secret: process.env.AUTH_SECRET,
   });
 
-  const protectedRoutes = ["/laporan", "/booking", "/profil", "/pengelola"];
+  const protectedRoutes = ["/profil", "/pengelola"];
   const adminRoutes = ["/dashboard"];
 
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
