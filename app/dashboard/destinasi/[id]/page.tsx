@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, UserCircle, ShieldCheck, ImageOff, MessageCircle, Pa
 import { requireAdminPage } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import ApprovalActions from "./ApprovalActions";
+import HapusPermanenAction from "./HapusPermanenAction";
 
 export const dynamic = "force-dynamic";
 
@@ -360,6 +361,8 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
               </div>
             )}
           </SectionCard>
+
+          <HapusPermanenAction destinationId={d.id} destinationName={d.name} />
         </div>
       </div>
     </div>

@@ -56,25 +56,61 @@ const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const MAX_PHOTOS = 5;
 
-type PhotoDraft = { file: File; previewUrl: string };
+type PhotoSlot = { kind: "existing"; url: string } | { kind: "new"; file: File; previewUrl: string };
 
-export default function AjukanDestinasiFormClient() {
+export type DestinasiFormInitial = {
+  name: string;
+  kabupaten: string;
+  kategori: string;
+  latitude: number;
+  longitude: number;
+  buka24Jam: boolean;
+  jamBuka: string | null;
+  jamTutup: string | null;
+  htmResmi: number;
+  htmAnak: number | null;
+  hasToilet: boolean;
+  hasParkir: boolean;
+  hasTempatIbadah: boolean;
+  hasTempatDuduk: boolean;
+  hasPenitipanBarang: boolean;
+  aksesibilitas: string | null;
+  vibeTags: string[];
+  photoUrls: string[];
+};
+
+interface DestinasiFormClientProps {
+  mode: "create" | "edit";
+  destinationId?: string;
+  initial?: DestinasiFormInitial;
+}
+
+/** Form Ajukan Destinasi Baru / Edit Destinasi — dipakai bersama, hanya beda endpoint & label lewat prop `mode` */
+export default function DestinasiFormClient({ mode, destinationId, initial }: DestinasiFormClientProps) {
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [kabupaten, setKabupaten] = useState("");
-  const [kategori, setKategori] = useState("");
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
-  const [buka24Jam, setBuka24Jam] = useState(false);
-  const [jamBuka, setJamBuka] = useState("");
-  const [jamTutup, setJamTutup] = useState("");
-  const [htmResmi, setHtmResmi] = useState<number | "">("");
-  const [htmAnak, setHtmAnak] = useState<number | "">("");
-  const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({});
-  const [aksesibilitas, setAksesibilitas] = useState("");
-  const [vibeTags, setVibeTags] = useState<string[]>([]);
-  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [kabupaten, setKabupaten] = useState(initial?.kabupaten ?? "");
+  const [kategori, setKategori] = useState(initial?.kategori ?? "");
+  const [latitude, setLatitude] = useState<number | null>(initial?.latitude ?? null);
+  const [longitude, setLongitude] = useState<number | null>(initial?.longitude ?? null);
+  const [buka24Jam, setBuka24Jam] = useState(initial?.buka24Jam ?? false);
+  const [jamBuka, setJamBuka] = useState(initial?.jamBuka ?? "");
+  const [jamTutup, setJamTutup] = useState(initial?.jamTutup ?? "");
+  const [htmResmi, setHtmResmi] = useState<number | "">(initial?.htmResmi ?? "");
+  const [htmAnak, setHtmAnak] = useState<number | "">(initial?.htmAnak ?? "");
+  const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({
+    hasToilet: initial?.hasToilet ?? false,
+    hasParkir: initial?.hasParkir ?? false,
+    hasTempatIbadah: initial?.hasTempatIbadah ?? false,
+    hasTempatDuduk: initial?.hasTempatDuduk ?? false,
+    hasPenitipanBarang: initial?.hasPenitipanBarang ?? false,
+  });
+  const [aksesibilitas, setAksesibilitas] = useState(initial?.aksesibilitas ?? "");
+  const [vibeTags, setVibeTags] = useState<string[]>(initial?.vibeTags ?? []);
+  const [photos, setPhotos] = useState<PhotoSlot[]>(
+    () => initial?.photoUrls.map((url): PhotoSlot => ({ kind: "existing", url })) ?? []
+  );
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -106,14 +142,14 @@ export default function AjukanDestinasiFormClient() {
     });
     setPhotos((prev) => [
       ...prev,
-      ...selected.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
+      ...selected.map((file): PhotoSlot => ({ kind: "new", file, previewUrl: URL.createObjectURL(file) })),
     ]);
   }
 
   function removePhoto(index: number) {
     setPhotos((prev) => {
       const target = prev[index];
-      if (target) URL.revokeObjectURL(target.previewUrl);
+      if (target?.kind === "new") URL.revokeObjectURL(target.previewUrl);
       return prev.filter((_, i) => i !== index);
     });
   }
@@ -152,6 +188,15 @@ export default function AjukanDestinasiFormClient() {
     return data.url as string;
   }
 
+  async function resolvePhotoUrls(): Promise<string[]> {
+    if (photos.length === 0) return [];
+    const newCount = photos.filter((p) => p.kind === "new").length;
+    if (newCount > 0) setUploadProgress({ done: 0, total: newCount });
+    const urls = await Promise.all(photos.map((p) => (p.kind === "existing" ? p.url : uploadPhoto(p.file))));
+    setUploadProgress(null);
+    return urls;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError("");
@@ -160,12 +205,7 @@ export default function AjukanDestinasiFormClient() {
 
     setSubmitting(true);
     try {
-      let photoUrls: string[] = [];
-      if (photos.length > 0) {
-        setUploadProgress({ done: 0, total: photos.length });
-        photoUrls = await Promise.all(photos.map((p) => uploadPhoto(p.file)));
-        setUploadProgress(null);
-      }
+      const photoUrls = await resolvePhotoUrls();
 
       const jamOperasionalDerived = buka24Jam
         ? "Buka 24 Jam"
@@ -173,49 +213,59 @@ export default function AjukanDestinasiFormClient() {
           ? `${jamBuka} - ${jamTutup}`
           : null;
 
-      const res = await fetch("/api/pengelola/destinasi", {
-        method: "POST",
+      const payload = {
+        name: name.trim(),
+        kabupaten,
+        kategori,
+        latitude,
+        longitude,
+        jamOperasional: jamOperasionalDerived,
+        jamBuka: buka24Jam ? null : jamBuka || null,
+        jamTutup: buka24Jam ? null : jamTutup || null,
+        buka24Jam,
+        htmResmi: htmResmi === "" ? 0 : htmResmi,
+        htmAnak: htmAnak === "" ? null : htmAnak,
+        hasToilet: fasilitas.hasToilet ?? false,
+        hasParkir: fasilitas.hasParkir ?? false,
+        hasTempatIbadah: fasilitas.hasTempatIbadah ?? false,
+        hasTempatDuduk: fasilitas.hasTempatDuduk ?? false,
+        hasPenitipanBarang: fasilitas.hasPenitipanBarang ?? false,
+        aksesibilitas: aksesibilitas.trim() === "" ? null : aksesibilitas.trim(),
+        vibeTags,
+        photoUrls,
+      };
+
+      const url = mode === "create" ? "/api/pengelola/destinasi" : `/api/pengelola/destinasi/${destinationId}`;
+      const method = mode === "create" ? "POST" : "PATCH";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          kabupaten,
-          kategori,
-          latitude,
-          longitude,
-          jamOperasional: jamOperasionalDerived,
-          jamBuka: buka24Jam ? null : jamBuka || null,
-          jamTutup: buka24Jam ? null : jamTutup || null,
-          buka24Jam,
-          htmResmi: htmResmi === "" ? 0 : htmResmi,
-          htmAnak: htmAnak === "" ? null : htmAnak,
-          hasToilet: fasilitas.hasToilet ?? false,
-          hasParkir: fasilitas.hasParkir ?? false,
-          hasTempatIbadah: fasilitas.hasTempatIbadah ?? false,
-          hasTempatDuduk: fasilitas.hasTempatDuduk ?? false,
-          hasPenitipanBarang: fasilitas.hasPenitipanBarang ?? false,
-          aksesibilitas: aksesibilitas.trim() === "" ? null : aksesibilitas.trim(),
-          vibeTags,
-          photoUrls,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setSubmitError(data.message || "Gagal mengirim pengajuan. Coba lagi.");
+        setSubmitError(data.message || "Gagal menyimpan. Coba lagi.");
         setSubmitting(false);
         setUploadProgress(null);
         return;
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/pengelola"), 1800);
+      setTimeout(
+        () => router.push(mode === "create" ? "/pengelola" : `/pengelola/destinasi/${destinationId}`),
+        1500
+      );
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan. Coba lagi.");
       setSubmitting(false);
       setUploadProgress(null);
     }
   }
+
+  const backHref = mode === "create" ? "/pengelola" : `/pengelola/destinasi/${destinationId}`;
 
   if (success) {
     return (
@@ -232,10 +282,10 @@ export default function AjukanDestinasiFormClient() {
             className="text-lg font-bold mb-1"
             style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
           >
-            Pengajuan destinasi terkirim, menunggu persetujuan Admin
+            {mode === "create" ? "Pengajuan destinasi terkirim, menunggu persetujuan Admin" : "Perubahan berhasil disimpan"}
           </h1>
           <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-            Anda akan diarahkan kembali ke dashboard...
+            Anda akan diarahkan kembali...
           </p>
         </div>
       </div>
@@ -249,7 +299,7 @@ export default function AjukanDestinasiFormClient() {
     >
       <div className="max-w-xl mx-auto px-4 py-6 pb-16">
         <Link
-          href="/pengelola"
+          href={backHref}
           className="inline-flex items-center gap-1.5 text-sm font-medium mb-4"
           style={{ color: "var(--blusukan-on-surface-variant)" }}
         >
@@ -261,10 +311,12 @@ export default function AjukanDestinasiFormClient() {
           className="text-2xl font-bold mb-1"
           style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
         >
-          Ajukan Destinasi Baru
+          {mode === "create" ? "Ajukan Destinasi Baru" : "Edit Destinasi"}
         </h1>
         <p className="text-sm mb-6" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-          Pengajuan akan ditinjau oleh Admin sebelum tampil ke publik.
+          {mode === "create"
+            ? "Pengajuan akan ditinjau oleh Admin sebelum tampil ke publik."
+            : "Perubahan tersimpan langsung tanpa perlu persetujuan ulang Admin."}
         </p>
 
         {submitError && (
@@ -375,6 +427,8 @@ export default function AjukanDestinasiFormClient() {
               Lokasi di Peta
             </label>
             <MapPicker
+              initialLatitude={initial?.latitude}
+              initialLongitude={initial?.longitude}
               onLocationSelect={(lat, lng) => {
                 setLatitude(lat);
                 setLongitude(lng);
@@ -579,12 +633,16 @@ export default function AjukanDestinasiFormClient() {
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3">
                 {photos.map((p, idx) => (
                   <div
-                    key={p.previewUrl}
+                    key={p.kind === "existing" ? p.url : p.previewUrl}
                     className="relative aspect-square rounded-lg overflow-hidden"
                     style={{ border: "1px solid var(--blusukan-outline-variant)" }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.previewUrl} alt={`Preview foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img
+                      src={p.kind === "existing" ? p.url : p.previewUrl}
+                      alt={`Preview foto ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
                     <button
                       type="button"
                       onClick={() => removePhoto(idx)}
@@ -636,8 +694,12 @@ export default function AjukanDestinasiFormClient() {
             {submitting
               ? uploadProgress
                 ? `Mengunggah foto (${uploadProgress.done}/${uploadProgress.total})...`
-                : "Mengirim..."
-              : "Ajukan Destinasi"}
+                : mode === "create"
+                  ? "Mengirim..."
+                  : "Menyimpan..."
+              : mode === "create"
+                ? "Ajukan Destinasi"
+                : "Simpan Perubahan"}
           </button>
         </form>
       </div>
