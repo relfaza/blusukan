@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Ticket, Pencil, Trash2, Plus, X, ImageOff, User, Power, PowerOff } from "lucide-react";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import RupiahInput from "@/components/ui/rupiah-input";
 
 type TransaksiRow = {
@@ -441,8 +442,16 @@ function KelolaFasilitasSection({
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm("Hapus fasilitas ini?")) return;
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  function handleDelete(id: string) {
+    setDeleteTargetId(id);
+  }
+
+  async function confirmDelete() {
+    const id = deleteTargetId;
+    if (!id) return;
+    setDeleteTargetId(null);
     setSubmitting(true);
     setError("");
     try {
@@ -551,6 +560,16 @@ function KelolaFasilitasSection({
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTargetId !== null}
+        title="Hapus Fasilitas"
+        message="Hapus fasilitas ini? Tindakan ini tidak bisa dibatalkan."
+        confirmLabel="Ya, Hapus"
+        isDestructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 }
@@ -1246,6 +1265,8 @@ function KelolaUmkmSection({
   const [showAddForm, setShowAddForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [deleteWarungTargetId, setDeleteWarungTargetId] = useState<string | null>(null);
+  const [deleteMenuTarget, setDeleteMenuTarget] = useState<{ warungId: string; menuItemId: string } | null>(null);
 
   async function handleAddWarung(values: {
     name: string;
@@ -1314,8 +1335,14 @@ function KelolaUmkmSection({
     }
   }
 
-  async function handleDeleteWarung(id: string) {
-    if (!window.confirm("Hapus UMKM ini beserta semua produknya?")) return;
+  function handleDeleteWarung(id: string) {
+    setDeleteWarungTargetId(id);
+  }
+
+  async function confirmDeleteWarung() {
+    const id = deleteWarungTargetId;
+    if (!id) return;
+    setDeleteWarungTargetId(null);
     setSubmitting(true);
     setError("");
     try {
@@ -1381,8 +1408,15 @@ function KelolaUmkmSection({
     }
   }
 
-  async function handleDeleteMenuItem(warungId: string, menuItemId: string) {
-    if (!window.confirm("Hapus menu ini?")) return;
+  function handleDeleteMenuItem(warungId: string, menuItemId: string) {
+    setDeleteMenuTarget({ warungId, menuItemId });
+  }
+
+  async function confirmDeleteMenuItem() {
+    const target = deleteMenuTarget;
+    if (!target) return;
+    const { warungId, menuItemId } = target;
+    setDeleteMenuTarget(null);
     setSubmitting(true);
     setError("");
     try {
@@ -1452,6 +1486,25 @@ function KelolaUmkmSection({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteWarungTargetId !== null}
+        title="Hapus UMKM"
+        message="Hapus UMKM ini beserta semua produknya? Tindakan ini tidak bisa dibatalkan."
+        confirmLabel="Ya, Hapus"
+        isDestructive
+        onConfirm={confirmDeleteWarung}
+        onCancel={() => setDeleteWarungTargetId(null)}
+      />
+      <ConfirmDialog
+        open={deleteMenuTarget !== null}
+        title="Hapus Menu"
+        message="Hapus menu ini? Tindakan ini tidak bisa dibatalkan."
+        confirmLabel="Ya, Hapus"
+        isDestructive
+        onConfirm={confirmDeleteMenuItem}
+        onCancel={() => setDeleteMenuTarget(null)}
+      />
     </div>
   );
 }
@@ -1464,13 +1517,15 @@ function DestinasiStatusActions({ destinationId, status }: { destinationId: stri
 
   const isNonaktif = status === "NONAKTIF";
   const canToggle = status === "APPROVED" || status === "NONAKTIF";
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  async function handleToggleStatus() {
+  const confirmMessage = isNonaktif
+    ? "Yakin ingin mengaktifkan kembali destinasi ini? Destinasi akan tampil lagi di pencarian publik."
+    : "Yakin ingin menonaktifkan? Destinasi tidak akan tampil di pencarian publik sampai diaktifkan kembali.";
+
+  async function performToggleStatus() {
+    setConfirmOpen(false);
     const nextStatus = isNonaktif ? "APPROVED" : "NONAKTIF";
-    const confirmMessage = isNonaktif
-      ? "Yakin ingin mengaktifkan kembali destinasi ini? Destinasi akan tampil lagi di pencarian publik."
-      : "Yakin ingin menonaktifkan? Destinasi tidak akan tampil di pencarian publik sampai diaktifkan kembali.";
-    if (!window.confirm(confirmMessage)) return;
 
     setBusy(true);
     setError("");
@@ -1509,7 +1564,7 @@ function DestinasiStatusActions({ destinationId, status }: { destinationId: stri
           <button
             type="button"
             id="btn-toggle-status-destinasi"
-            onClick={handleToggleStatus}
+            onClick={() => setConfirmOpen(true)}
             disabled={busy}
             className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
             style={
@@ -1528,6 +1583,16 @@ function DestinasiStatusActions({ destinationId, status }: { destinationId: stri
           {error}
         </p>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title={isNonaktif ? "Aktifkan Kembali Destinasi" : "Nonaktifkan Destinasi"}
+        message={confirmMessage}
+        confirmLabel={isNonaktif ? "Ya, Aktifkan" : "Ya, Nonaktifkan"}
+        isDestructive={false}
+        onConfirm={performToggleStatus}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

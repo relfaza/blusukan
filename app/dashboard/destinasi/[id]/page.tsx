@@ -206,8 +206,18 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
               <InfoItem label="Koordinat" value={`${d.latitude}, ${d.longitude}`} />
               <InfoItem label="Jam Operasional" value={d.jamOperasional || "Tidak ada data"} />
               <InfoItem
-                label="Harga Tiket Masuk"
+                label="Harga Tiket Dewasa"
                 value={Number(d.htmResmi) === 0 ? "Gratis" : formatRupiah(Number(d.htmResmi))}
+              />
+              <InfoItem
+                label="Harga Tiket Anak-anak"
+                value={
+                  d.htmAnak == null
+                    ? "Tidak dibedakan (1 harga untuk semua)"
+                    : Number(d.htmAnak) === 0
+                      ? "Gratis"
+                      : formatRupiah(Number(d.htmAnak))
+                }
               />
               <InfoItem label="Tanggal Diajukan" value={formatTanggal(d.createdAt)} />
               <InfoItem
