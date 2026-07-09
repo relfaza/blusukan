@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DateTimePicker from "@/components/ui/datetime-picker";
+import RupiahInput from "@/components/ui/rupiah-input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft,
@@ -34,6 +35,9 @@ import {
   ImageOff,
   User,
   X,
+  Bike,
+  Compass,
+  Loader2,
 } from "lucide-react";
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
@@ -160,6 +164,7 @@ export type DestinasiDetail = {
   totalReview: number;
   isLoggedIn: boolean;
   myReview: MyReview;
+  userPhone: string | null;
 };
 
 interface Props {
@@ -1430,6 +1435,802 @@ function SewaFasilitasSection({
   );
 }
 
+// ── Booking Transportasi Lokal ──────────────────────────────────
+const SERVICE_TYPE_LABEL: Record<string, string> = {
+  OJEK: "Ojek Lokal",
+  JEEP: "Sewa Jeep",
+  GUIDE: "Pemandu Wisata",
+};
+
+const SERVICE_TYPE_ICON: Record<string, React.ReactNode> = {
+  OJEK: <Bike size={13} />,
+  JEEP: <Car size={13} />,
+  GUIDE: <Compass size={13} />,
+};
+
+function formatTanggalBooking(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(year, month - 1, day));
+}
+
+function todayISODate(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function BookingSummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-start gap-4">
+      <span className="text-xs shrink-0" style={{ color: "#72796e" }}>
+        {label}
+      </span>
+      <span className="text-xs font-semibold text-right" style={{ color: "#1a1c1c" }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/** Kartu ringkas jasa transport — nama provider, badge jenis layanan, tarif dasar. Klik untuk buka form booking. */
+function TransportServiceCard({ service, onClick }: { service: LocalService; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      id={`card-transport-${service.id}`}
+      onClick={onClick}
+      className="text-left rounded-xl p-4 transition-all hover:shadow-md"
+      style={{ background: "#ffffff", border: "1px solid #e8e8e8" }}
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <p className="text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}>
+          {service.providerName}
+        </p>
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+          style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+        >
+          {SERVICE_TYPE_ICON[service.serviceType]}
+          {SERVICE_TYPE_LABEL[service.serviceType] ?? service.serviceType}
+        </span>
+      </div>
+      {service.baseRate != null && (
+        <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
+          {formatRupiah(service.baseRate)}{" "}
+          <span className="text-xs font-normal" style={{ color: "#72796e" }}>
+            tarif dasar
+          </span>
+        </p>
+      )}
+    </button>
+  );
+}
+
+type ConfirmedTransportBooking = {
+  travelDate: string;
+  meetingPoint: string;
+  contactNumber: string;
+  notes: string;
+};
+
+/** Dialog form booking inline — tanggal, titik jemput, kontak, catatan. Submit ke /api/booking, konfirmasi WA inline (bukan navigasi halaman). */
+function TransportBookingDialog({
+  destinationId,
+  destinationName,
+  service,
+  defaultContactNumber,
+  isLoggedIn,
+  open,
+  onOpenChange,
+}: {
+  destinationId: string;
+  destinationName: string;
+  service: LocalService;
+  defaultContactNumber: string;
+  isLoggedIn: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [travelDate, setTravelDate] = useState("");
+  const [meetingPoint, setMeetingPoint] = useState("");
+  const [contactNumber, setContactNumber] = useState(defaultContactNumber);
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState<ConfirmedTransportBooking | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!travelDate) {
+      setError("Pilih tanggal perjalanan terlebih dahulu.");
+      return;
+    }
+    if (!contactNumber.trim()) {
+      setError("Nomor kontak wajib diisi.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceId: service.id,
+          destinationId,
+          travelDate,
+          meetingPoint: meetingPoint.trim() || undefined,
+          notes: notes.trim() || undefined,
+          contactNumber: contactNumber.trim(),
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Gagal membuat booking. Coba lagi.");
+        setLoading(false);
+        return;
+      }
+
+      setConfirmed({
+        travelDate,
+        meetingPoint: meetingPoint.trim(),
+        contactNumber: contactNumber.trim(),
+        notes: notes.trim(),
+      });
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+      setLoading(false);
+    }
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent showCloseButton={false} className="!max-w-sm !w-[calc(100vw-2rem)] !p-6">
+          <DialogHeader>
+            <DialogTitle
+              className="text-sm font-bold"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+            >
+              {service.providerName}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm" style={{ color: "#72796e" }}>
+            <Link
+              href="/login"
+              id="link-login-booking-transport"
+              className="font-semibold hover:underline"
+              style={{ color: "var(--blusukan-primary)" }}
+            >
+              Login
+            </Link>{" "}
+            untuk booking jasa transport ini.
+          </p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (confirmed) {
+    const waMessage =
+      `Halo ${service.providerName}, saya baru saja melakukan reservasi *${
+        SERVICE_TYPE_LABEL[service.serviceType] ?? service.serviceType
+      }* melalui Blusukan.\n\n` +
+      `Destinasi: ${destinationName}\n` +
+      `Tanggal: ${formatTanggalBooking(confirmed.travelDate)}\n` +
+      `Titik Jemput: ${confirmed.meetingPoint || "-"}\n` +
+      `Nomor Kontak: ${confirmed.contactNumber}` +
+      (confirmed.notes ? `\nCatatan: ${confirmed.notes}` : "") +
+      `\n\nMohon konfirmasi ketersediaannya. Terima kasih.`;
+    const waHref = `https://wa.me/${service.contactWa.replace(/\D/g, "")}?text=${encodeURIComponent(waMessage)}`;
+
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent showCloseButton={false} className="!max-w-sm !w-[calc(100vw-2rem)] !p-6">
+          <div className="flex flex-col items-center text-center">
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+              style={{ background: "var(--blusukan-primary-container)" }}
+            >
+              <CheckCircle2 size={30} style={{ color: "var(--blusukan-primary)" }} />
+            </div>
+            <h3
+              className="text-base font-bold mb-1"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+            >
+              Booking Berhasil Dibuat
+            </h3>
+            <p className="text-xs mb-5" style={{ color: "#72796e" }}>
+              Reservasi tersimpan. Hubungi penyedia jasa via WhatsApp untuk konfirmasi ketersediaan.
+            </p>
+            <div className="w-full space-y-2 mb-5 text-left">
+              <BookingSummaryRow label="Tanggal" value={formatTanggalBooking(confirmed.travelDate)} />
+              {confirmed.meetingPoint && <BookingSummaryRow label="Titik Jemput" value={confirmed.meetingPoint} />}
+              <BookingSummaryRow label="Nomor Kontak" value={confirmed.contactNumber} />
+              {confirmed.notes && <BookingSummaryRow label="Catatan" value={confirmed.notes} />}
+            </div>
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              id={`btn-wa-booking-${service.id}`}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 mb-2"
+              style={{ background: "#25D366", color: "#ffffff" }}
+            >
+              <MessageCircle size={16} />
+              Hubungi via WhatsApp
+            </a>
+            <button
+              type="button"
+              id={`btn-tutup-konfirmasi-booking-${service.id}`}
+              onClick={() => onOpenChange(false)}
+              className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-80"
+              style={{ border: "1px solid #c2c9bb", color: "#1a1c1c" }}
+            >
+              Tutup
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="!max-w-sm !w-[calc(100vw-2rem)] !max-h-[85vh] !p-0 overflow-hidden flex flex-col"
+      >
+        <DialogHeader
+          className="flex flex-row items-center justify-between px-4 py-3 border-b shrink-0"
+          style={{ borderColor: "#e8e8e8" }}
+        >
+          <DialogTitle className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}>
+            Booking {service.providerName}
+          </DialogTitle>
+          <button
+            type="button"
+            id="btn-tutup-booking-transport"
+            onClick={() => onOpenChange(false)}
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
+            style={{ color: "#42493e" }}
+            aria-label="Tutup form booking"
+          >
+            <X size={16} />
+          </button>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="overflow-y-auto p-4 space-y-4">
+          {service.baseRate != null && (
+            <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
+              {formatRupiah(service.baseRate)}{" "}
+              <span className="text-xs font-normal" style={{ color: "#72796e" }}>
+                tarif dasar
+              </span>
+            </p>
+          )}
+
+          <div>
+            <label
+              htmlFor={`travelDate-${service.id}`}
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: "#72796e" }}
+            >
+              Tanggal Perjalanan <span style={{ color: "var(--blusukan-error)" }}>*</span>
+            </label>
+            <input
+              id={`travelDate-${service.id}`}
+              type="date"
+              required
+              min={todayISODate()}
+              value={travelDate}
+              onChange={(e) => setTravelDate(e.target.value)}
+              className="w-full px-3 py-2.5 text-sm"
+              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor={`meetingPoint-${service.id}`}
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: "#72796e" }}
+            >
+              Titik Jemput
+            </label>
+            <input
+              id={`meetingPoint-${service.id}`}
+              type="text"
+              placeholder="misal: Terminal Giwangan, Yogyakarta"
+              value={meetingPoint}
+              onChange={(e) => setMeetingPoint(e.target.value)}
+              className="w-full px-3 py-2.5 text-sm"
+              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor={`contactNumber-${service.id}`}
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: "#72796e" }}
+            >
+              Nomor Kontak <span style={{ color: "var(--blusukan-error)" }}>*</span>
+            </label>
+            <input
+              id={`contactNumber-${service.id}`}
+              type="tel"
+              required
+              placeholder="08xxxxxxxxxx"
+              value={contactNumber}
+              onChange={(e) => setContactNumber(e.target.value)}
+              className="w-full px-3 py-2.5 text-sm"
+              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor={`notes-${service.id}`}
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: "#72796e" }}
+            >
+              Catatan Tambahan
+            </label>
+            <textarea
+              id={`notes-${service.id}`}
+              rows={3}
+              placeholder="misal: rombongan 4 orang, bawa anak kecil"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-2.5 text-sm resize-none"
+              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+            />
+          </div>
+
+          {error && (
+            <p className="text-xs" style={{ color: "var(--blusukan-error)" }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            id={`btn-submit-booking-${service.id}`}
+            disabled={loading}
+            className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+          >
+            {loading ? "Memproses..." : "Ajukan Booking"}
+          </button>
+
+          <p className="text-xs text-center" style={{ color: "#72796e" }}>
+            Ini bukan transaksi pembayaran. Konfirmasi akhir dilakukan langsung dengan penyedia jasa via WhatsApp.
+          </p>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Section Booking Transportasi Lokal — grid card jasa tervalidasi milik destinasi ini, klik untuk buka form booking inline. Disembunyikan kalau belum ada jasa. */
+function BookingTransportSection({
+  destinationId,
+  destinationName,
+  services,
+  isLoggedIn,
+  defaultContactNumber,
+}: {
+  destinationId: string;
+  destinationName: string;
+  services: LocalService[];
+  isLoggedIn: boolean;
+  defaultContactNumber: string;
+}) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedService = services.find((s) => s.id === selectedId) ?? null;
+
+  if (services.length === 0) return null;
+
+  return (
+    <SectionCard>
+      <SectionTitle>
+        <span className="flex items-center gap-2">
+          <Car size={18} />
+          Booking Transportasi Lokal
+        </span>
+      </SectionTitle>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {services.map((s) => (
+          <TransportServiceCard key={s.id} service={s} onClick={() => setSelectedId(s.id)} />
+        ))}
+      </div>
+
+      {selectedService && (
+        <TransportBookingDialog
+          destinationId={destinationId}
+          destinationName={destinationName}
+          service={selectedService}
+          defaultContactNumber={defaultContactNumber}
+          isLoggedIn={isLoggedIn}
+          open={selectedId !== null}
+          onOpenChange={(open) => {
+            if (!open) setSelectedId(null);
+          }}
+        />
+      )}
+    </SectionCard>
+  );
+}
+
+// ── Laporkan Kondisi / Usulan Perbaikan ─────────────────────────
+const ROAD_CONDITION_OPTIONS = [
+  { value: "MUDAH", label: "Mudah" },
+  { value: "SEDANG", label: "Sedang" },
+  { value: "SULIT", label: "Sulit" },
+  { value: "RUSAK", label: "Rusak" },
+] as const;
+
+const SIGNAL_STRENGTH_OPTIONS = [
+  { value: "LEMAH", label: "Lemah" },
+  { value: "SEDANG", label: "Sedang" },
+  { value: "KUAT", label: "Kuat" },
+] as const;
+
+const CROWD_LEVEL_OPTIONS = [
+  { value: "SEPI", label: "Sepi" },
+  { value: "SEDANG", label: "Sedang" },
+  { value: "PADAT", label: "Padat" },
+] as const;
+
+const LAPORAN_FASILITAS_FIELDS = [
+  { key: "toiletLayak", label: "Toilet layak" },
+  { key: "parkirLayak", label: "Parkir layak" },
+  { key: "tempatIbadahLayak", label: "Tempat ibadah layak" },
+  { key: "tempatDudukLayak", label: "Tempat duduk layak" },
+  { key: "penitipanBarangLayak", label: "Penitipan barang layak" },
+] as const;
+
+function LaporanPillGroup({
+  label,
+  options,
+  value,
+  onChange,
+  error,
+}: {
+  label: string;
+  options: ReadonlyArray<{ value: string; label: string }>;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1.5" style={{ color: "#72796e" }}>
+        {label}
+      </label>
+      <div className="grid grid-cols-3 gap-2">
+        {options.map((opt) => {
+          const selected = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className="py-2.5 text-xs font-semibold text-center transition-colors rounded-lg"
+              style={{
+                border: `1.5px solid ${selected ? "var(--blusukan-primary)" : "#e8e8e8"}`,
+                background: selected ? "var(--blusukan-primary-container)" : "#ffffff",
+                color: selected ? "var(--blusukan-primary)" : "#1a1c1c",
+              }}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+      {error && (
+        <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+type GeoStatus = "loading" | "granted" | "denied" | "error";
+
+/** Section laporan kondisi lapangan — form sama seperti /laporan, tapi destinationId sudah otomatis terisi dari halaman ini. Sukses ditampilkan inline, tidak redirect. */
+function LaporKondisiSection({
+  destinationId,
+  fallbackLatitude,
+  fallbackLongitude,
+  isLoggedIn,
+}: {
+  destinationId: string;
+  fallbackLatitude: number;
+  fallbackLongitude: number;
+  isLoggedIn: boolean;
+}) {
+  const router = useRouter();
+  const [roadCondition, setRoadCondition] = useState("");
+  const [signalStrength, setSignalStrength] = useState("");
+  const [crowdLevel, setCrowdLevel] = useState("");
+  const [fasilitas, setFasilitas] = useState<Record<string, boolean>>({});
+  const [reportedFee, setReportedFee] = useState<number | "">("");
+  const [notes, setNotes] = useState("");
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>("loading");
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGeoStatus("error");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        setGeoStatus("granted");
+      },
+      (err) => {
+        setGeoStatus(err.code === err.PERMISSION_DENIED ? "denied" : "error");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  function toggleFasilitas(key: string) {
+    setFasilitas((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function validate(): boolean {
+    const next: Record<string, string> = {};
+    if (!roadCondition) next.roadCondition = "Pilih kondisi jalan.";
+    if (!signalStrength) next.signalStrength = "Pilih kekuatan sinyal.";
+    if (!crowdLevel) next.crowdLevel = "Pilih tingkat keramaian.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
+  function resetForm() {
+    setRoadCondition("");
+    setSignalStrength("");
+    setCrowdLevel("");
+    setFasilitas({});
+    setReportedFee("");
+    setNotes("");
+    setErrors({});
+    setSuccess(false);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitError("");
+    if (!validate()) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/laporan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          destinationId,
+          roadCondition,
+          signalStrength,
+          crowdLevel,
+          latitude: coords?.latitude ?? fallbackLatitude,
+          longitude: coords?.longitude ?? fallbackLongitude,
+          toiletLayak: fasilitas.toiletLayak ?? false,
+          parkirLayak: fasilitas.parkirLayak ?? false,
+          tempatIbadahLayak: fasilitas.tempatIbadahLayak ?? false,
+          tempatDudukLayak: fasilitas.tempatDudukLayak ?? false,
+          penitipanBarangLayak: fasilitas.penitipanBarangLayak ?? false,
+          reportedFee: reportedFee === "" ? null : reportedFee,
+          notes: notes.trim() === "" ? null : notes.trim(),
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSubmitError(data.message || "Gagal mengirim laporan. Coba lagi.");
+        setSubmitting(false);
+        return;
+      }
+
+      setSuccess(true);
+      setSubmitting(false);
+      router.refresh();
+    } catch {
+      setSubmitError("Terjadi kesalahan jaringan. Coba lagi.");
+      setSubmitting(false);
+    }
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <SectionCard>
+        <SectionTitle>
+          <span className="flex items-center gap-2">
+            <AlertTriangle size={18} />
+            Laporkan Kondisi / Usulan Perbaikan
+          </span>
+        </SectionTitle>
+        <p className="text-sm" style={{ color: "#72796e" }}>
+          <Link
+            href="/login"
+            id="link-login-laporan"
+            className="font-semibold hover:underline"
+            style={{ color: "var(--blusukan-primary)" }}
+          >
+            Login
+          </Link>{" "}
+          untuk melaporkan kondisi lapangan destinasi ini.
+        </p>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <SectionCard>
+      <SectionTitle>
+        <span className="flex items-center gap-2">
+          <AlertTriangle size={18} />
+          Laporkan Kondisi / Usulan Perbaikan
+        </span>
+      </SectionTitle>
+
+      {success ? (
+        <div>
+          <div
+            className="flex items-start gap-2.5 text-sm rounded-xl px-4 py-3 mb-4"
+            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+          >
+            <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+            <span>Terima kasih! Laporan Anda berhasil dikirim.</span>
+          </div>
+          <button
+            type="button"
+            id="btn-laporan-baru"
+            onClick={resetForm}
+            className="text-sm font-semibold hover:underline"
+            style={{ color: "var(--blusukan-primary)" }}
+          >
+            Kirim laporan baru
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div
+            className="flex items-start gap-2.5 text-xs rounded-xl px-3.5 py-2.5"
+            style={{
+              background: geoStatus === "granted" ? "var(--blusukan-primary-container)" : "#fef3e7",
+              color: geoStatus === "granted" ? "var(--blusukan-primary)" : "#805533",
+            }}
+          >
+            {geoStatus === "loading" && (
+              <>
+                <Loader2 size={15} className="mt-0.5 animate-spin shrink-0" />
+                <span>Mengambil lokasi Anda...</span>
+              </>
+            )}
+            {geoStatus === "granted" && (
+              <>
+                <MapPin size={15} className="mt-0.5 shrink-0" />
+                <span>Lokasi berhasil diambil.</span>
+              </>
+            )}
+            {(geoStatus === "denied" || geoStatus === "error") && (
+              <>
+                <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                <span>
+                  {geoStatus === "denied" ? "Izin lokasi ditolak." : "Lokasi tidak dapat diambil."} Laporan tetap
+                  bisa dikirim menggunakan lokasi perkiraan destinasi.
+                </span>
+              </>
+            )}
+          </div>
+
+          {submitError && (
+            <p className="text-xs" style={{ color: "var(--blusukan-error)" }}>
+              {submitError}
+            </p>
+          )}
+
+          <LaporanPillGroup
+            label="Kondisi Jalan"
+            options={ROAD_CONDITION_OPTIONS}
+            value={roadCondition}
+            onChange={setRoadCondition}
+            error={errors.roadCondition}
+          />
+          <LaporanPillGroup
+            label="Kekuatan Sinyal"
+            options={SIGNAL_STRENGTH_OPTIONS}
+            value={signalStrength}
+            onChange={setSignalStrength}
+            error={errors.signalStrength}
+          />
+          <LaporanPillGroup
+            label="Tingkat Keramaian"
+            options={CROWD_LEVEL_OPTIONS}
+            value={crowdLevel}
+            onChange={setCrowdLevel}
+            error={errors.crowdLevel}
+          />
+
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "#72796e" }}>
+              Fasilitas yang layak (centang jika kondisinya baik)
+            </label>
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #e8e8e8" }}>
+              {LAPORAN_FASILITAS_FIELDS.map((f, idx) => (
+                <label
+                  key={f.key}
+                  className="flex items-center gap-3 px-3.5 py-3 cursor-pointer"
+                  style={{ borderTop: idx === 0 ? "none" : "1px solid #e8e8e8", background: "#ffffff" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!fasilitas[f.key]}
+                    onChange={() => toggleFasilitas(f.key)}
+                    className="w-5 h-5 shrink-0"
+                    style={{ accentColor: "var(--blusukan-primary)" }}
+                  />
+                  <span className="text-sm" style={{ color: "#1a1c1c" }}>
+                    {f.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="laporan-reportedFee"
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: "#72796e" }}
+            >
+              Biaya yang dikeluarkan (opsional)
+            </label>
+            <RupiahInput id="laporan-reportedFee" value={reportedFee} onChange={setReportedFee} placeholder="0" />
+          </div>
+
+          <div>
+            <label htmlFor="laporan-notes" className="block text-xs font-medium mb-1.5" style={{ color: "#72796e" }}>
+              Catatan tambahan (opsional)
+            </label>
+            <textarea
+              id="laporan-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Ceritakan kondisi lapangan lainnya..."
+              className="w-full px-3 py-2.5 text-sm resize-none"
+              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            id="btn-submit-laporan"
+            disabled={submitting}
+            className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+          >
+            {submitting ? "Mengirim..." : "Kirim Laporan"}
+          </button>
+        </form>
+      )}
+    </SectionCard>
+  );
+}
+
 // ── Main Component ───────────────────────────────────────────────
 export default function DestinasiDetailClient({ destination: d }: Props) {
   const badge = getRouteBadge(d.routeStatus);
@@ -1676,6 +2477,23 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
               destinationId={d.id}
               warungs={d.warungs}
               jamOperasional={{ jamBuka: d.jamBuka, jamTutup: d.jamTutup, buka24Jam: d.buka24Jam }}
+            />
+
+            {/* Section Booking Transportasi Lokal — jasa tervalidasi milik destinasi ini, booking inline lewat dialog. Disembunyikan kalau belum ada jasa. */}
+            <BookingTransportSection
+              destinationId={d.id}
+              destinationName={d.name}
+              services={d.localServices}
+              isLoggedIn={d.isLoggedIn}
+              defaultContactNumber={d.userPhone ?? ""}
+            />
+
+            {/* Section Laporkan Kondisi / Usulan Perbaikan — form laporan sama seperti /laporan, destinationId otomatis terisi */}
+            <LaporKondisiSection
+              destinationId={d.id}
+              fallbackLatitude={d.latitude}
+              fallbackLongitude={d.longitude}
+              isLoggedIn={d.isLoggedIn}
             />
 
             {/* Section Laporan Wisatawan */}
