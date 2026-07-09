@@ -188,6 +188,24 @@ export default async function TransaksiDetailPage({ params }: Props) {
                 </div>
               )}
             </>
+          ) : transaksi.items.length > 1 ? (
+            <div>
+              <span className="text-sm block mb-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Tiket Dipesan
+              </span>
+              <div className="space-y-1.5">
+                {transaksi.items.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center">
+                    <span className="text-sm" style={{ color: "var(--blusukan-on-surface)" }}>
+                      {item.namaItem} x{item.kuantitas}
+                    </span>
+                    <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                      {formatRupiah(Number(item.subtotal))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="flex justify-between items-center">
               <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>

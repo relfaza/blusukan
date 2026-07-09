@@ -42,6 +42,7 @@ export async function POST(req: Request) {
     jamTutup,
     buka24Jam,
     htmResmi,
+    htmAnak,
     hasToilet,
     hasParkir,
     hasTempatIbadah,
@@ -71,6 +72,12 @@ export async function POST(req: Request) {
   const htm = htmResmi === undefined || htmResmi === null || htmResmi === "" ? 0 : Number(htmResmi);
   if (!Number.isFinite(htm) || htm < 0) {
     return NextResponse.json({ message: "HTM tidak valid." }, { status: 400 });
+  }
+
+  const htmAnakValue: number | null =
+    htmAnak === undefined || htmAnak === null || htmAnak === "" ? null : Number(htmAnak);
+  if (htmAnakValue !== null && (!Number.isFinite(htmAnakValue) || htmAnakValue < 0)) {
+    return NextResponse.json({ message: "HTM anak-anak tidak valid." }, { status: 400 });
   }
 
   const buka24JamValue = Boolean(buka24Jam);
@@ -115,6 +122,7 @@ export async function POST(req: Request) {
       jamTutup: jamTutupValue,
       buka24Jam: buka24JamValue,
       htmResmi: htm,
+      htmAnak: htmAnakValue,
       hasToilet: Boolean(hasToilet),
       hasParkir: Boolean(hasParkir),
       hasTempatIbadah: Boolean(hasTempatIbadah),
