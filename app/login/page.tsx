@@ -3,6 +3,8 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { Compass } from "lucide-react";
 
 // Ikon mata (show/hide password)
 function EyeIcon({ open }: { open: boolean }) {
@@ -72,164 +74,180 @@ function LoginForm() {
 
   return (
     <div
-      className="min-h-screen flex"
-      style={{ backgroundColor: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-10"
+      style={{ backgroundColor: "var(--blusukan-surface-low)", fontFamily: "Inter, sans-serif" }}
     >
-      {/* Panel kiri — Dekoratif (desktop only) */}
-      {/* TODO: ganti gradient dengan foto hutan asli saat asset tersedia */}
       <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
+        className="relative w-full max-w-6xl flex flex-col lg:flex-row rounded-[2rem] lg:rounded-[2.5rem] overflow-hidden"
         style={{
-          background: "linear-gradient(160deg, #1a3d22 0%, #1f4d2c 40%, #2e6b3e 70%, #3a8050 100%)",
+          backgroundColor: "var(--blusukan-surface-container-lowest)",
+          boxShadow: "0 30px 60px -20px rgba(31,77,44,0.25), 0 10px 24px -8px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Overlay tekstur halus */}
-        <div
-          className="absolute inset-0 opacity-10"
+        {/* Ikon kompas — pojok kanan atas keseluruhan card */}
+        <Link
+          href="/"
+          aria-label="Kembali ke beranda"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105"
           style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 80%, #a8d5a2 0%, transparent 50%), radial-gradient(circle at 80% 20%, #6dbe8a 0%, transparent 50%)",
+            backgroundColor: "var(--blusukan-primary)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+            color: "#ffffff",
           }}
-        />
+        >
+          <Compass size={18} strokeWidth={2} />
+        </Link>
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <span
-            className="text-white text-2xl font-bold"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Blusukan
-          </span>
-        </div>
+        {/* Panel kiri — Foto (mobile: strip atas ~32vh, desktop: separuh card) */}
+        <div className="relative h-[32vh] lg:h-auto lg:w-1/2 overflow-hidden">
+          <Image
+            src="/prambanan.jpg"
+            alt="Siluet Candi Prambanan saat golden hour dengan gunung di belakang"
+            fill
+            priority
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover"
+          />
 
-        {/* Tagline bawah */}
-        <div className="relative z-10">
-          <h2
-            className="text-white text-4xl font-bold leading-tight mb-4"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Temukan Permata<br />Tersembunyi.
-          </h2>
-          <p className="text-white/70 text-base leading-relaxed">
-            Destinasi wisata hidden gem Yogyakarta<br />yang menanti untuk dijelajahi.
-          </p>
-        </div>
-      </div>
+          {/* Overlay gradient hijau tua — gelap di bawah-kiri, transparan di atas-kanan */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to top right, rgba(15,33,20,0.92) 0%, rgba(31,77,44,0.6) 42%, rgba(31,77,44,0.08) 78%)",
+            }}
+          />
 
-      {/* Panel kanan — Form */}
-      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 lg:px-16">
-        <div className="w-full max-w-sm">
+          {/* Aksen dekoratif — lingkaran tipis overlap, mengambang di pojok bawah panel foto */}
+          <div
+            className="absolute -bottom-6 -left-6 w-24 h-24 lg:w-36 lg:h-36 rounded-full pointer-events-none"
+            style={{ border: "1px solid rgba(255,255,255,0.22)" }}
+          />
+          <div
+            className="absolute bottom-2 left-8 lg:left-12 w-14 h-14 lg:w-20 lg:h-20 rounded-full pointer-events-none"
+            style={{ border: "1px solid rgba(255,255,255,0.32)" }}
+          />
+          <div
+            className="absolute bottom-8 lg:bottom-14 left-0 lg:left-1 w-9 h-9 lg:w-12 lg:h-12 rounded-full pointer-events-none"
+            style={{ border: "1px solid rgba(255,255,255,0.42)" }}
+          />
 
-          {/* Logo mobile */}
-          <div className="lg:hidden text-center mb-8">
+          {/* Konten: brand + headline */}
+          <div className="relative z-10 h-full flex flex-col justify-between p-4 sm:p-6 lg:p-12">
             <span
-              className="text-2xl font-bold"
-              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-primary)" }}
+              className="text-white text-base sm:text-lg lg:text-2xl font-bold"
+              style={{ fontFamily: "Montserrat, sans-serif", textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
             >
               Blusukan
             </span>
-            <p className="text-sm mt-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-              Temukan Permata Tersembunyi
-            </p>
-          </div>
 
-          {/* Heading */}
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-          >
-            Masuk
-          </h1>
-          <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-            Selamat datang kembali
-          </p>
-
-          {/* Sukses reset password */}
-          {resetSuccess && (
-            <div
-              className="text-sm rounded-lg px-4 py-3 mb-6"
-              style={{
-                backgroundColor: "var(--blusukan-surface-container-lowest)",
-                border: "1px solid var(--blusukan-outline-variant)",
-                color: "var(--blusukan-on-surface)",
-                borderRadius: "8px",
-              }}
-            >
-              Password berhasil direset. Silakan masuk dengan password baru Anda.
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div
-              className="text-sm rounded-lg px-4 py-3 mb-6"
-              style={{
-                backgroundColor: "var(--blusukan-error-container)",
-                color: "var(--blusukan-error)",
-                borderRadius: "8px",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
             <div>
-              <label
-                htmlFor="login-email"
-                className="block text-sm font-medium mb-1.5"
-                style={{ color: "var(--blusukan-on-surface)" }}
+              <h2
+                className="text-white text-lg sm:text-2xl lg:text-4xl xl:text-5xl leading-[1.15] mb-1.5 lg:mb-4"
+                style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 900, textShadow: "0 2px 6px rgba(0,0,0,0.35)" }}
               >
-                Email
-              </label>
-              <input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@contoh.com"
-                required
-                className="w-full px-3.5 py-2.5 text-sm transition-colors"
-                style={{
-                  border: "1px solid var(--blusukan-outline-variant)",
-                  borderRadius: "8px",
-                  backgroundColor: "var(--blusukan-surface-container-lowest)",
-                  color: "var(--blusukan-on-surface)",
-                  outline: "none",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "var(--blusukan-primary)")}
-                onBlur={(e) => (e.target.style.borderColor = "var(--blusukan-outline-variant)")}
-              />
+                Temukan Permata<br />Tersembunyi.
+              </h2>
+              <p
+                className="text-white/80 text-[11px] sm:text-sm lg:text-base leading-relaxed"
+                style={{ textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}
+              >
+                Destinasi wisata hidden gem Yogyakarta<br />yang menanti untuk dijelajahi.
+              </p>
             </div>
+          </div>
+        </div>
 
-            {/* Password */}
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
+        {/* Divider organik — versi vertikal (desktop) */}
+        <svg
+          className="hidden lg:block absolute top-0 h-full w-20 z-20"
+          style={{ left: "calc(50% - 40px)" }}
+          viewBox="0 0 80 800"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M40,0 C10,90 65,160 35,260 C8,350 68,430 38,540 C12,630 66,700 40,800 L80,800 L80,0 Z"
+            fill="var(--blusukan-surface-container-lowest)"
+          />
+        </svg>
+
+        {/* Divider organik — versi horizontal (mobile) */}
+        <svg
+          className="lg:hidden absolute left-0 w-full h-10 z-20"
+          style={{ top: "calc(32vh - 20px)" }}
+          viewBox="0 0 800 80"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M0,40 C90,10 160,65 260,35 C350,8 430,68 540,38 C630,12 700,66 800,40 L800,80 L0,80 Z"
+            fill="var(--blusukan-surface-container-lowest)"
+          />
+        </svg>
+
+        {/* Panel kanan — Form */}
+        <div className="flex-1 flex flex-col justify-center items-center px-6 py-10 lg:px-16 relative z-10">
+          <div className="w-full max-w-sm">
+
+            {/* Heading */}
+            <h1
+              className="text-2xl font-bold mb-1"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            >
+              Masuk
+            </h1>
+            <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+              Selamat datang kembali
+            </p>
+
+            {/* Sukses reset password */}
+            {resetSuccess && (
+              <div
+                className="text-sm rounded-lg px-4 py-3 mb-6"
+                style={{
+                  backgroundColor: "var(--blusukan-surface-container-lowest)",
+                  border: "1px solid var(--blusukan-outline-variant)",
+                  color: "var(--blusukan-on-surface)",
+                  borderRadius: "8px",
+                }}
+              >
+                Password berhasil direset. Silakan masuk dengan password baru Anda.
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div
+                className="text-sm rounded-lg px-4 py-3 mb-6"
+                style={{
+                  backgroundColor: "var(--blusukan-error-container)",
+                  color: "var(--blusukan-error)",
+                  borderRadius: "8px",
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email */}
+              <div>
                 <label
-                  htmlFor="login-password"
-                  className="block text-sm font-medium"
+                  htmlFor="login-email"
+                  className="block text-sm font-medium mb-1.5"
                   style={{ color: "var(--blusukan-on-surface)" }}
                 >
-                  Password
+                  Email
                 </label>
-                <Link
-                  href="/lupa-password"
-                  className="text-xs font-medium hover:underline"
-                  style={{ color: "var(--blusukan-primary)" }}
-                >
-                  Lupa Password?
-                </Link>
-              </div>
-              <div className="relative">
                 <input
-                  id="login-password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="email@contoh.com"
                   required
-                  className="w-full px-3.5 py-2.5 pr-11 text-sm transition-colors"
+                  className="w-full px-3.5 py-2.5 text-sm transition-colors"
                   style={{
                     border: "1px solid var(--blusukan-outline-variant)",
                     borderRadius: "8px",
@@ -240,50 +258,90 @@ function LoginForm() {
                   onFocus={(e) => (e.target.style.borderColor = "var(--blusukan-primary)")}
                   onBlur={(e) => (e.target.style.borderColor = "var(--blusukan-outline-variant)")}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color: "var(--blusukan-on-surface-variant)" }}
-                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                >
-                  <EyeIcon open={showPassword} />
-                </button>
               </div>
-            </div>
 
-            {/* Submit */}
-            <button
-              id="login-submit"
-              type="submit"
-              disabled={loading}
-              className="w-full font-semibold py-2.5 transition-opacity mt-2"
-              style={{
-                backgroundColor: "var(--blusukan-primary)",
-                color: "var(--blusukan-on-primary)",
-                borderRadius: "8px",
-                opacity: loading ? 0.6 : 1,
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-            >
-              {loading ? "Memproses..." : "Masuk"}
-            </button>
-          </form>
+              {/* Password */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label
+                    htmlFor="login-password"
+                    className="block text-sm font-medium"
+                    style={{ color: "var(--blusukan-on-surface)" }}
+                  >
+                    Password
+                  </label>
+                  <Link
+                    href="/lupa-password"
+                    className="text-xs font-medium hover:underline"
+                    style={{ color: "var(--blusukan-primary)" }}
+                  >
+                    Lupa Password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full px-3.5 py-2.5 pr-11 text-sm transition-colors"
+                    style={{
+                      border: "1px solid var(--blusukan-outline-variant)",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--blusukan-surface-container-lowest)",
+                      color: "var(--blusukan-on-surface)",
+                      outline: "none",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = "var(--blusukan-primary)")}
+                    onBlur={(e) => (e.target.style.borderColor = "var(--blusukan-outline-variant)")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: "var(--blusukan-on-surface-variant)" }}
+                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  >
+                    <EyeIcon open={showPassword} />
+                  </button>
+                </div>
+              </div>
 
-          {/* Link daftar */}
-          <p
-            className="text-center text-sm mt-6"
-            style={{ color: "var(--blusukan-on-surface-variant)" }}
-          >
-            Belum punya akun?{" "}
-            <Link
-              href="/register"
-              className="font-semibold hover:underline"
-              style={{ color: "var(--blusukan-primary)" }}
+              {/* Submit */}
+              <button
+                id="login-submit"
+                type="submit"
+                disabled={loading}
+                className="w-full font-semibold py-2.5 transition-opacity mt-2"
+                style={{
+                  backgroundColor: "var(--blusukan-primary)",
+                  color: "var(--blusukan-on-primary)",
+                  borderRadius: "8px",
+                  opacity: loading ? 0.6 : 1,
+                  cursor: loading ? "not-allowed" : "pointer",
+                }}
+              >
+                {loading ? "Memproses..." : "Masuk"}
+              </button>
+            </form>
+
+            {/* Link daftar */}
+            <p
+              className="text-center text-sm mt-6"
+              style={{ color: "var(--blusukan-on-surface-variant)" }}
             >
-              Daftar sekarang
-            </Link>
-          </p>
+              Belum punya akun?{" "}
+              <Link
+                href="/register"
+                className="font-semibold hover:underline"
+                style={{ color: "var(--blusukan-primary)" }}
+              >
+                Daftar sekarang
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
