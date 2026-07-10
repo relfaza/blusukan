@@ -54,7 +54,7 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
     return <TidakDiizinkan />;
   }
 
-  const [transaksis, fasilitasList, warungList] = await Promise.all([
+  const [transaksis, fasilitasList, warungList, bookings] = await Promise.all([
     prisma.transaksi.findMany({
       where: { destinationId: id },
       orderBy: { createdAt: "desc" },
@@ -68,6 +68,14 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
       where: { destinationId: id },
       include: { menuItems: true },
       orderBy: { updatedAt: "desc" },
+    }),
+    prisma.booking.findMany({
+      where: { destinationId: id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        service: { select: { providerName: true, serviceType: true } },
+        user: { select: { name: true } },
+      },
     }),
   ]);
 
@@ -109,12 +117,23 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
     })),
   }));
 
+  const initialBookings = bookings.map((b) => ({
+    id: b.id,
+    status: b.status,
+    travelDate: b.travelDate.toISOString(),
+    createdAt: b.createdAt.toISOString(),
+    contactNumber: b.contactNumber,
+    namaPemesan: b.user.name,
+    service: { providerName: b.service.providerName, serviceType: b.service.serviceType },
+  }));
+
   return (
     <PengelolaDestinasiClient
       destination={{ id: destination.id, name: destination.name, status: destination.status }}
       initialTransaksis={initialTransaksis}
       initialFasilitas={initialFasilitas}
       initialWarungs={initialWarungs}
+      initialBookings={initialBookings}
     />
   );
 }

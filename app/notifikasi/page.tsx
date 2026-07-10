@@ -18,18 +18,29 @@ export default async function NotifikasiPage() {
   // Pengelola tidak punya tab Riwayat Transaksi — tidak perlu query ini untuk mereka
   const isPengelola = user?.role === "PENGELOLA";
 
-  const transaksis = isPengelola
-    ? []
-    : await prisma.transaksi.findMany({
-        where: { userId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          destination: { select: { name: true } },
-          items: true,
-        },
-      });
+  const [transaksis, bookings] = isPengelola
+    ? [[], []]
+    : await Promise.all([
+        prisma.transaksi.findMany({
+          where: { userId },
+          orderBy: { createdAt: "desc" },
+          include: {
+            destination: { select: { name: true } },
+            items: true,
+          },
+        }),
+        prisma.booking.findMany({
+          where: { userId },
+          orderBy: { createdAt: "desc" },
+          include: {
+            destination: { select: { name: true } },
+            service: { select: { providerName: true, serviceType: true } },
+          },
+        }),
+      ]);
 
-  const serialized = transaksis.map((t) => ({
+  const serializedTransaksis = transaksis.map((t) => ({
+    kind: "transaksi" as const,
     id: t.id,
     kodeTransaksi: t.kodeTransaksi,
     type: t.type,
@@ -41,9 +52,23 @@ export default async function NotifikasiPage() {
     items: t.items.map((item) => ({ namaItem: item.namaItem, kuantitas: item.kuantitas })),
   }));
 
+  const serializedBookings = bookings.map((b) => ({
+    kind: "booking" as const,
+    id: b.id,
+    status: b.status,
+    travelDate: b.travelDate.toISOString(),
+    createdAt: b.createdAt.toISOString(),
+    destination: { name: b.destination.name },
+    service: { providerName: b.service.providerName, serviceType: b.service.serviceType },
+  }));
+
+  const riwayat = [...serializedTransaksis, ...serializedBookings].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
   return (
     <Suspense>
-      <NotifikasiPageClient transaksis={serialized} role={user?.role ?? null} />
+      <NotifikasiPageClient riwayat={riwayat} role={user?.role ?? null} />
     </Suspense>
   );
 }

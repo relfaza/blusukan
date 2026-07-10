@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Bell } from "lucide-react";
-import RiwayatTransaksiList, { type RiwayatTransaksiItem } from "./RiwayatTransaksiList";
+import RiwayatTransaksiList, { type RiwayatItem } from "./RiwayatTransaksiList";
 
 type NotifikasiItem = {
   id: string;
@@ -29,6 +29,26 @@ const KATEGORI_CHIPS: { key: KategoriFilter; label: string }[] = [
   { key: "REVIEW", label: "Ulasan" },
 ];
 
+type RiwayatKategoriFilter = "SEMUA" | "TIKET" | "FASILITAS" | "TRANSPORT" | "UMKM";
+
+const RIWAYAT_KATEGORI_CHIPS: { key: RiwayatKategoriFilter; label: string }[] = [
+  { key: "SEMUA", label: "Semua" },
+  { key: "TIKET", label: "Tiket" },
+  { key: "FASILITAS", label: "Fasilitas" },
+  { key: "TRANSPORT", label: "Transport" },
+  { key: "UMKM", label: "UMKM" },
+];
+
+const TRANSAKSI_TYPE_KATEGORI: Record<string, RiwayatKategoriFilter> = {
+  TIKET_MASUK: "TIKET",
+  FASILITAS: "FASILITAS",
+  UMKM: "UMKM",
+};
+
+function riwayatKategori(item: RiwayatItem): RiwayatKategoriFilter {
+  return item.kind === "booking" ? "TRANSPORT" : TRANSAKSI_TYPE_KATEGORI[item.type] ?? "TIKET";
+}
+
 // Waktu relatif ringkas ala "2 jam lalu"
 function formatRelativeTime(iso: string): string {
   const diffSec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -43,10 +63,10 @@ function formatRelativeTime(iso: string): string {
 }
 
 export default function NotifikasiPageClient({
-  transaksis,
+  riwayat,
   role,
 }: {
-  transaksis: RiwayatTransaksiItem[];
+  riwayat: RiwayatItem[];
   role: string | null;
 }) {
   const router = useRouter();
@@ -56,6 +76,7 @@ export default function NotifikasiPageClient({
   const [tab, setTab] = useState<Tab>(initialTab);
   const [notifications, setNotifications] = useState<NotifikasiItem[] | null>(null);
   const [kategoriFilter, setKategoriFilter] = useState<KategoriFilter>("SEMUA");
+  const [riwayatFilter, setRiwayatFilter] = useState<RiwayatKategoriFilter>("SEMUA");
 
   useEffect(() => {
     fetch("/api/notifikasi")
@@ -96,6 +117,9 @@ export default function NotifikasiPageClient({
       : kategoriFilter === "SEMUA"
         ? notifications
         : notifications.filter((n) => n.kategori === kategoriFilter);
+
+  const filteredRiwayat =
+    riwayatFilter === "SEMUA" ? riwayat : riwayat.filter((item) => riwayatKategori(item) === riwayatFilter);
 
   return (
     <div
@@ -225,7 +249,30 @@ export default function NotifikasiPageClient({
             </>
           )
         ) : (
-          <RiwayatTransaksiList transaksis={transaksis} />
+          <>
+            <div className="flex items-center gap-2 mb-6 flex-wrap">
+              {RIWAYAT_KATEGORI_CHIPS.map((c) => {
+                const active = riwayatFilter === c.key;
+                return (
+                  <button
+                    key={c.key}
+                    type="button"
+                    id={`chip-riwayat-${c.key.toLowerCase()}`}
+                    onClick={() => setRiwayatFilter(c.key)}
+                    className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                    style={{
+                      background: active ? "var(--blusukan-primary)" : "#ffffff",
+                      color: active ? "var(--blusukan-on-primary)" : "var(--blusukan-on-surface-variant)",
+                      border: `1px solid ${active ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
+                    }}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+            <RiwayatTransaksiList transaksis={filteredRiwayat} />
+          </>
         )}
       </div>
     </div>
