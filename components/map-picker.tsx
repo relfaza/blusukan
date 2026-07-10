@@ -56,10 +56,11 @@ function FlyToPosition({ position }: { position: [number, number] | null }) {
 interface MapPickerProps {
   initialLatitude?: number | null;
   initialLongitude?: number | null;
-  onLocationSelect: (lat: number, lng: number) => void;
+  onLocationSelect?: (lat: number, lng: number) => void;
+  readOnly?: boolean;
 }
 
-export default function MapPicker({ initialLatitude, initialLongitude, onLocationSelect }: MapPickerProps) {
+export default function MapPicker({ initialLatitude, initialLongitude, onLocationSelect, readOnly = false }: MapPickerProps) {
   const [position, setPosition] = useState<[number, number] | null>(
     initialLatitude != null && initialLongitude != null ? [initialLatitude, initialLongitude] : null
   );
@@ -69,7 +70,7 @@ export default function MapPicker({ initialLatitude, initialLongitude, onLocatio
 
   function handleSelect(lat: number, lng: number) {
     setPosition([lat, lng]);
-    onLocationSelect(lat, lng);
+    onLocationSelect?.(lat, lng);
   }
 
   function handleUseMyLocation() {
@@ -84,7 +85,7 @@ export default function MapPicker({ initialLatitude, initialLongitude, onLocatio
         const next: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setPosition(next);
         setFlyTo(next);
-        onLocationSelect(next[0], next[1]);
+        onLocationSelect?.(next[0], next[1]);
         setLocating(false);
       },
       () => {
@@ -104,44 +105,52 @@ export default function MapPicker({ initialLatitude, initialLongitude, onLocatio
         <MapContainer
           center={position ?? DEFAULT_CENTER}
           zoom={position ? SELECTED_ZOOM : DEFAULT_ZOOM}
-          scrollWheelZoom
+          scrollWheelZoom={!readOnly}
+          dragging={!readOnly}
+          zoomControl={!readOnly}
+          doubleClickZoom={!readOnly}
+          touchZoom={!readOnly}
           style={{ width: "100%", height: "100%" }}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <ClickHandler onSelect={handleSelect} />
+          {!readOnly && <ClickHandler onSelect={handleSelect} />}
           <FlyToPosition position={flyTo} />
           {position && <Marker position={position} icon={PIN_ICON} />}
         </MapContainer>
       </div>
 
-      <p className="text-xs mt-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-        {position
-          ? `Koordinat terpilih: ${position[0].toFixed(6)}, ${position[1].toFixed(6)}`
-          : "Klik di peta untuk memilih lokasi destinasi."}
-      </p>
+      {!readOnly && (
+        <>
+          <p className="text-xs mt-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            {position
+              ? `Koordinat terpilih: ${position[0].toFixed(6)}, ${position[1].toFixed(6)}`
+              : "Klik di peta untuk memilih lokasi destinasi."}
+          </p>
 
-      <button
-        type="button"
-        onClick={handleUseMyLocation}
-        disabled={locating}
-        className="mt-2 flex items-center justify-center gap-1.5 w-full text-sm font-semibold px-4 py-2.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-60"
-        style={{
-          background: "#ffffff",
-          color: "var(--blusukan-primary)",
-          border: "1px solid var(--blusukan-primary)",
-        }}
-      >
-        {locating ? <Loader2 size={16} className="animate-spin" /> : <Crosshair size={16} />}
-        {locating ? "Mengambil lokasi..." : "Gunakan Lokasi Saya Saat Ini"}
-      </button>
+          <button
+            type="button"
+            onClick={handleUseMyLocation}
+            disabled={locating}
+            className="mt-2 flex items-center justify-center gap-1.5 w-full text-sm font-semibold px-4 py-2.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{
+              background: "#ffffff",
+              color: "var(--blusukan-primary)",
+              border: "1px solid var(--blusukan-primary)",
+            }}
+          >
+            {locating ? <Loader2 size={16} className="animate-spin" /> : <Crosshair size={16} />}
+            {locating ? "Mengambil lokasi..." : "Gunakan Lokasi Saya Saat Ini"}
+          </button>
 
-      {geoError && (
-        <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
-          {geoError}
-        </p>
+          {geoError && (
+            <p className="text-xs mt-1.5" style={{ color: "var(--blusukan-error)" }}>
+              {geoError}
+            </p>
+          )}
+        </>
       )}
     </div>
   );
