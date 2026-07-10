@@ -43,12 +43,27 @@ export async function GET(_req: Request, { params }: Props) {
         include: { user: { select: { name: true } } },
       },
       fasilitas: { orderBy: { nama: "asc" } },
+      warungs: {
+        orderBy: { name: "asc" },
+        include: { menuItems: { orderBy: { name: "asc" } } },
+      },
+      localServices: { orderBy: { providerName: "asc" } },
+      reviews: {
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        include: { user: { select: { name: true } } },
+      },
     },
   });
 
   if (!destination) {
     return NextResponse.json({ message: "Destinasi tidak ditemukan." }, { status: 404 });
   }
+
+  const [reviewCount, reviewAgg] = await Promise.all([
+    prisma.review.count({ where: { destinationId: id } }),
+    prisma.review.aggregate({ where: { destinationId: id }, _avg: { rating: true } }),
+  ]);
 
   return NextResponse.json({
     id: destination.id,
@@ -93,6 +108,45 @@ export async function GET(_req: Request, { params }: Props) {
       satuanWaktu: f.satuanWaktu,
       jumlahUnit: f.jumlahUnit,
     })),
+    fasilitasGratis: {
+      hasToilet: destination.hasToilet,
+      hasParkir: destination.hasParkir,
+      hasTempatIbadah: destination.hasTempatIbadah,
+      hasTempatDuduk: destination.hasTempatDuduk,
+      hasPenitipanBarang: destination.hasPenitipanBarang,
+    },
+    warungs: destination.warungs.map((w) => ({
+      id: w.id,
+      name: w.name,
+      kategori: w.kategori,
+      location: w.location,
+      namaPemilik: w.namaPemilik,
+      bisaBooking: w.bisaBooking,
+      menuItems: w.menuItems.map((m) => ({
+        id: m.id,
+        name: m.name,
+        price: Number(m.price),
+      })),
+    })),
+    localServices: destination.localServices.map((s) => ({
+      id: s.id,
+      providerName: s.providerName,
+      serviceType: s.serviceType,
+      contactWa: s.contactWa,
+      baseRate: Number(s.baseRate),
+      isValidated: s.isValidated,
+    })),
+    reviews: destination.reviews.map((r) => ({
+      id: r.id,
+      userName: r.user.name,
+      rating: r.rating,
+      komentar: r.komentar,
+      createdAt: r.createdAt.toISOString(),
+    })),
+    reviewStats: {
+      count: reviewCount,
+      averageRating: reviewAgg._avg.rating != null ? Number(reviewAgg._avg.rating.toFixed(1)) : null,
+    },
   });
 }
 

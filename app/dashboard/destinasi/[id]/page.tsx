@@ -1,11 +1,31 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, UserCircle, ShieldCheck, ImageOff, MessageCircle, Package } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  UserCircle,
+  ShieldCheck,
+  ImageOff,
+  MessageCircle,
+  Package,
+  Droplets,
+  Car,
+  Cross,
+  Armchair,
+  CheckCircle2,
+  XCircle,
+  Store,
+  Bike,
+  Compass,
+  Star,
+  Phone,
+} from "lucide-react";
 import { requireAdminPage } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import ApprovalActions from "./ApprovalActions";
 import HapusPermanenAction from "./HapusPermanenAction";
+import PetaLokasi from "./PetaLokasi";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +81,26 @@ const CROWD_LABEL: Record<string, string> = {
   PADAT: "Padat",
 };
 
+const KATEGORI_UMKM_LABEL: Record<string, string> = {
+  KULINER: "Kuliner",
+  KERAJINAN: "Kerajinan",
+  FASHION: "Fashion",
+  JASA: "Jasa",
+  LAINNYA: "Lainnya",
+};
+
+const SERVICE_TYPE_LABEL: Record<string, string> = {
+  OJEK: "Ojek Lokal",
+  JEEP: "Sewa Jeep",
+  GUIDE: "Pemandu Wisata",
+};
+
+const SERVICE_TYPE_ICON: Record<string, React.ReactNode> = {
+  OJEK: <Bike size={13} />,
+  JEEP: <Car size={13} />,
+  GUIDE: <Compass size={13} />,
+};
+
 function formatRupiah(n: number): string {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -95,6 +135,54 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
+function FasilitasGratisItem({
+  label,
+  available,
+  icon,
+}: {
+  label: string;
+  available: boolean;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div
+      className="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl"
+      style={{
+        background: available ? "var(--blusukan-primary-container)" : "var(--blusukan-surface)",
+        border: `1px solid ${available ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
+      }}
+    >
+      <span style={{ color: available ? "var(--blusukan-primary)" : "var(--blusukan-outline)" }}>{icon}</span>
+      <span
+        className="text-sm font-medium flex-1"
+        style={{ color: available ? "var(--blusukan-on-surface)" : "var(--blusukan-on-surface-variant)" }}
+      >
+        {label}
+      </span>
+      {available ? (
+        <CheckCircle2 size={15} style={{ color: "var(--blusukan-primary)" }} />
+      ) : (
+        <XCircle size={15} style={{ color: "var(--blusukan-outline)" }} />
+      )}
+    </div>
+  );
+}
+
+function StarRow({ rating, size = 15 }: { rating: number; size?: number }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`Rating ${rating} dari 5`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          size={size}
+          fill={rating >= n ? "#f5a623" : "none"}
+          style={{ color: rating >= n ? "#f5a623" : "var(--blusukan-outline-variant)" }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -123,10 +211,26 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
         include: { user: { select: { name: true } } },
       },
       fasilitas: { orderBy: { nama: "asc" } },
+      warungs: {
+        orderBy: { name: "asc" },
+        include: { menuItems: true },
+      },
+      localServices: { orderBy: { providerName: "asc" } },
+      reviews: {
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        include: { user: { select: { name: true } } },
+      },
     },
   });
 
   if (!d) notFound();
+
+  const [reviewCount, reviewAgg] = await Promise.all([
+    prisma.review.count({ where: { destinationId: id } }),
+    prisma.review.aggregate({ where: { destinationId: id }, _avg: { rating: true } }),
+  ]);
+  const avgRating = reviewAgg._avg.rating != null ? Number(reviewAgg._avg.rating.toFixed(1)) : null;
 
   const statusStyle = STATUS_STYLE[d.status] ?? STATUS_STYLE.PENDING;
 
@@ -203,7 +307,6 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InfoItem label="Kabupaten" value={KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten} />
               <InfoItem label="Kategori" value={KATEGORI_LABEL[d.kategori] ?? d.kategori} />
-              <InfoItem label="Koordinat" value={`${d.latitude}, ${d.longitude}`} />
               <InfoItem label="Jam Operasional" value={d.jamOperasional || "Tidak ada data"} />
               <InfoItem
                 label="Harga Tiket Dewasa"
@@ -224,6 +327,16 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
                 label="Tanggal Disetujui"
                 value={d.approvedAt ? formatTanggal(d.approvedAt) : "Belum disetujui"}
               />
+            </div>
+
+            <div className="mt-4">
+              <p className="text-xs mb-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Koordinat
+              </p>
+              <PetaLokasi latitude={d.latitude} longitude={d.longitude} />
+              <p className="text-xs mt-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                {d.latitude}, {d.longitude}
+              </p>
             </div>
           </SectionCard>
 
@@ -281,6 +394,22 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
             </div>
           </SectionCard>
 
+          {/* Fasilitas Umum — gratis */}
+          <SectionCard>
+            <SectionTitle>Fasilitas Umum (Gratis)</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <FasilitasGratisItem label="Toilet" available={d.hasToilet} icon={<Droplets size={16} />} />
+              <FasilitasGratisItem label="Parkir" available={d.hasParkir} icon={<Car size={16} />} />
+              <FasilitasGratisItem label="Tempat Ibadah" available={d.hasTempatIbadah} icon={<Cross size={16} />} />
+              <FasilitasGratisItem label="Tempat Duduk" available={d.hasTempatDuduk} icon={<Armchair size={16} />} />
+              <FasilitasGratisItem
+                label="Penitipan Barang"
+                available={d.hasPenitipanBarang}
+                icon={<Package size={16} />}
+              />
+            </div>
+          </SectionCard>
+
           {/* Fasilitas — read-only */}
           <SectionCard>
             <SectionTitle>
@@ -307,6 +436,144 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
                     <span className="text-sm font-bold" style={{ color: "var(--blusukan-primary)" }}>
                       {formatRupiah(Number(f.hargaSewa))} / {f.satuanWaktu}
                     </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          {/* UMKM Terdaftar */}
+          <SectionCard>
+            <SectionTitle>
+              <span className="flex items-center gap-2">
+                <Store size={16} />
+                UMKM Terdaftar
+              </span>
+            </SectionTitle>
+            {d.warungs.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Belum ada UMKM terdaftar di destinasi ini.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {d.warungs.map((w) => (
+                  <div
+                    key={w.id}
+                    className="py-3 px-3.5 rounded-xl"
+                    style={{ background: "var(--blusukan-surface)", border: "1px solid var(--blusukan-outline-variant)" }}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                        {w.name}
+                      </span>
+                      <span
+                        className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+                        style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+                      >
+                        {KATEGORI_UMKM_LABEL[w.kategori] ?? w.kategori}
+                      </span>
+                    </div>
+                    <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                      {w.menuItems.length} produk {w.namaPemilik ? `· Pemilik: ${w.namaPemilik}` : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          {/* Transportasi Tersedia */}
+          <SectionCard>
+            <SectionTitle>
+              <span className="flex items-center gap-2">
+                <Bike size={16} />
+                Transportasi Tersedia
+              </span>
+            </SectionTitle>
+            {d.localServices.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Belum ada jasa transportasi terdaftar.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {d.localServices.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between gap-3 py-2.5 px-3.5 rounded-xl"
+                    style={{ background: "var(--blusukan-surface)", border: "1px solid var(--blusukan-outline-variant)" }}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+                      >
+                        {SERVICE_TYPE_ICON[s.serviceType] ?? <Compass size={13} />}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                          {s.providerName}
+                        </p>
+                        <p className="text-xs flex items-center gap-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                          {SERVICE_TYPE_LABEL[s.serviceType] ?? s.serviceType}
+                          <span className="inline-flex items-center gap-0.5">
+                            <Phone size={11} />
+                            {s.contactWa}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold whitespace-nowrap" style={{ color: "var(--blusukan-primary)" }}>
+                      {formatRupiah(Number(s.baseRate))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          {/* Ulasan & Rating */}
+          <SectionCard>
+            <SectionTitle>
+              <span className="flex items-center gap-2">
+                <Star size={16} />
+                Ulasan & Rating
+              </span>
+            </SectionTitle>
+            <div className="flex items-center gap-2 mb-4">
+              <StarRow rating={avgRating ?? 0} />
+              <span className="text-sm font-bold" style={{ color: "var(--blusukan-on-surface)" }}>
+                {avgRating != null ? avgRating.toFixed(1) : "Belum ada rating"}
+              </span>
+              <span className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                ({reviewCount} ulasan)
+              </span>
+            </div>
+            {d.reviews.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Belum ada ulasan dari wisatawan.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {d.reviews.map((r) => (
+                  <div
+                    key={r.id}
+                    className="py-3 px-3.5 rounded-xl"
+                    style={{ background: "var(--blusukan-surface)", border: "1px solid var(--blusukan-outline-variant)" }}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
+                        {r.user.name}
+                      </span>
+                      <span className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                        {formatTanggal(r.createdAt)}
+                      </span>
+                    </div>
+                    <StarRow rating={r.rating} size={12} />
+                    {r.komentar && (
+                      <p className="text-xs italic mt-1.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                        &ldquo;{r.komentar}&rdquo;
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
