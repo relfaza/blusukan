@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, LogOut, User, MapPin, LayoutDashboard } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, MapPin, LayoutDashboard, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 type NotifikasiItem = {
@@ -268,6 +268,19 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                     <User size={15} style={{ color: "#42493e" }} />
                     Profil Saya
                   </Link>
+
+                  {user?.role === "ADMIN" && (
+                    <Link
+                      href="/pengaturan"
+                      id="dropdown-pengaturan"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
+                      style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                    >
+                      <Settings size={15} style={{ color: "#42493e" }} />
+                      Pengaturan
+                    </Link>
+                  )}
 
                   <button
                     id="dropdown-logout"

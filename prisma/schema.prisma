@@ -110,6 +110,9 @@ model User {
   resetToken        String?
   resetTokenExpiry  DateTime?
   createdAt         DateTime  @default(now())
+  namaInstansi      String?
+  notifEmailAktif   Boolean   @default(true)
+  bahasaPreferensi  String    @default("id")
 
   reports               UserReport[]
   bookings              Booking[]
