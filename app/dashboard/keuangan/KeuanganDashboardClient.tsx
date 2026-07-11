@@ -57,7 +57,7 @@ export default function KeuanganDashboardClient({ semuaDestinasiKeuangan }: { se
           </Link>
           <div className="flex items-center gap-4">
             <Link
-              href="/dashboard/peringkat-keuangan"
+              href="/dashboard/peringkat-keuangan?from=keuangan"
               id="link-lihat-peringkat-keuangan"
               className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
               style={{ color: "var(--blusukan-primary)" }}

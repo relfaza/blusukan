@@ -19,6 +19,13 @@ const TOP_BADGE: Record<number, { label: string; bg: string; color: string }> = 
   3: { label: "🥉 Cukup Ramai", bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
 };
 
+const BACK_TARGET: Record<string, { href: string; label: string }> = {
+  dashboard: { href: "/dashboard", label: "← Kembali ke Dashboard" },
+  destinasi: { href: "/dashboard/destinasi", label: "← Kembali ke Destinasi Aktif" },
+  keuangan: { href: "/dashboard/keuangan", label: "← Kembali ke Dashboard Keuangan" },
+};
+const DEFAULT_BACK = { href: "/dashboard", label: "← Kembali ke Dashboard" };
+
 function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
     <div className="flex items-center gap-0.5" aria-label={`Rating ${rating} dari 5`}>
@@ -34,8 +41,14 @@ function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
   );
 }
 
-export default async function PeringkatKeramaianPage() {
+export default async function PeringkatKeramaianPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
   await requireAdminPage();
+  const { from } = await searchParams;
+  const back = (from && BACK_TARGET[from]) || DEFAULT_BACK;
 
   const peringkat = await getPeringkatDestinasi();
 
@@ -43,12 +56,12 @@ export default async function PeringkatKeramaianPage() {
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
       <div className="max-w-4xl mx-auto px-4 lg:px-8 py-10">
         <Link
-          href="/dashboard"
+          href={back.href}
           id="peringkat-back"
           className="flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
           style={{ color: "var(--blusukan-primary)" }}
         >
-          ← Kembali ke Dashboard
+          {back.label}
         </Link>
 
         <div className="flex items-center gap-2 mb-1">
