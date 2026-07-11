@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet, MapPin } from "lucide-react";
 import type { PeringkatKeuangan } from "@/lib/peringkat-keuangan";
 import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
 import ChartDetailDialog, { type DetailColumn } from "../ChartDetailDialog";
@@ -22,6 +22,22 @@ import {
 } from "./keuangan-shared";
 
 const PERINGKAT_TABS: PeringkatWidgetTab[] = [{ key: "terlaris", label: "Terlaris", dataSource: "pendapatan" }];
+
+const KABUPATEN_LABEL: Record<string, string> = {
+  SLEMAN: "Sleman",
+  GUNUNGKIDUL: "Gunungkidul",
+  BANTUL: "Bantul",
+  KULON_PROGO: "Kulon Progo",
+  KOTA_YOGYAKARTA: "Kota Yogyakarta",
+};
+
+const KATEGORI_LABEL: Record<string, string> = {
+  PANTAI: "Pantai",
+  AIR_TERJUN: "Air Terjun",
+  GUNUNG: "Gunung",
+  BUKIT: "Bukit",
+  TEBING: "Tebing",
+};
 
 const TRANSAKSI_STATUS_LABEL: Record<string, string> = {
   PENDING: "Menunggu Konfirmasi",
@@ -110,7 +126,7 @@ export default function KeuanganDashboardClient({
           </Link>
           <div className="flex items-center gap-4">
             <Link
-              href="/dashboard/transaksi"
+              href="/dashboard/transaksi?from=keuangan"
               id="link-lihat-semua-transaksi"
               className="text-xs font-semibold hover:opacity-70 transition-opacity"
               style={{ color: "var(--blusukan-on-surface-variant)" }}
@@ -187,47 +203,51 @@ export default function KeuanganDashboardClient({
         />
 
         {/* Keuangan per Destinasi */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}>
-          <div className="px-5 pt-5 pb-1">
-            <h3 className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
-              Keuangan per Destinasi
-            </h3>
-            <p className="text-xs mt-0.5 mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-              Klik destinasi untuk lihat detail keuangannya
-            </p>
-          </div>
+        <section>
+          <h3 className="text-sm font-bold mb-1" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
+            Keuangan per Destinasi
+          </h3>
+          <p className="text-xs mb-3" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Klik destinasi untuk lihat detail keuangannya
+          </p>
+
           {semuaDestinasiKeuangan.length === 0 ? (
-            <div className="px-5 py-8 text-center">
+            <div className="rounded-2xl p-10 flex flex-col items-center text-center" style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}>
               <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                 Belum ada destinasi dengan transaksi
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {semuaDestinasiKeuangan.map((d) => (
                 <Link
                   key={d.id}
                   href={`/dashboard/keuangan/${d.id}`}
                   id={`card-keuangan-destinasi-${d.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-[#f7f8f5]"
-                  style={{ border: "1px solid var(--blusukan-outline-variant)" }}
+                  className="block rounded-2xl p-5 transition-shadow hover:shadow-md"
+                  style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
                 >
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
-                      {d.name}
-                    </p>
-                    <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                      {d.jumlahTransaksi} transaksi
-                    </p>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <MapPin size={14} style={{ color: "var(--blusukan-on-surface-variant)" }} />
+                    <span className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                      {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}
+                    </span>
                   </div>
-                  <p className="text-sm font-bold shrink-0" style={{ color: "var(--blusukan-primary)" }}>
-                    {formatRupiah(d.totalPendapatan)}
+
+                  <p className="text-base font-bold mb-1" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
+                    {d.name}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    {KATEGORI_LABEL[d.kategori] ?? d.kategori} · Dikelola oleh {d.submittedByName}
+                  </p>
+                  <p className="text-xs font-bold mt-2" style={{ color: "var(--blusukan-primary)" }}>
+                    Total Pendapatan: {formatRupiah(d.totalPendapatan)}
                   </p>
                 </Link>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
 
       <ChartDetailDialog state={detailState} onOpenChange={closeDetail} />

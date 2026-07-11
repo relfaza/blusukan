@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { buildBucketsForPeriodeKeuangan, type PeriodeKeuangan } from "@/lib/keuanganBuckets";
+import type { TransaksiType } from "@/lib/generated/prisma/enums";
 
 const TRANSAKSI_SELESAI_STATUS = ["SELESAI", "DIKONFIRMASI"] as const;
+const VALID_JENIS = ["TIKET_MASUK", "FASILITAS", "UMKM"];
 
 export async function GET(request: Request) {
   const authResult = await requireAdminApi();
@@ -14,6 +16,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const periode = searchParams.get("periode") ?? "harian";
   const destinationId = searchParams.get("destinationId");
+  const jenis = searchParams.get("jenis");
 
   if (!["harian", "mingguan", "bulanan", "tahunan"].includes(periode)) {
     return NextResponse.json({ message: "Periode tidak valid." }, { status: 400 });
@@ -29,6 +32,7 @@ export async function GET(request: Request) {
       status: { in: [...TRANSAKSI_SELESAI_STATUS] },
       createdAt: { gte: rangeStart },
       ...(destinationId ? { destinationId } : {}),
+      ...(jenis && VALID_JENIS.includes(jenis) ? { type: jenis as TransaksiType } : {}),
     },
     select: {
       totalHarga: true,
