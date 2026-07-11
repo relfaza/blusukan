@@ -30,6 +30,18 @@ const KATEGORI_LABEL: Record<string, string> = {
   TEBING: "Tebing",
 };
 
+function formatTanggalDiajukan(iso: string): string {
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(iso));
+}
+
+function sortByCreatedAt(list: PendingDestination[], mode: "terlama" | "terbaru" | null): PendingDestination[] {
+  if (!mode) return list;
+  return [...list].sort((a, b) => {
+    const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    return mode === "terbaru" ? -diff : diff;
+  });
+}
+
 export default function PersetujuanClient() {
   const [items, setItems] = useState<PendingDestination[] | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -38,7 +50,7 @@ export default function PersetujuanClient() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/admin/destinasi${activeSort ? `?sortBy=${activeSort}` : ""}`)
+    fetch("/api/admin/destinasi")
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setItems(Array.isArray(data) ? data : []);
@@ -49,7 +61,9 @@ export default function PersetujuanClient() {
     return () => {
       cancelled = true;
     };
-  }, [activeSort]);
+  }, []);
+
+  const sortedItems = items ? sortByCreatedAt(items, activeSort) : null;
 
   async function handleAction(id: string, status: "APPROVED" | "REJECTED") {
     setProcessingId(id);
@@ -129,7 +143,7 @@ export default function PersetujuanClient() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {items.map((d) => {
+            {(sortedItems ?? items).map((d) => {
               const busy = processingId === d.id;
               return (
                 <div
@@ -153,8 +167,11 @@ export default function PersetujuanClient() {
                       {d.name}
                     </p>
                   </Link>
-                  <p className="text-xs mb-4" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                     {KATEGORI_LABEL[d.kategori] ?? d.kategori} · Diajukan oleh {d.submittedByName}
+                  </p>
+                  <p className="text-xs mb-4" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    Diajukan pada {formatTanggalDiajukan(d.createdAt)}
                   </p>
 
                   <div className="flex items-center gap-2">
