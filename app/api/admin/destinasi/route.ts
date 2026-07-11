@@ -45,6 +45,8 @@ export async function GET(request: Request) {
       name: d.name,
       kabupaten: d.kabupaten,
       kategori: d.kategori,
+      latitude: d.latitude,
+      longitude: d.longitude,
       submittedByName: d.submittedBy.name,
       createdAt: d.createdAt.toISOString(),
     }))

@@ -2,13 +2,30 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { MapPin, Search, BarChart3 } from "lucide-react";
+
+const AdminMapOverview = dynamic(() => import("@/components/admin-map-overview"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="w-full h-72 sm:h-96 flex items-center justify-center rounded-2xl"
+      style={{ background: "#f3f3f3", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        Memuat peta…
+      </span>
+    </div>
+  ),
+});
 
 type DestinasiRow = {
   id: string;
   name: string;
   kabupaten: string;
   kategori: string;
+  latitude: number;
+  longitude: number;
   submittedByName: string;
   createdAt: string;
 };
@@ -207,6 +224,18 @@ export default function DestinasiAktifClient() {
           >
             {error}
           </p>
+        )}
+
+        {items && items.length > 0 && (
+          <section className="mb-8">
+            <h2
+              className="text-sm font-bold mb-3"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            >
+              🗺️ Peta Sebaran Destinasi
+            </h2>
+            <AdminMapOverview destinasi={items} />
+          </section>
         )}
 
         {items === null ? (
