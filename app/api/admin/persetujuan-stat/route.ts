@@ -29,10 +29,11 @@ export async function GET() {
     return NextResponse.json({ message: authResult.message }, { status: authResult.status });
   }
 
-  const buckets = buildHarianBuckets(new Date());
+  const now = new Date();
+  const buckets = buildHarianBuckets(now);
   const rangeStart = buckets[0].start;
 
-  const [pendingRecent, kabupatenGroups, kategoriGroups, totalPending] = await Promise.all([
+  const [pendingRecent, kabupatenGroups, kategoriGroups, totalPending, oldestPending, newestPending] = await Promise.all([
     prisma.destination.findMany({
       where: { status: "PENDING", createdAt: { gte: rangeStart } },
       select: { createdAt: true },
@@ -48,6 +49,16 @@ export async function GET() {
       _count: { _all: true },
     }),
     prisma.destination.count({ where: { status: "PENDING" } }),
+    prisma.destination.findFirst({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true, createdAt: true },
+    }),
+    prisma.destination.findFirst({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, createdAt: true },
+    }),
   ]);
 
   const perTanggal = buckets.map(({ tanggal, start, end }) => ({
@@ -55,10 +66,18 @@ export async function GET() {
     jumlah: pendingRecent.filter((d) => d.createdAt >= start && d.createdAt < end).length,
   }));
 
+  const hariSejak = (createdAt: Date) => Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+
   return NextResponse.json({
     perTanggal,
     perKabupaten: kabupatenGroups.map((g) => ({ kabupaten: g.kabupaten, jumlah: g._count._all })),
     perKategori: kategoriGroups.map((g) => ({ kategori: g.kategori, jumlah: g._count._all })),
     totalPending,
+    destinasiTerlama: oldestPending
+      ? { id: oldestPending.id, name: oldestPending.name, hari: hariSejak(oldestPending.createdAt) }
+      : null,
+    destinasiTerbaru: newestPending
+      ? { id: newestPending.id, name: newestPending.name, hari: hariSejak(newestPending.createdAt) }
+      : null,
   });
 }

@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Clock, CalendarPlus, AlertTriangle } from "lucide-react";
+
+type DestinasiRingkas = { id: string; name: string; hari: number };
 
 type PersetujuanStat = {
   perTanggal: { tanggal: string; jumlah: number }[];
   perKabupaten: { kabupaten: string; jumlah: number }[];
   perKategori: { kategori: string; jumlah: number }[];
   totalPending: number;
+  destinasiTerlama: DestinasiRingkas | null;
+  destinasiTerbaru: DestinasiRingkas | null;
 };
+
+// Ambang dominasi kategori — kalau satu kategori melebihi ini dari total PENDING, tampilkan insight ke Admin
+const DOMINASI_THRESHOLD_PCT = 50;
 
 const KABUPATEN_LABEL: Record<string, string> = {
   SLEMAN: "Sleman",
@@ -28,19 +36,77 @@ const KATEGORI_LABEL: Record<string, string> = {
 
 const axisTickStyle = { fontSize: 11, fill: "var(--blusukan-on-surface-variant)" };
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function ChartCard({ title, badge, children }: { title: string; badge?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div
       className="rounded-2xl p-5"
       style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
     >
       <h3
-        className="text-sm font-bold mb-4"
+        className={`text-sm font-bold ${badge ? "mb-2" : "mb-4"}`}
         style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
       >
         {title}
       </h3>
+      {badge && <div className="mb-4">{badge}</div>}
       {children}
+    </div>
+  );
+}
+
+function DominasiBadge({ label }: { label: string }) {
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
+      style={{ background: "var(--blusukan-error-container)", color: "var(--blusukan-error)" }}
+    >
+      <AlertTriangle size={13} />
+      Kategori {label} mendominasi pengajuan saat ini
+    </div>
+  );
+}
+
+function InfoCard({
+  icon,
+  label,
+  destinasi,
+  hariSuffix,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  destinasi: DestinasiRingkas | null;
+  hariSuffix: (hari: number) => string;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-5 flex items-start gap-3"
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div
+        className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center"
+        style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+      >
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          {label}
+        </p>
+        {destinasi ? (
+          <>
+            <p className="text-sm font-bold truncate" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
+              {destinasi.name}
+            </p>
+            <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+              {hariSuffix(destinasi.hari)}
+            </p>
+          </>
+        ) : (
+          <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Tidak ada data
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -187,6 +253,15 @@ export default function PersetujuanStatSection() {
   if (!data) {
     return (
       <div className="space-y-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl p-5 h-[76px] animate-pulse"
+              style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            />
+          ))}
+        </div>
         <div
           className="rounded-2xl p-5 h-[236px] animate-pulse"
           style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
@@ -204,8 +279,27 @@ export default function PersetujuanStatSection() {
     );
   }
 
+  const dominanKategori = [...data.perKategori].sort((a, b) => b.jumlah - a.jumlah)[0];
+  const dominanPct = dominanKategori && data.totalPending > 0 ? (dominanKategori.jumlah / data.totalPending) * 100 : 0;
+  const showDominasiBadge = dominanKategori && dominanPct > DOMINASI_THRESHOLD_PCT;
+
   return (
     <div className="space-y-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <InfoCard
+          icon={<Clock size={16} />}
+          label="Menunggu Terlama"
+          destinasi={data.destinasiTerlama}
+          hariSuffix={(hari) => `${hari} hari menunggu`}
+        />
+        <InfoCard
+          icon={<CalendarPlus size={16} />}
+          label="Diajukan Terbaru"
+          destinasi={data.destinasiTerbaru}
+          hariSuffix={(hari) => (hari <= 0 ? "Hari ini" : `${hari} hari lalu`)}
+        />
+      </div>
+
       <ChartCard title="Pengajuan per Tanggal (30 Hari Terakhir)">
         <PengajuanPerTanggalChart data={data.perTanggal} />
       </ChartCard>
@@ -214,7 +308,14 @@ export default function PersetujuanStatSection() {
         <ChartCard title="Distribusi PENDING per Kabupaten">
           <BreakdownList data={data.perKabupaten} labelKey="kabupaten" labelMap={KABUPATEN_LABEL} total={data.totalPending} />
         </ChartCard>
-        <ChartCard title="Distribusi PENDING per Kategori">
+        <ChartCard
+          title="Distribusi PENDING per Kategori"
+          badge={
+            showDominasiBadge ? (
+              <DominasiBadge label={KATEGORI_LABEL[dominanKategori.kategori] ?? dominanKategori.kategori} />
+            ) : undefined
+          }
+        >
           <BreakdownList data={data.perKategori} labelKey="kategori" labelMap={KATEGORI_LABEL} total={data.totalPending} />
         </ChartCard>
       </div>
