@@ -44,6 +44,9 @@ export async function GET() {
     pendingDestinations,
     laporanMingguIni,
     transaksiMingguIni,
+    roadConditionGroups,
+    crowdLevelGroups,
+    reviewsRecent,
   ] = await Promise.all([
     prisma.destination.count({ where: { status: "APPROVED" } }),
     prisma.destination.count({ where: { status: "PENDING" } }),
@@ -77,6 +80,12 @@ export async function GET() {
     prisma.transaksi.count({
       where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] }, createdAt: { gte: sevenDaysAgo } },
     }),
+    prisma.userReport.groupBy({ by: ["roadCondition"], _count: { _all: true } }),
+    prisma.userReport.groupBy({ by: ["crowdLevel"], _count: { _all: true } }),
+    prisma.review.findMany({
+      where: { createdAt: { gte: rangeStart } },
+      select: { createdAt: true, rating: true },
+    }),
   ]);
 
   const rataRataHariMenunggu =
@@ -100,6 +109,14 @@ export async function GET() {
       .reduce((sum, t) => sum + Number(t.totalHarga), 0),
   }));
 
+  const trenRatingRataRata = months.map(({ bulan, year, month }) => {
+    const ratings = reviewsRecent.filter(
+      (r) => r.createdAt.getFullYear() === year && r.createdAt.getMonth() === month
+    );
+    const rataRata = ratings.length === 0 ? 0 : ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+    return { bulan, rataRata: Number(rataRata.toFixed(1)) };
+  });
+
   return NextResponse.json({
     totalDestinasi,
     totalPending,
@@ -114,5 +131,8 @@ export async function GET() {
     transaksiPerBulan,
     destinasiPerKategori: kategoriGroups.map((g) => ({ kategori: g.kategori, jumlah: g._count._all })),
     destinasiPerKabupaten: kabupatenGroups.map((g) => ({ kabupaten: g.kabupaten, jumlah: g._count._all })),
+    distribusiKondisiJalan: roadConditionGroups.map((g) => ({ kondisi: g.roadCondition, jumlah: g._count._all })),
+    distribusiKeramaian: crowdLevelGroups.map((g) => ({ keramaian: g.crowdLevel, jumlah: g._count._all })),
+    trenRatingRataRata,
   });
 }

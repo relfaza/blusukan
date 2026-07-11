@@ -3,6 +3,20 @@
 import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Users } from "lucide-react";
+import ChartDetailDialog, { type DetailColumn } from "./ChartDetailDialog";
+import { useChartDetail } from "./useChartDetail";
+
+function formatTanggalSingkat(iso: unknown): string {
+  if (typeof iso !== "string" || !iso) return "–";
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+}
+
+const KUNJUNGAN_COLUMNS: DetailColumn[] = [
+  { key: "kodeTransaksi", label: "Kode Transaksi" },
+  { key: "destinationName", label: "Destinasi" },
+  { key: "userName", label: "Wisatawan" },
+  { key: "selesaiAt", label: "Selesai", format: formatTanggalSingkat },
+];
 
 type Periode = "harian" | "mingguan" | "bulanan";
 
@@ -82,6 +96,13 @@ export default function TrenKunjunganSection({
   const [result, setResult] = useState<KunjunganResponse | null>(null);
   const [total30Hari, setTotal30Hari] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const { state: detailState, show: showDetail, onOpenChange: closeDetail } = useChartDetail();
+
+  function handlePointClick(label: string) {
+    const params: Record<string, string> = { type: "kunjungan", periode, label };
+    if (destinationId) params.destinationId = destinationId;
+    showDetail(params, `Kunjungan — ${label}`, KUNJUNGAN_COLUMNS);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -162,7 +183,14 @@ export default function TrenKunjunganSection({
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={result.data} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
+              <LineChart
+                data={result.data}
+                margin={{ top: 8, right: 12, left: -16, bottom: 0 }}
+                style={{ cursor: "pointer" }}
+                onClick={(state: any) => {
+                  if (typeof state?.activeLabel === "string") handlePointClick(state.activeLabel);
+                }}
+              >
                 <CartesianGrid vertical={false} stroke="var(--blusukan-outline-variant)" />
                 <XAxis
                   dataKey="label"
@@ -190,6 +218,8 @@ export default function TrenKunjunganSection({
           )}
         </div>
       )}
+
+      <ChartDetailDialog state={detailState} onOpenChange={closeDetail} />
     </div>
   );
 }
