@@ -16,6 +16,7 @@ import {
   type KeuanganResponse,
   type Periode,
 } from "../keuangan-shared";
+import DaftarTransaksiSection from "./DaftarTransaksiSection";
 
 const KABUPATEN_LABEL: Record<string, string> = {
   SLEMAN: "Sleman",
@@ -244,6 +245,8 @@ export default function KeuanganDestinasiClient({
             </div>
           </div>
         </div>
+
+        <DaftarTransaksiSection destinationId={destinationId} />
       </div>
     </div>
   );
