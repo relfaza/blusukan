@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Users } from "lucide-react";
 import ChartDetailDialog, { type DetailColumn } from "./ChartDetailDialog";
 import { useChartDetail } from "./useChartDetail";
+import { pointValueLabelContent } from "@/components/admin/chart-value-label";
 
 function formatTanggalSingkat(iso: unknown): string {
   if (typeof iso !== "string" || !iso) return "–";
@@ -185,7 +186,7 @@ export default function TrenKunjunganSection({
             <ResponsiveContainer width="100%" height={220}>
               <LineChart
                 data={result.data}
-                margin={{ top: 8, right: 12, left: -16, bottom: 0 }}
+                margin={{ top: 20, right: 12, left: -16, bottom: 0 }}
                 style={{ cursor: "pointer" }}
                 onClick={(state: any) => {
                   if (typeof state?.activeLabel === "string") handlePointClick(state.activeLabel);
@@ -212,7 +213,16 @@ export default function TrenKunjunganSection({
                   strokeWidth={2}
                   dot={{ r: 4, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
                   activeDot={{ r: 6, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
-                />
+                >
+                  <LabelList
+                    dataKey="jumlahKunjungan"
+                    content={pointValueLabelContent(
+                      result.data.map((d) => d.jumlahKunjungan),
+                      (v) => `${v}`,
+                      "var(--blusukan-primary)"
+                    )}
+                  />
+                </Line>
               </LineChart>
             </ResponsiveContainer>
           )}

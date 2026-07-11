@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet } from "lucide-react";
 import type { PeringkatKeuangan } from "@/lib/peringkat-keuangan";
 import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
+import ChartDetailDialog, { type DetailColumn } from "../ChartDetailDialog";
+import { useChartDetail } from "../useChartDetail";
 import {
   ChartCard,
   EmptyChartState,
@@ -13,12 +15,35 @@ import {
   PeriodeToggle,
   TrenPendapatanChart,
   BreakdownJenisChart,
+  TYPE_LABEL,
   formatRupiah,
   type KeuanganResponse,
   type Periode,
 } from "./keuangan-shared";
 
 const PERINGKAT_TABS: PeringkatWidgetTab[] = [{ key: "terlaris", label: "Terlaris", dataSource: "pendapatan" }];
+
+const TRANSAKSI_STATUS_LABEL: Record<string, string> = {
+  PENDING: "Menunggu Konfirmasi",
+  DIKONFIRMASI: "Dikonfirmasi",
+  SELESAI: "Selesai",
+  DIBATALKAN: "Dibatalkan",
+};
+
+function formatTanggalSingkat(iso: unknown): string {
+  if (typeof iso !== "string" || !iso) return "–";
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+}
+
+const TRANSAKSI_COLUMNS: DetailColumn[] = [
+  { key: "kodeTransaksi", label: "Kode Transaksi" },
+  { key: "destinationName", label: "Destinasi" },
+  { key: "userName", label: "Pemesan" },
+  { key: "type", label: "Jenis", format: (v) => TYPE_LABEL[v as string] ?? String(v) },
+  { key: "totalHarga", label: "Total", format: (v) => formatRupiah(Number(v)) },
+  { key: "status", label: "Status", format: (v) => TRANSAKSI_STATUS_LABEL[v as string] ?? String(v) },
+  { key: "createdAt", label: "Tanggal", format: formatTanggalSingkat },
+];
 
 export default function KeuanganDashboardClient({
   semuaDestinasiKeuangan,
@@ -30,6 +55,25 @@ export default function KeuanganDashboardClient({
   const [periode, setPeriode] = useState<Periode>("harian");
   const [data, setData] = useState<KeuanganResponse | null>(null);
   const [error, setError] = useState("");
+  const { state: detailState, show: showDetail, onOpenChange: closeDetail } = useChartDetail();
+
+  function handleTrenBucketClick(label: string) {
+    showDetail(
+      { type: "bucket", periode, label },
+      `Transaksi — ${label}`,
+      TRANSAKSI_COLUMNS,
+      "/api/admin/keuangan/detail"
+    );
+  }
+
+  function handleJenisClick(jenisRaw: string, jenisLabel: string) {
+    showDetail(
+      { type: "jenis", periode, jenis: jenisRaw },
+      `Transaksi Jenis ${jenisLabel}`,
+      TRANSAKSI_COLUMNS,
+      "/api/admin/keuangan/detail"
+    );
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -120,10 +164,18 @@ export default function KeuanganDashboardClient({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           <ChartCard title="Tren Pendapatan">
-            {data ? <TrenPendapatanChart data={data.tren} /> : <EmptyChartState message="Memuat..." />}
+            {data ? (
+              <TrenPendapatanChart data={data.tren} onPointClick={handleTrenBucketClick} />
+            ) : (
+              <EmptyChartState message="Memuat..." />
+            )}
           </ChartCard>
           <ChartCard title="Breakdown Pendapatan per Jenis">
-            {data ? <BreakdownJenisChart data={data.perJenis} /> : <EmptyChartState message="Memuat..." />}
+            {data ? (
+              <BreakdownJenisChart data={data.perJenis} onBarClick={handleJenisClick} />
+            ) : (
+              <EmptyChartState message="Memuat..." />
+            )}
           </ChartCard>
         </div>
 
@@ -177,6 +229,8 @@ export default function KeuanganDashboardClient({
           )}
         </div>
       </div>
+
+      <ChartDetailDialog state={detailState} onOpenChange={closeDetail} />
     </div>
   );
 }
