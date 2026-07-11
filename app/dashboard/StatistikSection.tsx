@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Line,
   LineChart,
@@ -20,6 +21,7 @@ import {
 import { MapPin, Clock, MessageSquare, Receipt } from "lucide-react";
 import ChartDetailDialog, { type DetailColumn } from "./ChartDetailDialog";
 import { useChartDetail } from "./useChartDetail";
+import { pointValueLabelContent } from "@/components/admin/chart-value-label";
 
 type Statistik = {
   totalDestinasi: number;
@@ -239,11 +241,17 @@ function TrenLaporanChart({
 }) {
   if (data.every((d) => d.jumlah === 0)) return <EmptyChartState />;
 
+  const labelContent = pointValueLabelContent(
+    data.map((d) => d.jumlah),
+    (v) => `${v}`,
+    "var(--blusukan-primary)"
+  );
+
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart
         data={data}
-        margin={{ top: 8, right: 12, left: -16, bottom: 0 }}
+        margin={{ top: 20, right: 12, left: -16, bottom: 0 }}
         style={{ cursor: onPointClick ? "pointer" : undefined }}
         onClick={(state: any) => {
           if (onPointClick && typeof state?.activeLabel === "string") onPointClick(state.activeLabel);
@@ -269,7 +277,9 @@ function TrenLaporanChart({
           strokeWidth={2}
           dot={{ r: 4, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
           activeDot={{ r: 6, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
-        />
+        >
+          <LabelList dataKey="jumlah" content={labelContent} />
+        </Line>
       </LineChart>
     </ResponsiveContainer>
   );
@@ -284,11 +294,17 @@ function TrenTransaksiChart({
 }) {
   if (data.every((d) => d.jumlah === 0)) return <EmptyChartState />;
 
+  const labelContent = pointValueLabelContent(
+    data.map((d) => d.jumlah),
+    formatRupiahCompact,
+    "var(--blusukan-primary)"
+  );
+
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart
         data={data}
-        margin={{ top: 8, right: 12, left: -4, bottom: 0 }}
+        margin={{ top: 20, right: 12, left: -4, bottom: 0 }}
         style={{ cursor: onPointClick ? "pointer" : undefined }}
         onClick={(state: any) => {
           if (onPointClick && typeof state?.activeLabel === "string") onPointClick(state.activeLabel);
@@ -320,7 +336,9 @@ function TrenTransaksiChart({
           strokeWidth={2}
           dot={{ r: 4, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
           activeDot={{ r: 6, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
-        />
+        >
+          <LabelList dataKey="jumlah" content={labelContent} />
+        </Line>
       </LineChart>
     </ResponsiveContainer>
   );
@@ -350,11 +368,12 @@ function DistribusiChart({
     <ResponsiveContainer width="100%" height={220}>
       <BarChart
         data={chartData}
-        margin={{ top: 8, right: 12, left: -16, bottom: 0 }}
+        margin={{ top: 20, right: 12, left: -16, bottom: 0 }}
         style={{ cursor: onItemClick ? "pointer" : undefined }}
         onClick={(state: any) => {
-          const payload = state?.activePayload?.[0]?.payload;
-          if (onItemClick && payload) onItemClick(payload.raw, payload.label);
+          if (!onItemClick || typeof state?.activeLabel !== "string") return;
+          const match = chartData.find((d) => d.label === state.activeLabel);
+          if (match) onItemClick(match.raw, match.label);
         }}
       >
         <CartesianGrid vertical={false} stroke="var(--blusukan-outline-variant)" />
@@ -365,7 +384,13 @@ function DistribusiChart({
             <ChartTooltip active={active} payload={payload} label={label} formatValue={(v) => `${v} ${unitLabel}`} />
           )}
         />
-        <Bar dataKey="jumlah" fill="var(--blusukan-primary)" radius={[4, 4, 0, 0]} maxBarSize={24} />
+        <Bar dataKey="jumlah" fill="var(--blusukan-primary)" radius={[4, 4, 0, 0]} maxBarSize={24}>
+          <LabelList
+            dataKey="jumlah"
+            position="top"
+            style={{ fontSize: 11, fontWeight: 700, fill: "var(--blusukan-on-surface)" }}
+          />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
@@ -440,11 +465,17 @@ function TrenRatingChart({
 }) {
   if (data.every((d) => d.rataRata === 0)) return <EmptyChartState />;
 
+  const labelContent = pointValueLabelContent(
+    data.map((d) => d.rataRata),
+    (v) => `${v.toFixed(1)} ★`,
+    "var(--blusukan-secondary)"
+  );
+
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart
         data={data}
-        margin={{ top: 8, right: 12, left: -16, bottom: 0 }}
+        margin={{ top: 20, right: 12, left: -16, bottom: 0 }}
         style={{ cursor: onPointClick ? "pointer" : undefined }}
         onClick={(state: any) => {
           if (onPointClick && typeof state?.activeLabel === "string") onPointClick(state.activeLabel);
@@ -470,7 +501,9 @@ function TrenRatingChart({
           strokeWidth={2}
           dot={{ r: 4, fill: "var(--blusukan-secondary)", stroke: "#ffffff", strokeWidth: 2 }}
           activeDot={{ r: 6, fill: "var(--blusukan-secondary)", stroke: "#ffffff", strokeWidth: 2 }}
-        />
+        >
+          <LabelList dataKey="rataRata" content={labelContent} />
+        </Line>
       </LineChart>
     </ResponsiveContainer>
   );

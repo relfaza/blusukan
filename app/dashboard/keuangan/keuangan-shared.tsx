@@ -1,4 +1,5 @@
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { pointValueLabelContent } from "@/components/admin/chart-value-label";
 
 export type Periode = "harian" | "mingguan" | "bulanan" | "tahunan";
 
@@ -86,12 +87,31 @@ export function EmptyChartState({ message = "Data belum cukup untuk ditampilkan"
   );
 }
 
-export function TrenPendapatanChart({ data }: { data: KeuanganResponse["tren"] }) {
+export function TrenPendapatanChart({
+  data,
+  onPointClick,
+}: {
+  data: KeuanganResponse["tren"];
+  onPointClick?: (label: string) => void;
+}) {
   if (data.every((d) => d.totalPendapatan === 0)) return <EmptyChartState />;
+
+  const labelContent = pointValueLabelContent(
+    data.map((d) => d.totalPendapatan),
+    formatRupiahCompact,
+    "var(--blusukan-primary)"
+  );
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <LineChart data={data} margin={{ top: 8, right: 12, left: -4, bottom: 0 }}>
+      <LineChart
+        data={data}
+        margin={{ top: 20, right: 12, left: -4, bottom: 0 }}
+        style={{ cursor: onPointClick ? "pointer" : undefined }}
+        onClick={(state: any) => {
+          if (onPointClick && typeof state?.activeLabel === "string") onPointClick(state.activeLabel);
+        }}
+      >
         <CartesianGrid vertical={false} stroke="var(--blusukan-outline-variant)" />
         <XAxis dataKey="label" tick={axisTickStyle} axisLine={{ stroke: "var(--blusukan-outline-variant)" }} tickLine={false} interval="preserveStartEnd" />
         <YAxis tick={axisTickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => formatRupiahCompact(Number(v))} />
@@ -103,25 +123,49 @@ export function TrenPendapatanChart({ data }: { data: KeuanganResponse["tren"] }
           strokeWidth={2}
           dot={{ r: 4, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
           activeDot={{ r: 6, fill: "var(--blusukan-primary)", stroke: "#ffffff", strokeWidth: 2 }}
-        />
+        >
+          <LabelList dataKey="totalPendapatan" content={labelContent} />
+        </Line>
       </LineChart>
     </ResponsiveContainer>
   );
 }
 
-export function BreakdownJenisChart({ data }: { data: KeuanganResponse["perJenis"] }) {
+export function BreakdownJenisChart({
+  data,
+  onBarClick,
+}: {
+  data: KeuanganResponse["perJenis"];
+  onBarClick?: (jenisRaw: string, jenisLabel: string) => void;
+}) {
   if (data.every((d) => d.totalPendapatan === 0) || data.length === 0) return <EmptyChartState />;
 
-  const chartData = data.map((d) => ({ jenis: TYPE_LABEL[d.type] ?? d.type, totalPendapatan: d.totalPendapatan }));
+  const chartData = data.map((d) => ({ jenis: TYPE_LABEL[d.type] ?? d.type, totalPendapatan: d.totalPendapatan, raw: d.type }));
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={chartData} margin={{ top: 8, right: 12, left: -4, bottom: 0 }}>
+      <BarChart
+        data={chartData}
+        margin={{ top: 20, right: 12, left: -4, bottom: 0 }}
+        style={{ cursor: onBarClick ? "pointer" : undefined }}
+        onClick={(state: any) => {
+          if (!onBarClick || typeof state?.activeLabel !== "string") return;
+          const match = chartData.find((d) => d.jenis === state.activeLabel);
+          if (match) onBarClick(match.raw, match.jenis);
+        }}
+      >
         <CartesianGrid vertical={false} stroke="var(--blusukan-outline-variant)" />
         <XAxis dataKey="jenis" tick={axisTickStyle} axisLine={{ stroke: "var(--blusukan-outline-variant)" }} tickLine={false} />
         <YAxis tick={axisTickStyle} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => formatRupiahCompact(Number(v))} />
         <Tooltip content={({ active, payload, label }: any) => <ChartTooltip active={active} payload={payload} label={label} />} />
-        <Bar dataKey="totalPendapatan" fill="var(--blusukan-primary)" radius={[4, 4, 0, 0]} maxBarSize={48} />
+        <Bar dataKey="totalPendapatan" fill="var(--blusukan-primary)" radius={[4, 4, 0, 0]} maxBarSize={48}>
+          <LabelList
+            dataKey="totalPendapatan"
+            position="top"
+            formatter={(v: unknown) => formatRupiahCompact(Number(v))}
+            style={{ fontSize: 11, fontWeight: 700, fill: "var(--blusukan-on-surface)" }}
+          />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

@@ -10,22 +10,31 @@ export function useChartDetail() {
   const [rows, setRows] = useState<Record<string, unknown>[] | null>(null);
   const [error, setError] = useState("");
 
-  const show = useCallback((params: Record<string, string>, dialogTitle: string, dialogColumns: DetailColumn[]) => {
-    setOpen(true);
-    setTitle(dialogTitle);
-    setColumns(dialogColumns);
-    setRows(null);
-    setError("");
+  const show = useCallback(
+    (
+      params: Record<string, string>,
+      dialogTitle: string,
+      dialogColumns: DetailColumn[],
+      endpoint: string = "/api/admin/statistik/detail"
+    ) => {
+      setOpen(true);
+      setTitle(dialogTitle);
+      setColumns(dialogColumns);
+      setRows(null);
+      setError("");
 
-    const query = new URLSearchParams(params);
-    fetch(`/api/admin/statistik/detail?${query.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.rows)) setRows(data.rows);
-        else setError(data.message || "Gagal memuat detail.");
-      })
-      .catch(() => setError("Terjadi kesalahan. Coba lagi."));
-  }, []);
+      const query = new URLSearchParams(params);
+      fetch(`${endpoint}?${query.toString()}`)
+        .then((res) => res.json())
+        .then((data) => {
+          const rows = Array.isArray(data) ? data : data.rows;
+          if (Array.isArray(rows)) setRows(rows);
+          else setError(data.message || "Gagal memuat detail.");
+        })
+        .catch(() => setError("Terjadi kesalahan. Coba lagi."));
+    },
+    []
+  );
 
   const onOpenChange = useCallback((next: boolean) => {
     setOpen(next);
