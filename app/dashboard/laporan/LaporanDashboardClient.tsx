@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, MessageSquare, MapPin } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type DestinasiLaporan = {
   id: string;
@@ -11,6 +11,10 @@ type DestinasiLaporan = {
   kabupaten: string;
   jumlahLaporan: number;
   breakdownKondisiJalan: Record<string, number>;
+};
+
+type LaporanTotal = {
+  distribusiKondisiJalan: { kondisi: string; jumlah: number }[];
 };
 
 const KABUPATEN_LABEL: Record<string, string> = {
@@ -27,6 +31,14 @@ const ROAD_LABEL: Record<string, string> = {
   SULIT: "Sulit",
   RUSAK: "Rusak",
   BELUM_ADA_DATA: "Belum ada data",
+};
+
+const ROAD_COLOR: Record<string, string> = {
+  MUDAH: "var(--blusukan-primary)",
+  SEDANG: "var(--blusukan-secondary)",
+  SULIT: "var(--blusukan-tertiary)",
+  RUSAK: "var(--blusukan-error)",
+  BELUM_ADA_DATA: "var(--blusukan-outline)",
 };
 
 const axisTickStyle = { fontSize: 11, fill: "var(--blusukan-on-surface-variant)" };
@@ -94,8 +106,43 @@ function TopLaporanChart({ data }: { data: DestinasiLaporan[] }) {
   );
 }
 
+function DistribusiKondisiJalanTotalChart({ data }: { data: LaporanTotal["distribusiKondisiJalan"] }) {
+  if (data.length === 0 || data.every((d) => d.jumlah === 0)) {
+    return (
+      <div className="h-[200px] flex items-center justify-center text-center">
+        <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Data belum cukup untuk ditampilkan
+        </p>
+      </div>
+    );
+  }
+
+  const chartData = data.map((d) => ({ kondisi: ROAD_LABEL[d.kondisi] ?? d.kondisi, jumlah: d.jumlah, raw: d.kondisi }));
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={chartData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="var(--blusukan-outline-variant)" />
+        <XAxis dataKey="kondisi" tick={axisTickStyle} axisLine={{ stroke: "var(--blusukan-outline-variant)" }} tickLine={false} />
+        <YAxis allowDecimals={false} tick={axisTickStyle} axisLine={false} tickLine={false} width={28} />
+        <Tooltip
+          content={({ active, payload, label }: any) => (
+            <ChartTooltip active={active} payload={payload} label={label} />
+          )}
+        />
+        <Bar dataKey="jumlah" radius={[4, 4, 0, 0]} maxBarSize={40}>
+          {chartData.map((entry) => (
+            <Cell key={entry.raw} fill={ROAD_COLOR[entry.raw] ?? "var(--blusukan-primary)"} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
 export default function LaporanDashboardClient() {
   const [items, setItems] = useState<DestinasiLaporan[] | null>(null);
+  const [laporanTotal, setLaporanTotal] = useState<LaporanTotal | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -108,6 +155,19 @@ export default function LaporanDashboardClient() {
       .catch(() => {
         if (!cancelled) setError("Gagal memuat data laporan.");
       });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/laporan-total")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setLaporanTotal(data);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -161,17 +221,32 @@ export default function LaporanDashboardClient() {
           </div>
         ) : (
           <>
-            <div
-              className="rounded-2xl p-5 mb-6"
-              style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
-            >
-              <h3
-                className="text-sm font-bold mb-4"
-                style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+              <div
+                className="rounded-2xl p-5"
+                style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
               >
-                Destinasi dengan Laporan Terbanyak
-              </h3>
-              <TopLaporanChart data={items} />
+                <h3
+                  className="text-sm font-bold mb-4"
+                  style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+                >
+                  Destinasi dengan Laporan Terbanyak
+                </h3>
+                <TopLaporanChart data={items} />
+              </div>
+
+              <div
+                className="rounded-2xl p-5"
+                style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+              >
+                <h3
+                  className="text-sm font-bold mb-4"
+                  style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+                >
+                  Distribusi Kondisi Jalan (Semua Destinasi)
+                </h3>
+                <DistribusiKondisiJalanTotalChart data={laporanTotal?.distribusiKondisiJalan ?? []} />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
