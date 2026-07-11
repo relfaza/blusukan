@@ -30,6 +30,8 @@ type DestinasiRow = {
   createdAt: string;
 };
 
+const MAP_VISIBILITY_KEY = "blusukan-admin-map-visible";
+
 const KABUPATEN_LABEL: Record<string, string> = {
   SLEMAN: "Sleman",
   GUNUNGKIDUL: "Gunungkidul",
@@ -94,6 +96,18 @@ export default function DestinasiAktifClient() {
   const [kabupaten, setKabupaten] = useState("ALL");
   const [kategori, setKategori] = useState("ALL");
   const [sortBy, setSortBy] = useState<"terbaru" | "terlama">("terbaru");
+  const [showMap, setShowMap] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem(MAP_VISIBILITY_KEY) !== "false";
+  });
+
+  function toggleMap() {
+    setShowMap((prev) => {
+      const next = !prev;
+      localStorage.setItem(MAP_VISIBILITY_KEY, String(next));
+      return next;
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -228,13 +242,25 @@ export default function DestinasiAktifClient() {
 
         {items && items.length > 0 && (
           <section className="mb-8">
-            <h2
-              className="text-sm font-bold mb-3"
-              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-            >
-              🗺️ Peta Sebaran Destinasi
-            </h2>
-            <AdminMapOverview destinasi={items} />
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2
+                className="text-sm font-bold"
+                style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+              >
+                🗺️ Peta Sebaran Destinasi
+              </h2>
+              <button
+                type="button"
+                id="toggle-peta-destinasi"
+                onClick={toggleMap}
+                suppressHydrationWarning
+                className="shrink-0 text-xs font-semibold px-3.5 py-1.5 rounded-full transition-opacity hover:opacity-90"
+                style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+              >
+                {showMap ? "Sembunyikan Peta" : "Tampilkan Peta"}
+              </button>
+            </div>
+            {showMap && <AdminMapOverview destinasi={items} />}
           </section>
         )}
 
