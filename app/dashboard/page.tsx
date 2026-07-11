@@ -8,5 +8,5 @@ export default async function DashboardPage() {
   await requireAdminPage();
   const peringkat = await getPeringkatDestinasi();
 
-  return <DashboardClient top5Destinasi={peringkat.slice(0, 5)} />;
+  return <DashboardClient peringkat={peringkat} />;
 }
