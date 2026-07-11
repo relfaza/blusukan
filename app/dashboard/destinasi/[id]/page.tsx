@@ -32,7 +32,14 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
+
+const BACK_TARGET: Record<string, { href: string; label: string }> = {
+  persetujuan: { href: "/dashboard/persetujuan", label: "Kembali ke Persetujuan" },
+  keuangan: { href: "/dashboard/keuangan", label: "Kembali ke Dashboard Keuangan" },
+};
+const DEFAULT_BACK = { href: "/dashboard/destinasi", label: "Kembali ke Daftar Destinasi" };
 
 const KABUPATEN_LABEL: Record<string, string> = {
   SLEMAN: "Sleman",
@@ -197,9 +204,11 @@ function InfoItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default async function DashboardDestinasiDetailPage({ params }: Props) {
+export default async function DashboardDestinasiDetailPage({ params, searchParams }: Props) {
   await requireAdminPage();
   const { id } = await params;
+  const { from } = await searchParams;
+  const back = (from && BACK_TARGET[from]) || DEFAULT_BACK;
 
   const d = await prisma.destination.findUnique({
     where: { id },
@@ -239,13 +248,13 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
       <div className="max-w-4xl mx-auto px-4 lg:px-8 py-10">
         <Link
-          href="/dashboard/destinasi"
+          href={back.href}
           id="destinasi-detail-back"
           className="flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
           style={{ color: "var(--blusukan-primary)" }}
         >
           <ArrowLeft size={16} />
-          Kembali ke Daftar Destinasi
+          {back.label}
         </Link>
 
         <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
