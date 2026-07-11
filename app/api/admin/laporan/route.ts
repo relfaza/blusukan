@@ -1,31 +1,21 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import { getDestinasiDenganLaporan, getLaporanByDestinasi } from "@/lib/laporan";
 
-export async function GET() {
+export async function GET(request: Request) {
   const authResult = await requireAdminApi();
   if (!authResult.ok) {
     return NextResponse.json({ message: authResult.message }, { status: authResult.status });
   }
 
-  const reports = await prisma.userReport.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 50,
-    include: {
-      user: { select: { name: true } },
-      destination: { select: { name: true } },
-    },
-  });
+  const { searchParams } = new URL(request.url);
+  const destinationId = searchParams.get("destinationId");
 
-  return NextResponse.json(
-    reports.map((r) => ({
-      id: r.id,
-      userName: r.user.name,
-      destinationName: r.destination.name,
-      roadCondition: r.roadCondition,
-      signalStrength: r.signalStrength,
-      crowdLevel: r.crowdLevel,
-      createdAt: r.createdAt.toISOString(),
-    }))
-  );
+  if (destinationId) {
+    const reports = await getLaporanByDestinasi(destinationId);
+    return NextResponse.json(reports);
+  }
+
+  const destinations = await getDestinasiDenganLaporan();
+  return NextResponse.json(destinations);
 }

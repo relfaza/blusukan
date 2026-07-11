@@ -2,16 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare, MapPin } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-type LaporanRow = {
+type DestinasiLaporan = {
   id: string;
-  userName: string;
-  destinationName: string;
-  roadCondition: string;
-  signalStrength: string;
-  crowdLevel: string;
-  createdAt: string;
+  name: string;
+  kabupaten: string;
+  jumlahLaporan: number;
+  breakdownKondisiJalan: Record<string, number>;
+};
+
+const KABUPATEN_LABEL: Record<string, string> = {
+  SLEMAN: "Sleman",
+  GUNUNGKIDUL: "Gunungkidul",
+  BANTUL: "Bantul",
+  KULON_PROGO: "Kulon Progo",
+  KOTA_YOGYAKARTA: "Kota Yogyakarta",
 };
 
 const ROAD_LABEL: Record<string, string> = {
@@ -22,32 +29,73 @@ const ROAD_LABEL: Record<string, string> = {
   BELUM_ADA_DATA: "Belum ada data",
 };
 
-const ROAD_STYLE: Record<string, { bg: string; color: string }> = {
-  MUDAH: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
-  SEDANG: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
-  SULIT: { bg: "#fef3e7", color: "#805533" },
-  RUSAK: { bg: "var(--blusukan-error-container)", color: "var(--blusukan-error)" },
-  BELUM_ADA_DATA: { bg: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
-};
+const axisTickStyle = { fontSize: 11, fill: "var(--blusukan-on-surface-variant)" };
 
-const SIGNAL_LABEL: Record<string, string> = {
-  KUAT: "Sinyal Kuat",
-  SEDANG: "Sinyal Sedang",
-  LEMAH: "Sinyal Lemah",
-};
+function formatBreakdownRingkas(breakdown: Record<string, number>): string {
+  const entries = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+  if (entries.length === 0) return "Belum ada data kondisi";
+  return entries
+    .slice(0, 2)
+    .map(([kondisi, jumlah]) => `${jumlah} ${ROAD_LABEL[kondisi] ?? kondisi}`)
+    .join(", ");
+}
 
-const CROWD_LABEL: Record<string, string> = {
-  SEPI: "Sepi",
-  SEDANG: "Sedang",
-  PADAT: "Padat",
-};
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ value?: number | string }>;
+  label?: string;
+}) {
+  if (!active || !payload || !payload.length) return null;
+  const value = Number(payload[0]?.value ?? 0);
+  return (
+    <div
+      className="rounded-lg px-3 py-2 text-xs shadow-md"
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <p style={{ color: "var(--blusukan-on-surface-variant)" }}>{label}</p>
+      <p className="font-bold" style={{ color: "var(--blusukan-on-surface)" }}>
+        {value} laporan
+      </p>
+    </div>
+  );
+}
 
-function formatTanggal(iso: string): string {
-  return new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeStyle: "short" }).format(new Date(iso));
+function TopLaporanChart({ data }: { data: DestinasiLaporan[] }) {
+  const top5 = data.slice(0, 5).map((d) => ({ name: d.name, jumlahLaporan: d.jumlahLaporan }));
+
+  if (top5.length === 0) {
+    return (
+      <div className="h-[200px] flex items-center justify-center text-center">
+        <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Data belum cukup untuk ditampilkan
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={top5} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="var(--blusukan-outline-variant)" />
+        <XAxis dataKey="name" tick={axisTickStyle} axisLine={{ stroke: "var(--blusukan-outline-variant)" }} tickLine={false} />
+        <YAxis allowDecimals={false} tick={axisTickStyle} axisLine={false} tickLine={false} width={28} />
+        <Tooltip
+          content={({ active, payload, label }: any) => (
+            <ChartTooltip active={active} payload={payload} label={label} />
+          )}
+        />
+        <Bar dataKey="jumlahLaporan" fill="var(--blusukan-primary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
 }
 
 export default function LaporanDashboardClient() {
-  const [items, setItems] = useState<LaporanRow[] | null>(null);
+  const [items, setItems] = useState<DestinasiLaporan[] | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -67,7 +115,7 @@ export default function LaporanDashboardClient() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
-      <div className="max-w-3xl mx-auto px-4 lg:px-8 py-10">
+      <div className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
         <Link
           href="/dashboard"
           id="laporan-back"
@@ -85,7 +133,7 @@ export default function LaporanDashboardClient() {
           Laporan Masuk
         </h1>
         <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-          50 laporan terbaru dari wisatawan
+          Destinasi dengan laporan kondisi lapangan dari wisatawan
         </p>
 
         {error && (
@@ -112,60 +160,58 @@ export default function LaporanDashboardClient() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {items.map((r) => {
-              const roadStyle = ROAD_STYLE[r.roadCondition] ?? ROAD_STYLE.BELUM_ADA_DATA;
-              return (
-                <div
-                  key={r.id}
-                  className="rounded-2xl p-5"
+          <>
+            <div
+              className="rounded-2xl p-5 mb-6"
+              style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            >
+              <h3
+                className="text-sm font-bold mb-4"
+                style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+              >
+                Destinasi dengan Laporan Terbanyak
+              </h3>
+              <TopLaporanChart data={items} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {items.map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/dashboard/laporan/${d.id}`}
+                  id={`card-laporan-${d.id}`}
+                  className="block rounded-2xl p-5 transition-shadow hover:shadow-md"
                   style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
                 >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div>
-                      <p
-                        className="text-sm font-bold"
-                        style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-                      >
-                        {r.destinationName}
-                      </p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                        Dilaporkan oleh {r.userName}
-                      </p>
-                    </div>
-                    <span
-                      className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
-                      style={{ background: roadStyle.bg, color: roadStyle.color }}
-                    >
-                      Jalan: {ROAD_LABEL[r.roadCondition] ?? r.roadCondition}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ background: "#f0f0f0", color: "#4b4f45" }}
-                    >
-                      {SIGNAL_LABEL[r.signalStrength] ?? r.signalStrength}
-                    </span>
-                    <span
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ background: "#f0f0f0", color: "#4b4f45" }}
-                    >
-                      Keramaian: {CROWD_LABEL[r.crowdLevel] ?? r.crowdLevel}
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <MapPin size={14} style={{ color: "var(--blusukan-on-surface-variant)" }} />
+                    <span className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                      {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}
                     </span>
                   </div>
 
                   <p
-                    className="text-xs pt-3"
-                    style={{ borderTop: "1px dashed var(--blusukan-outline-variant)", color: "var(--blusukan-on-surface-variant)" }}
+                    className="text-base font-bold mb-2"
+                    style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
                   >
-                    {formatTanggal(r.createdAt)}
+                    {d.name}
                   </p>
-                </div>
-              );
-            })}
-          </div>
+
+                  <div className="flex items-center justify-between">
+                    <span
+                      className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+                      style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+                    >
+                      {d.jumlahLaporan} laporan
+                    </span>
+                  </div>
+                  <p className="text-xs mt-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                    {formatBreakdownRingkas(d.breakdownKondisiJalan)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
