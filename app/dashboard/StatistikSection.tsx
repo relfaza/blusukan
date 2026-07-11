@@ -370,7 +370,7 @@ export default function StatistikSection() {
           subtitle={`Estimasi pendapatan: ${formatRupiah(data.totalPendapatanEstimasi)}`}
           iconBg="var(--blusukan-primary-container)"
           iconColor="var(--blusukan-primary)"
-          href="/dashboard/transaksi"
+          href="/dashboard/keuangan"
         />
       </div>
 
