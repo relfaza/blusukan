@@ -70,6 +70,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const periode = searchParams.get("periode") ?? "harian";
+  const destinationId = searchParams.get("destinationId");
 
   if (!["harian", "mingguan", "bulanan", "tahunan"].includes(periode)) {
     return NextResponse.json({ message: "Periode tidak valid." }, { status: 400 });
@@ -91,6 +92,7 @@ export async function GET(request: Request) {
     where: {
       status: { in: [...TRANSAKSI_SELESAI_STATUS] },
       createdAt: { gte: rangeStart },
+      ...(destinationId ? { destinationId } : {}),
     },
     select: {
       totalHarga: true,
@@ -124,24 +126,28 @@ export async function GET(request: Request) {
   }
   const perJenis = Array.from(perJenisMap.entries()).map(([type, totalPendapatan]) => ({ type, totalPendapatan }));
 
-  const perDestinasiMap = new Map<string, { name: string; totalPendapatan: number; jumlahTransaksi: number }>();
-  for (const t of transaksis) {
-    const existing = perDestinasiMap.get(t.destinationId);
-    if (existing) {
-      existing.totalPendapatan += Number(t.totalHarga);
-      existing.jumlahTransaksi += 1;
-    } else {
-      perDestinasiMap.set(t.destinationId, {
-        name: t.destination.name,
-        totalPendapatan: Number(t.totalHarga),
-        jumlahTransaksi: 1,
-      });
+  // Peringkat destinasi tidak relevan saat sudah difilter ke 1 destinasi
+  let top5Destinasi: { destinationId: string; name: string; totalPendapatan: number; jumlahTransaksi: number }[] = [];
+  if (!destinationId) {
+    const perDestinasiMap = new Map<string, { name: string; totalPendapatan: number; jumlahTransaksi: number }>();
+    for (const t of transaksis) {
+      const existing = perDestinasiMap.get(t.destinationId);
+      if (existing) {
+        existing.totalPendapatan += Number(t.totalHarga);
+        existing.jumlahTransaksi += 1;
+      } else {
+        perDestinasiMap.set(t.destinationId, {
+          name: t.destination.name,
+          totalPendapatan: Number(t.totalHarga),
+          jumlahTransaksi: 1,
+        });
+      }
     }
+    top5Destinasi = Array.from(perDestinasiMap.entries())
+      .map(([id, v]) => ({ destinationId: id, ...v }))
+      .sort((a, b) => b.totalPendapatan - a.totalPendapatan)
+      .slice(0, 5);
   }
-  const top5Destinasi = Array.from(perDestinasiMap.entries())
-    .map(([destinationId, v]) => ({ destinationId, ...v }))
-    .sort((a, b) => b.totalPendapatan - a.totalPendapatan)
-    .slice(0, 5);
 
   return NextResponse.json({
     periode,
