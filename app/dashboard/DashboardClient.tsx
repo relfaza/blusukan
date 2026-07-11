@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { TrendingUp, ChevronRight } from "lucide-react";
+import { TrendingUp, ChevronRight, Star } from "lucide-react";
 import StatistikSection from "./StatistikSection";
 import TrenKunjunganSection from "./TrenKunjunganSection";
 import type { PeringkatDestinasi } from "@/lib/peringkat";
@@ -24,15 +24,26 @@ function TopDestinasiWidget({ items }: { items: PeringkatDestinasi[] }) {
         >
           🏆 Top 5 Destinasi Terpopuler
         </h2>
-        <Link
-          href="/dashboard/peringkat"
-          id="link-lihat-peringkat-lengkap"
-          className="flex items-center gap-0.5 text-xs font-semibold hover:opacity-70 transition-opacity"
-          style={{ color: "var(--blusukan-primary)" }}
-        >
-          Lihat Peringkat Lengkap
-          <ChevronRight size={14} />
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/peringkat-rating"
+            id="link-lihat-peringkat-rating"
+            className="flex items-center gap-0.5 text-xs font-semibold hover:opacity-70 transition-opacity"
+            style={{ color: "var(--blusukan-primary)" }}
+          >
+            <Star size={13} />
+            Peringkat Rating
+          </Link>
+          <Link
+            href="/dashboard/peringkat"
+            id="link-lihat-peringkat-lengkap"
+            className="flex items-center gap-0.5 text-xs font-semibold hover:opacity-70 transition-opacity"
+            style={{ color: "var(--blusukan-primary)" }}
+          >
+            Lihat Peringkat Lengkap
+            <ChevronRight size={14} />
+          </Link>
+        </div>
       </div>
 
       {items.length === 0 ? (
