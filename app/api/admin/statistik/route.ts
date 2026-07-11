@@ -27,6 +27,9 @@ export async function GET() {
 
   const months = last6Months();
   const rangeStart = new Date(months[0].year, months[0].month, 1);
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
   const [
     totalDestinasi,
@@ -37,6 +40,10 @@ export async function GET() {
     transaksiRecent,
     kategoriGroups,
     kabupatenGroups,
+    destinasiBaruBulanIni,
+    pendingDestinations,
+    laporanMingguIni,
+    transaksiMingguIni,
   ] = await Promise.all([
     prisma.destination.count({ where: { status: "APPROVED" } }),
     prisma.destination.count({ where: { status: "PENDING" } }),
@@ -64,7 +71,21 @@ export async function GET() {
       where: { status: "APPROVED" },
       _count: { _all: true },
     }),
+    prisma.destination.count({ where: { status: "APPROVED", approvedAt: { gte: startOfMonth } } }),
+    prisma.destination.findMany({ where: { status: "PENDING" }, select: { createdAt: true } }),
+    prisma.userReport.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+    prisma.transaksi.count({
+      where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] }, createdAt: { gte: sevenDaysAgo } },
+    }),
   ]);
+
+  const rataRataHariMenunggu =
+    pendingDestinations.length === 0
+      ? 0
+      : Math.round(
+          pendingDestinations.reduce((sum, d) => sum + (now.getTime() - d.createdAt.getTime()) / 86400000, 0) /
+            pendingDestinations.length
+        );
 
   const laporanPerBulan = months.map(({ bulan, year, month }) => ({
     bulan,
@@ -85,6 +106,10 @@ export async function GET() {
     totalLaporan,
     totalTransaksi: transaksiAgg._count._all,
     totalPendapatanEstimasi: Number(transaksiAgg._sum.totalHarga ?? 0),
+    destinasiBaruBulanIni,
+    rataRataHariMenunggu,
+    laporanMingguIni,
+    transaksiMingguIni,
     laporanPerBulan,
     transaksiPerBulan,
     destinasiPerKategori: kategoriGroups.map((g) => ({ kategori: g.kategori, jumlah: g._count._all })),

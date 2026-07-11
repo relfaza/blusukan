@@ -175,7 +175,7 @@ export default function PersetujuanClient() {
                     </span>
                   </div>
 
-                  <Link href={`/dashboard/destinasi/${d.id}`} id={`link-pending-${d.id}`}>
+                  <Link href={`/dashboard/destinasi/${d.id}?from=persetujuan`} id={`link-pending-${d.id}`}>
                     <p
                       className="text-base font-bold mb-1 hover:opacity-70 transition-opacity"
                       style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}

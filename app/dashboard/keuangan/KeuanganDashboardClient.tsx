@@ -285,7 +285,7 @@ export default function KeuanganDashboardClient() {
               {data.top5Destinasi.map((d, idx) => (
                 <Link
                   key={d.destinationId}
-                  href={`/dashboard/destinasi/${d.destinationId}`}
+                  href={`/dashboard/destinasi/${d.destinationId}?from=keuangan`}
                   id={`row-top-destinasi-${d.destinationId}`}
                   className="flex items-center gap-4 px-3 py-3 mt-2 rounded-xl transition-colors hover:bg-[#f7f8f5]"
                 >

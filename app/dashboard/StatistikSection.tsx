@@ -21,6 +21,10 @@ type Statistik = {
   totalLaporan: number;
   totalTransaksi: number;
   totalPendapatanEstimasi: number;
+  destinasiBaruBulanIni: number;
+  rataRataHariMenunggu: number;
+  laporanMingguIni: number;
+  transaksiMingguIni: number;
   laporanPerBulan: { bulan: string; jumlah: number }[];
   transaksiPerBulan: { bulan: string; jumlah: number }[];
   destinasiPerKategori: { kategori: string; jumlah: number }[];
@@ -343,6 +347,7 @@ export default function StatistikSection() {
           icon={<MapPin size={18} />}
           label="Total Destinasi Aktif"
           value={String(data.totalDestinasi)}
+          subtitle={`${data.destinasiBaruBulanIni} ditambahkan bulan ini`}
           iconBg="var(--blusukan-primary-container)"
           iconColor="var(--blusukan-primary)"
           href="/dashboard/destinasi"
@@ -351,6 +356,7 @@ export default function StatistikSection() {
           icon={<Clock size={18} />}
           label="Menunggu Persetujuan"
           value={String(data.totalPending)}
+          subtitle={`Rata-rata menunggu ${data.rataRataHariMenunggu} hari`}
           iconBg="#fef3e7"
           iconColor="#805533"
           href="/dashboard/persetujuan"
@@ -359,6 +365,7 @@ export default function StatistikSection() {
           icon={<MessageSquare size={18} />}
           label="Total Laporan Masuk"
           value={String(data.totalLaporan)}
+          subtitle={`${data.laporanMingguIni} laporan minggu ini`}
           iconBg="var(--blusukan-primary-container)"
           iconColor="var(--blusukan-primary)"
           href="/dashboard/laporan"
@@ -367,7 +374,7 @@ export default function StatistikSection() {
           icon={<Receipt size={18} />}
           label="Total Transaksi"
           value={String(data.totalTransaksi)}
-          subtitle={`Estimasi pendapatan: ${formatRupiah(data.totalPendapatanEstimasi)}`}
+          subtitle={`${data.transaksiMingguIni} transaksi minggu ini`}
           iconBg="var(--blusukan-primary-container)"
           iconColor="var(--blusukan-primary)"
           href="/dashboard/keuangan"
