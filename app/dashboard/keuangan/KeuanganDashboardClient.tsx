@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet, Receipt, TrendingUp, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet } from "lucide-react";
 import type { PeringkatKeuangan } from "@/lib/peringkat-keuangan";
+import PeringkatWidget, { type PeringkatWidgetItem } from "@/components/admin/peringkat-widget";
 import {
   ChartCard,
   EmptyChartState,
@@ -17,7 +18,13 @@ import {
   type Periode,
 } from "./keuangan-shared";
 
-export default function KeuanganDashboardClient({ semuaDestinasiKeuangan }: { semuaDestinasiKeuangan: PeringkatKeuangan[] }) {
+export default function KeuanganDashboardClient({
+  semuaDestinasiKeuangan,
+  peringkatWidgetItems,
+}: {
+  semuaDestinasiKeuangan: PeringkatKeuangan[];
+  peringkatWidgetItems: PeringkatWidgetItem[];
+}) {
   const [periode, setPeriode] = useState<Periode>("harian");
   const [data, setData] = useState<KeuanganResponse | null>(null);
   const [error, setError] = useState("");
@@ -56,16 +63,6 @@ export default function KeuanganDashboardClient({ semuaDestinasiKeuangan }: { se
             Kembali ke Dashboard
           </Link>
           <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/peringkat-keuangan?from=keuangan"
-              id="link-lihat-peringkat-keuangan"
-              className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
-              style={{ color: "var(--blusukan-primary)" }}
-            >
-              <TrendingUp size={13} />
-              Peringkat Pendapatan
-              <ChevronRight size={13} />
-            </Link>
             <Link
               href="/dashboard/transaksi"
               id="link-lihat-semua-transaksi"
@@ -128,51 +125,12 @@ export default function KeuanganDashboardClient({ semuaDestinasiKeuangan }: { se
           </ChartCard>
         </div>
 
-        {/* Top 5 Destinasi Terlaris */}
-        <div className="rounded-2xl overflow-hidden mb-6" style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}>
-          <div className="px-5 pt-5 pb-1 flex items-center gap-2">
-            <Receipt size={16} style={{ color: "var(--blusukan-primary)" }} />
-            <h3 className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
-              Top 5 Destinasi Terlaris
-            </h3>
-          </div>
-          {!data || data.top5Destinasi.length === 0 ? (
-            <div className="px-5 py-8 text-center">
-              <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                {data ? "Belum ada transaksi pada periode ini" : "Memuat..."}
-              </p>
-            </div>
-          ) : (
-            <div className="px-2 pb-2">
-              {data.top5Destinasi.map((d, idx) => (
-                <Link
-                  key={d.destinationId}
-                  href={`/dashboard/destinasi/${d.destinationId}?from=keuangan`}
-                  id={`row-top-destinasi-${d.destinationId}`}
-                  className="flex items-center gap-4 px-3 py-3 mt-2 rounded-xl transition-colors hover:bg-[#f7f8f5]"
-                >
-                  <span
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold"
-                    style={{ background: "var(--blusukan-primary)", color: "#ffffff" }}
-                  >
-                    #{idx + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
-                      {d.name}
-                    </p>
-                    <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                      {d.jumlahTransaksi} transaksi
-                    </p>
-                  </div>
-                  <p className="text-sm font-bold shrink-0" style={{ color: "var(--blusukan-primary)" }}>
-                    {formatRupiah(d.totalPendapatan)}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        <PeringkatWidget
+          title="🧾 Top 5 Destinasi Terlaris"
+          items={peringkatWidgetItems}
+          defaultMode="pendapatan"
+          source="keuangan"
+        />
 
         {/* Keuangan per Destinasi */}
         <div className="rounded-2xl overflow-hidden" style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}>
