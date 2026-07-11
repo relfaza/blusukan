@@ -6,6 +6,8 @@ export type PeringkatKeuangan = {
   id: string;
   name: string;
   kabupaten: string;
+  kategori: string;
+  submittedByName: string;
   totalPendapatan: number;
   jumlahTransaksi: number;
 };
@@ -15,7 +17,7 @@ export async function getPeringkatKeuangan(): Promise<PeringkatKeuangan[]> {
   const [destinations, transaksiGroups] = await Promise.all([
     prisma.destination.findMany({
       where: { status: "APPROVED" },
-      select: { id: true, name: true, kabupaten: true },
+      select: { id: true, name: true, kabupaten: true, kategori: true, submittedBy: { select: { name: true } } },
     }),
     prisma.transaksi.groupBy({
       by: ["destinationId"],
@@ -36,6 +38,8 @@ export async function getPeringkatKeuangan(): Promise<PeringkatKeuangan[]> {
         id: d.id,
         name: d.name,
         kabupaten: d.kabupaten,
+        kategori: d.kategori,
+        submittedByName: d.submittedBy.name,
         totalPendapatan: t?.total ?? 0,
         jumlahTransaksi: t?.jumlah ?? 0,
       };
