@@ -30,20 +30,15 @@ const KATEGORI_LABEL: Record<string, string> = {
   TEBING: "Tebing",
 };
 
-const SORT_OPTIONS: { value: "terlama" | "terbaru"; label: string }[] = [
-  { value: "terlama", label: "Terlama Menunggu" },
-  { value: "terbaru", label: "Terbaru Diajukan" },
-];
-
 export default function PersetujuanClient() {
   const [items, setItems] = useState<PendingDestination[] | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [sortBy, setSortBy] = useState<"terlama" | "terbaru">("terlama");
+  const [activeSort, setActiveSort] = useState<"terlama" | "terbaru" | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/admin/destinasi?sortBy=${sortBy}`)
+    fetch(`/api/admin/destinasi${activeSort ? `?sortBy=${activeSort}` : ""}`)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setItems(Array.isArray(data) ? data : []);
@@ -54,7 +49,7 @@ export default function PersetujuanClient() {
     return () => {
       cancelled = true;
     };
-  }, [sortBy]);
+  }, [activeSort]);
 
   async function handleAction(id: string, status: "APPROVED" | "REJECTED") {
     setProcessingId(id);
@@ -100,7 +95,7 @@ export default function PersetujuanClient() {
           Destinasi yang menunggu persetujuan
         </p>
 
-        <PersetujuanStatSection />
+        <PersetujuanStatSection activeSort={activeSort} onSortSelect={setActiveSort} />
 
         {error && (
           <p
@@ -111,37 +106,12 @@ export default function PersetujuanClient() {
           </p>
         )}
 
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <h2
-            className="text-sm font-bold"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-          >
-            Daftar Menunggu Persetujuan
-          </h2>
-          <div
-            className="inline-flex gap-1 rounded-lg p-1"
-            style={{ background: "var(--blusukan-surface)", border: "1px solid var(--blusukan-outline-variant)" }}
-          >
-            {SORT_OPTIONS.map((opt) => {
-              const active = opt.value === sortBy;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  id={`sort-${opt.value}`}
-                  onClick={() => setSortBy(opt.value)}
-                  className="text-xs font-semibold px-3.5 py-1.5 rounded-md transition-colors"
-                  style={{
-                    background: active ? "var(--blusukan-primary)" : "transparent",
-                    color: active ? "#ffffff" : "var(--blusukan-on-surface-variant)",
-                  }}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <h2
+          className="text-sm font-bold mb-4"
+          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+        >
+          Daftar Menunggu Persetujuan
+        </h2>
 
         {items === null ? (
           <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>

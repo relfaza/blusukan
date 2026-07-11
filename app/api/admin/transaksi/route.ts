@@ -19,12 +19,16 @@ export async function GET(request: Request) {
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
 
+  if (!destinationId) {
+    return NextResponse.json({ message: "Parameter destinationId wajib diisi." }, { status: 400 });
+  }
+
   const createdAt: Prisma.DateTimeFilter = {};
   if (dateFrom) createdAt.gte = new Date(`${dateFrom}T00:00:00`);
   if (dateTo) createdAt.lte = new Date(`${dateTo}T23:59:59.999`);
 
   const where: Prisma.TransaksiWhereInput = {
-    ...(destinationId ? { destinationId } : {}),
+    destinationId,
     ...(status && VALID_STATUS.includes(status) ? { status: status as TransaksiStatus } : {}),
     ...(Object.keys(createdAt).length > 0 ? { createdAt } : {}),
   };

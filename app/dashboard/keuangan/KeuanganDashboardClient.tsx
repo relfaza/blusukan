@@ -114,27 +114,15 @@ export default function KeuanganDashboardClient({
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
       <div className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <Link
-            href="/dashboard"
-            id="keuangan-back"
-            className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-70 transition-opacity"
-            style={{ color: "var(--blusukan-primary)" }}
-          >
-            <ArrowLeft size={16} />
-            Kembali ke Dashboard
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/transaksi?from=keuangan"
-              id="link-lihat-semua-transaksi"
-              className="text-xs font-semibold hover:opacity-70 transition-opacity"
-              style={{ color: "var(--blusukan-on-surface-variant)" }}
-            >
-              Lihat semua transaksi (detail) →
-            </Link>
-          </div>
-        </div>
+        <Link
+          href="/dashboard"
+          id="keuangan-back"
+          className="flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
+          style={{ color: "var(--blusukan-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Kembali ke Dashboard
+        </Link>
 
         <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
           <h1 className="text-2xl font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>

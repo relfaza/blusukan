@@ -67,20 +67,32 @@ function DominasiBadge({ label }: { label: string }) {
 }
 
 function InfoCard({
+  id,
   icon,
   label,
   destinasi,
   hariSuffix,
+  active,
+  onClick,
 }: {
+  id: string;
   icon: React.ReactNode;
   label: string;
   destinasi: DestinasiRingkas | null;
   hariSuffix: (hari: number) => string;
+  active: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div
-      className="rounded-2xl p-5 flex items-start gap-3"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+    <button
+      type="button"
+      id={id}
+      onClick={onClick}
+      className="rounded-2xl p-5 flex items-start gap-3 text-left w-full transition-colors"
+      style={{
+        background: active ? "var(--blusukan-primary-container)" : "#ffffff",
+        border: active ? "1.5px solid var(--blusukan-primary)" : "1px solid var(--blusukan-outline-variant)",
+      }}
     >
       <div
         className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center"
@@ -107,7 +119,7 @@ function InfoCard({
           </p>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -220,7 +232,13 @@ function BreakdownList({
   );
 }
 
-export default function PersetujuanStatSection() {
+export default function PersetujuanStatSection({
+  activeSort,
+  onSortSelect,
+}: {
+  activeSort: "terlama" | "terbaru" | null;
+  onSortSelect: (sort: "terlama" | "terbaru") => void;
+}) {
   const [data, setData] = useState<PersetujuanStat | null>(null);
   const [error, setError] = useState("");
 
@@ -287,16 +305,22 @@ export default function PersetujuanStatSection() {
     <div className="space-y-4 mb-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InfoCard
+          id="sort-terlama"
           icon={<Clock size={16} />}
           label="Menunggu Terlama"
           destinasi={data.destinasiTerlama}
           hariSuffix={(hari) => `${hari} hari menunggu`}
+          active={activeSort === "terlama"}
+          onClick={() => onSortSelect("terlama")}
         />
         <InfoCard
+          id="sort-terbaru"
           icon={<CalendarPlus size={16} />}
           label="Diajukan Terbaru"
           destinasi={data.destinasiTerbaru}
           hariSuffix={(hari) => (hari <= 0 ? "Hari ini" : `${hari} hari lalu`)}
+          active={activeSort === "terbaru"}
+          onClick={() => onSortSelect("terbaru")}
         />
       </div>
 
