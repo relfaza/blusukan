@@ -113,6 +113,10 @@ model User {
   namaInstansi      String?
   notifEmailAktif   Boolean   @default(true)
   bahasaPreferensi  String    @default("id")
+  notifTransaksiAktif Boolean @default(true)
+  notifBookingAktif   Boolean @default(true)
+  notifUlasanAktif    Boolean @default(true)
+  namaUsaha           String?
 
   reports               UserReport[]
   bookings              Booking[]
