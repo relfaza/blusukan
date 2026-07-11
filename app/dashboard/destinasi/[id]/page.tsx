@@ -26,6 +26,7 @@ import { prisma } from "@/lib/prisma";
 import ApprovalActions from "./ApprovalActions";
 import HapusPermanenAction from "./HapusPermanenAction";
 import PetaLokasi from "./PetaLokasi";
+import TrenKunjunganSection from "../../TrenKunjunganSection";
 
 export const dynamic = "force-dynamic";
 
@@ -339,6 +340,8 @@ export default async function DashboardDestinasiDetailPage({ params }: Props) {
               </p>
             </div>
           </SectionCard>
+
+          <TrenKunjunganSection destinationId={d.id} title="Tren Kunjungan Destinasi Ini" />
 
           {/* Info Kepemilikan */}
           <SectionCard>

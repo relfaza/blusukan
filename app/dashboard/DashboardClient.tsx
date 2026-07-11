@@ -1,6 +1,7 @@
 "use client";
 
 import StatistikSection from "./StatistikSection";
+import TrenKunjunganSection from "./TrenKunjunganSection";
 
 export default function DashboardClient() {
   return (
@@ -17,6 +18,7 @@ export default function DashboardClient() {
         </p>
 
         <StatistikSection />
+        <TrenKunjunganSection />
       </div>
     </div>
   );
