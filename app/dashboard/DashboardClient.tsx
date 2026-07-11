@@ -2,17 +2,21 @@
 
 import StatistikSection from "./StatistikSection";
 import TrenKunjunganSection from "./TrenKunjunganSection";
-import PeringkatWidget, { type PeringkatWidgetItem } from "@/components/admin/peringkat-widget";
+import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
 import type { PeringkatDestinasi } from "@/lib/peringkat";
 
+const PERINGKAT_TABS: PeringkatWidgetTab[] = [
+  { key: "populer", label: "Populer", dataSource: "kunjungan" },
+  { key: "rating", label: "Rating", dataSource: "rating" },
+  { key: "pendapatan", label: "Pendapatan", dataSource: "pendapatan" },
+];
+
 export default function DashboardClient({ peringkat }: { peringkat: PeringkatDestinasi[] }) {
-  const peringkatWidgetItems: PeringkatWidgetItem[] = peringkat.map((d) => ({
+  const initialItems: PeringkatWidgetItem[] = peringkat.map((d) => ({
     id: d.id,
     name: d.name,
     kabupaten: d.kabupaten,
-    primaryValue: d.jumlahKunjungan,
-    rataRataRating: d.rataRataRating,
-    totalReview: d.totalReview,
+    value: d.jumlahKunjungan,
   }));
 
   return (
@@ -29,7 +33,12 @@ export default function DashboardClient({ peringkat }: { peringkat: PeringkatDes
         </p>
 
         <StatistikSection />
-        <PeringkatWidget title="🏆 Top 5 Destinasi" items={peringkatWidgetItems} defaultMode="kunjungan" source="dashboard" />
+        <PeringkatWidget
+          title="🏆 Top 5 Destinasi"
+          tabs={PERINGKAT_TABS}
+          initialItems={initialItems}
+          source="dashboard"
+        />
         <TrenKunjunganSection />
       </div>
     </div>

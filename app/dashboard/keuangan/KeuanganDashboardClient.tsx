@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet } from "lucide-react";
 import type { PeringkatKeuangan } from "@/lib/peringkat-keuangan";
-import PeringkatWidget, { type PeringkatWidgetItem } from "@/components/admin/peringkat-widget";
+import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
 import {
   ChartCard,
   EmptyChartState,
@@ -17,6 +17,8 @@ import {
   type KeuanganResponse,
   type Periode,
 } from "./keuangan-shared";
+
+const PERINGKAT_TABS: PeringkatWidgetTab[] = [{ key: "terlaris", label: "Terlaris", dataSource: "pendapatan" }];
 
 export default function KeuanganDashboardClient({
   semuaDestinasiKeuangan,
@@ -127,8 +129,8 @@ export default function KeuanganDashboardClient({
 
         <PeringkatWidget
           title="🧾 Top 5 Destinasi Terlaris"
-          items={peringkatWidgetItems}
-          defaultMode="pendapatan"
+          tabs={PERINGKAT_TABS}
+          initialItems={peringkatWidgetItems}
           source="keuangan"
         />
 
