@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
-import { getDestinasiDenganLaporan, getLaporanByDestinasi } from "@/lib/laporan";
+import { computeLaporanDistribusi, getDestinasiDenganLaporan, getLaporanByDestinasi } from "@/lib/laporan";
 
 export async function GET(request: Request) {
   const authResult = await requireAdminApi();
@@ -13,7 +13,16 @@ export async function GET(request: Request) {
 
   if (destinationId) {
     const reports = await getLaporanByDestinasi(destinationId);
-    return NextResponse.json(reports);
+    const roadCondition = searchParams.get("roadCondition");
+    const signalStrength = searchParams.get("signalStrength");
+    const crowdLevel = searchParams.get("crowdLevel");
+    const rows = reports.filter(
+      (r) =>
+        (!roadCondition || r.roadCondition === roadCondition) &&
+        (!signalStrength || r.signalStrength === signalStrength) &&
+        (!crowdLevel || r.crowdLevel === crowdLevel)
+    );
+    return NextResponse.json({ rows, ...computeLaporanDistribusi(reports) });
   }
 
   const destinations = await getDestinasiDenganLaporan();

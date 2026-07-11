@@ -79,3 +79,24 @@ export async function getLaporanByDestinasi(destinationId: string): Promise<Lapo
     createdAt: r.createdAt.toISOString(),
   }));
 }
+
+export type LaporanDistribusi = {
+  roadCondition: { kondisi: string; jumlah: number }[];
+  signalStrength: { kondisi: string; jumlah: number }[];
+  crowdLevel: { kondisi: string; jumlah: number }[];
+};
+
+function countBy(reports: LaporanDetail[], key: "roadCondition" | "signalStrength" | "crowdLevel") {
+  const counts: Record<string, number> = {};
+  for (const r of reports) counts[r[key]] = (counts[r[key]] ?? 0) + 1;
+  return Object.entries(counts).map(([kondisi, jumlah]) => ({ kondisi, jumlah }));
+}
+
+/** Distribusi roadCondition/signalStrength/crowdLevel untuk 1 destinasi, dari laporan yang sudah dimuat */
+export function computeLaporanDistribusi(reports: LaporanDetail[]): LaporanDistribusi {
+  return {
+    roadCondition: countBy(reports, "roadCondition"),
+    signalStrength: countBy(reports, "signalStrength"),
+    crowdLevel: countBy(reports, "crowdLevel"),
+  };
+}

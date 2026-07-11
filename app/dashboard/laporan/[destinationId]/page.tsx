@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, MessageCircle } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { getLaporanByDestinasi } from "@/lib/laporan";
+import { computeLaporanDistribusi, getLaporanByDestinasi } from "@/lib/laporan";
+import LaporanChartsClient from "./LaporanChartsClient";
 import LaporanListClient from "./LaporanListClient";
 
 export const dynamic = "force-dynamic";
@@ -73,7 +74,10 @@ export default async function LaporanDestinasiDetailPage({ params }: Props) {
             </p>
           </div>
         ) : (
-          <LaporanListClient reports={reports} />
+          <>
+            <LaporanChartsClient destinationId={destination.id} distribusi={computeLaporanDistribusi(reports)} />
+            <LaporanListClient reports={reports} />
+          </>
         )}
       </div>
     </div>
