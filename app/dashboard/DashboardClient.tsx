@@ -26,7 +26,7 @@ function TopDestinasiWidget({ items }: { items: PeringkatDestinasi[] }) {
         </h2>
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard/peringkat-rating"
+            href="/dashboard/peringkat-rating?from=dashboard"
             id="link-lihat-peringkat-rating"
             className="flex items-center gap-0.5 text-xs font-semibold hover:opacity-70 transition-opacity"
             style={{ color: "var(--blusukan-primary)" }}
@@ -35,7 +35,7 @@ function TopDestinasiWidget({ items }: { items: PeringkatDestinasi[] }) {
             Peringkat Rating
           </Link>
           <Link
-            href="/dashboard/peringkat"
+            href="/dashboard/peringkat?from=dashboard"
             id="link-lihat-peringkat-lengkap"
             className="flex items-center gap-0.5 text-xs font-semibold hover:opacity-70 transition-opacity"
             style={{ color: "var(--blusukan-primary)" }}
@@ -111,7 +111,7 @@ export default function DashboardClient({ top5Destinasi }: { top5Destinasi: Peri
             Dashboard Admin
           </h1>
           <Link
-            href="/dashboard/peringkat"
+            href="/dashboard/peringkat?from=dashboard"
             id="link-lihat-peringkat-dashboard"
             className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
             style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}

@@ -132,7 +132,7 @@ export default function DestinasiAktifClient() {
             ← Kembali ke Dashboard
           </Link>
           <Link
-            href="/dashboard/peringkat"
+            href="/dashboard/peringkat?from=destinasi"
             id="link-lihat-peringkat"
             className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
             style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
