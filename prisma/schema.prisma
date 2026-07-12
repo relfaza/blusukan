@@ -169,18 +169,30 @@ model Destination {
 }
 
 model LocalService {
-  id            String      @id @default(cuid())
-  destinationId String
-  destination   Destination @relation(fields: [destinationId], references: [id])
-  providerName  String
-  serviceType   ServiceType
-  contactWa     String
-  baseRate      Decimal
-  isValidated   Boolean     @default(false)
-  validatedById String?
-  validatedBy   User?       @relation("ValidatedBy", fields: [validatedById], references: [id])
+  id                 String      @id @default(cuid())
+  destinationId      String
+  destination        Destination @relation(fields: [destinationId], references: [id])
+  providerName       String
+  serviceType        ServiceType
+  contactWa          String
+  baseRate           Decimal
+  kapasitasPenumpang Int?
+  fotoUrl            String?
+  isValidated        Boolean     @default(false)
+  validatedById      String?
+  validatedBy        User?       @relation("ValidatedBy", fields: [validatedById], references: [id])
 
-  bookings Booking[]
+  bookings    Booking[]
+  titikJemput TitikJemput[]
+}
+
+model TitikJemput {
+  id            String       @id @default(cuid())
+  serviceId     String
+  service       LocalService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  namaLokasi    String
+  hargaTambahan Decimal      @default(0)
+  estimasiWaktu String?
 }
 
 model UserReport {

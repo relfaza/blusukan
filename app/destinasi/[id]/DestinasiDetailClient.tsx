@@ -65,12 +65,22 @@ type Report = {
   createdAt: string;
 };
 
+type TitikJemput = {
+  id: string;
+  namaLokasi: string;
+  hargaTambahan: number;
+  estimasiWaktu: string | null;
+};
+
 type LocalService = {
   id: string;
   providerName: string;
   serviceType: string;
   contactWa: string;
   baseRate: number | null;
+  kapasitasPenumpang: number | null;
+  fotoUrl: string | null;
+  titikJemput: TitikJemput[];
 };
 
 type MenuItem = { id: string; name: string; price: number };
@@ -1491,36 +1501,49 @@ function BookingSummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** Kartu ringkas jasa transport — nama provider, badge jenis layanan, tarif dasar. Klik untuk buka form booking. */
+/** Kartu ringkas jasa transport — foto, nama provider, badge jenis layanan, tarif dasar, kapasitas. Klik untuk buka form booking. */
 function TransportServiceCard({ service, onClick }: { service: LocalService; onClick: () => void }) {
   return (
     <button
       type="button"
       id={`card-transport-${service.id}`}
       onClick={onClick}
-      className="text-left rounded-xl p-4 transition-all hover:shadow-md"
+      className="text-left rounded-xl overflow-hidden transition-all hover:shadow-md"
       style={{ background: "#ffffff", border: "1px solid #e8e8e8" }}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}>
-          {service.providerName}
-        </p>
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-          style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
-        >
-          {SERVICE_TYPE_ICON[service.serviceType]}
-          {SERVICE_TYPE_LABEL[service.serviceType] ?? service.serviceType}
-        </span>
-      </div>
-      {service.baseRate != null && (
-        <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
-          {formatRupiah(service.baseRate)}{" "}
-          <span className="text-xs font-normal" style={{ color: "#72796e" }}>
-            tarif dasar
-          </span>
-        </p>
+      {service.fotoUrl && (
+        <div className="relative w-full aspect-video">
+          <Image src={service.fotoUrl} alt={service.providerName} fill className="object-cover" sizes="(max-width: 640px) 100vw, 300px" />
+        </div>
       )}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <p className="text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}>
+            {service.providerName}
+          </p>
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+          >
+            {SERVICE_TYPE_ICON[service.serviceType]}
+            {SERVICE_TYPE_LABEL[service.serviceType] ?? service.serviceType}
+          </span>
+        </div>
+        {service.baseRate != null && (
+          <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
+            {formatRupiah(service.baseRate)}{" "}
+            <span className="text-xs font-normal" style={{ color: "#72796e" }}>
+              tarif dasar
+            </span>
+          </p>
+        )}
+        {service.kapasitasPenumpang != null && (
+          <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#72796e" }}>
+            <User size={11} />
+            Kapasitas {service.kapasitasPenumpang} penumpang
+          </p>
+        )}
+      </div>
     </button>
   );
 }
@@ -1551,12 +1574,21 @@ function TransportBookingDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [travelDate, setTravelDate] = useState("");
-  const [meetingPoint, setMeetingPoint] = useState("");
+  const [titikJemputChoice, setTitikJemputChoice] = useState("");
+  const [meetingPointManual, setMeetingPointManual] = useState("");
   const [contactNumber, setContactNumber] = useState(defaultContactNumber);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState<ConfirmedTransportBooking | null>(null);
+
+  const hasTitikJemput = service.titikJemput.length > 0;
+  const selectedTitikJemput = hasTitikJemput
+    ? service.titikJemput.find((t) => t.id === titikJemputChoice) ?? null
+    : null;
+  const resolvedMeetingPoint = selectedTitikJemput ? selectedTitikJemput.namaLokasi : meetingPointManual.trim();
+  const hargaTambahan = selectedTitikJemput?.hargaTambahan ?? 0;
+  const totalHarga = (service.baseRate ?? 0) + hargaTambahan;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1579,7 +1611,7 @@ function TransportBookingDialog({
           serviceId: service.id,
           destinationId,
           travelDate,
-          meetingPoint: meetingPoint.trim() || undefined,
+          meetingPoint: resolvedMeetingPoint || undefined,
           notes: notes.trim() || undefined,
           contactNumber: contactNumber.trim(),
         }),
@@ -1594,7 +1626,7 @@ function TransportBookingDialog({
 
       setConfirmed({
         travelDate,
-        meetingPoint: meetingPoint.trim(),
+        meetingPoint: resolvedMeetingPoint,
         contactNumber: contactNumber.trim(),
         notes: notes.trim(),
       });
@@ -1723,12 +1755,24 @@ function TransportBookingDialog({
 
         <form onSubmit={handleSubmit} className="overflow-y-auto p-4 space-y-4">
           {service.baseRate != null && (
-            <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
-              {formatRupiah(service.baseRate)}{" "}
-              <span className="text-xs font-normal" style={{ color: "#72796e" }}>
-                tarif dasar
-              </span>
-            </p>
+            <div>
+              <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
+                {formatRupiah(service.baseRate)}{" "}
+                <span className="text-xs font-normal" style={{ color: "#72796e" }}>
+                  tarif dasar
+                </span>
+              </p>
+              {hargaTambahan > 0 && (
+                <>
+                  <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+                    + {formatRupiah(hargaTambahan)} titik jemput ({selectedTitikJemput?.namaLokasi})
+                  </p>
+                  <p className="text-sm font-bold mt-1" style={{ color: "#2d5a27" }}>
+                    Total: {formatRupiah(totalHarga)}
+                  </p>
+                </>
+              )}
+            </div>
           )}
 
           <div>
@@ -1751,24 +1795,64 @@ function TransportBookingDialog({
             />
           </div>
 
-          <div>
-            <label
-              htmlFor={`meetingPoint-${service.id}`}
-              className="block text-xs font-medium mb-1.5"
-              style={{ color: "#72796e" }}
-            >
-              Titik Jemput
-            </label>
-            <input
-              id={`meetingPoint-${service.id}`}
-              type="text"
-              placeholder="misal: Terminal Giwangan, Yogyakarta"
-              value={meetingPoint}
-              onChange={(e) => setMeetingPoint(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm"
-              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
-            />
-          </div>
+          {hasTitikJemput ? (
+            <div>
+              <label
+                htmlFor={`titikJemput-${service.id}`}
+                className="block text-xs font-medium mb-1.5"
+                style={{ color: "#72796e" }}
+              >
+                Titik Jemput
+              </label>
+              <select
+                id={`titikJemput-${service.id}`}
+                value={titikJemputChoice}
+                onChange={(e) => setTitikJemputChoice(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm"
+                style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+              >
+                <option value="">-- Pilih titik jemput --</option>
+                {service.titikJemput.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.namaLokasi}
+                    {t.hargaTambahan > 0 ? ` (+${formatRupiah(t.hargaTambahan)})` : ""}
+                    {t.estimasiWaktu ? ` · ${t.estimasiWaktu}` : ""}
+                  </option>
+                ))}
+                <option value="LAINNYA">Lainnya (isi manual)</option>
+              </select>
+
+              {titikJemputChoice === "LAINNYA" && (
+                <input
+                  type="text"
+                  placeholder="misal: Terminal Giwangan, Yogyakarta"
+                  value={meetingPointManual}
+                  onChange={(e) => setMeetingPointManual(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm mt-2"
+                  style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+                />
+              )}
+            </div>
+          ) : (
+            <div>
+              <label
+                htmlFor={`meetingPoint-${service.id}`}
+                className="block text-xs font-medium mb-1.5"
+                style={{ color: "#72796e" }}
+              >
+                Titik Jemput
+              </label>
+              <input
+                id={`meetingPoint-${service.id}`}
+                type="text"
+                placeholder="misal: Terminal Giwangan, Yogyakarta"
+                value={meetingPointManual}
+                onChange={(e) => setMeetingPointManual(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm"
+                style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+              />
+            </div>
+          )}
 
           <div>
             <label
