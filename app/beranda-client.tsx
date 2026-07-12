@@ -39,9 +39,9 @@ const DestinationMap = dynamic(
     loading: () => (
       <div
         className="w-full h-full flex items-center justify-center"
-        style={{ background: "#f3f3f3" }}
+        style={{ background: "var(--blusukan-surface-low)" }}
       >
-        <span className="text-sm" style={{ color: "#72796e" }}>
+        <span className="text-sm" style={{ color: "var(--blusukan-outline)" }}>
           Memuat peta…
         </span>
       </div>
@@ -115,21 +115,21 @@ function getRouteBadge(routeStatus: string): BadgeCfg {
     case "SEDANG":
       return {
         label: "Aman",
-        bg: "#2d5a27",
-        textColor: "#ffffff",
+        bg: "var(--blusukan-primary)",
+        textColor: "var(--blusukan-on-primary)",
         icon: <CheckCircle size={12} />,
       };
     case "SULIT":
       return {
         label: "Berlumpur",
-        bg: "#44372a",
-        textColor: "#ffffff",
+        bg: "var(--blusukan-tertiary)",
+        textColor: "var(--blusukan-on-tertiary)",
         icon: <Droplets size={12} />,
       };
     case "RUSAK":
       return {
         label: "Perlu Perhatian",
-        bg: "#ba1a1a",
+        bg: "var(--blusukan-error)",
         textColor: "#ffffff",
         icon: <AlertTriangle size={12} />,
       };
@@ -192,19 +192,37 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
   // ID destinasi yang sesuai filter aktif (untuk highlight di peta)
   const filteredIds = new Set(filtered.map((d) => d.id));
 
+  // Statistik singkat untuk hero — murni turunan dari prop destinations, tanpa fetch baru
+  const wilayahCount = new Set(destinations.map((d) => d.kabupaten)).size;
+  const kategoriCount = new Set(destinations.map((d) => d.kategori)).size;
+  const heroStats = [
+    { icon: <Sparkles size={14} />, value: destinations.length, label: "Destinasi" },
+    { icon: <MapPin size={14} />, value: wilayahCount, label: "Wilayah" },
+    { icon: <Map size={14} />, value: kategoriCount, label: "Kategori" },
+  ];
+
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "#f9f9f9", color: "#1a1c1c" }}
+      style={{ background: "var(--blusukan-surface)", color: "var(--blusukan-on-surface)" }}
     >
-      {/* ── Hero banner (full-width gradient, headline besar, tekstur subtle) ── */}
+      {/* ── Hero — editorial gradient, headline besar, strip statistik ── */}
       <div
-        className="relative overflow-hidden px-4 lg:px-8 pt-14 pb-24 sm:pt-16 sm:pb-28 lg:pt-20 lg:pb-32"
+        className="relative overflow-hidden px-4 lg:px-8 pt-16 pb-28 sm:pt-20 sm:pb-32 lg:pt-24 lg:pb-36"
         style={{
           background:
-            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 45%, var(--blusukan-primary-fixed-dim) 55%) 65%, var(--blusukan-primary-fixed-dim) 100%)",
+            "linear-gradient(160deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 55%, var(--blusukan-tertiary) 45%) 55%, var(--blusukan-primary-fixed-dim) 135%)",
         }}
       >
+        {/* Bentuk dekoratif — blur circle, murni turunan token, bukan warna baru */}
+        <div
+          className="absolute -top-24 -right-16 w-72 h-72 rounded-full blur-3xl opacity-30 pointer-events-none"
+          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
+        />
+        <div
+          className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none"
+          style={{ background: "var(--blusukan-secondary-container)" }}
+        />
         {/* Overlay tekstur subtle — hanya turunan warna palet (on-primary), bukan warna baru */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -215,24 +233,88 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
         />
 
         <div className="relative max-w-7xl mx-auto text-center lg:text-left">
-          <p
-            className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
-            style={{ color: "var(--blusukan-primary-fixed-dim)", fontFamily: "Inter, sans-serif" }}
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] mb-6"
+            style={{
+              background: "color-mix(in srgb, var(--blusukan-on-primary) 16%, transparent)",
+              color: "var(--blusukan-on-primary)",
+              border: "1px solid color-mix(in srgb, var(--blusukan-on-primary) 28%, transparent)",
+              fontFamily: "Inter, sans-serif",
+            }}
           >
+            <Sparkles size={12} />
             Yogyakarta · Hidden Gem
-          </p>
+          </span>
+
           <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] max-w-3xl mx-auto lg:mx-0"
-            style={{ color: "var(--blusukan-on-primary)", fontFamily: "Montserrat, sans-serif" }}
+            className="font-black leading-[0.98] tracking-tight"
+            style={{ fontFamily: "Montserrat, sans-serif" }}
           >
-            Jelajahi Hidden Gem Yogyakarta
+            <span
+              className="block text-4xl sm:text-5xl lg:text-[4.25rem]"
+              style={{ color: "var(--blusukan-on-primary)" }}
+            >
+              Jelajahi
+            </span>
+            <span
+              className="block text-4xl sm:text-5xl lg:text-[4.25rem] italic"
+              style={{ color: "var(--blusukan-primary-fixed-dim)" }}
+            >
+              Hidden Gem
+            </span>
+            <span
+              className="block text-4xl sm:text-5xl lg:text-[4.25rem]"
+              style={{ color: "var(--blusukan-on-primary)" }}
+            >
+              Yogyakarta
+            </span>
           </h1>
+
           <p
-            className="text-sm sm:text-base mt-4 max-w-xl mx-auto lg:mx-0"
+            className="text-sm sm:text-base mt-5 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             style={{ color: "var(--blusukan-primary-container)", fontFamily: "Inter, sans-serif" }}
           >
             Temukan destinasi wisata tersembunyi yang menakjubkan
           </p>
+
+          {/* Strip statistik singkat — dihitung dari prop destinations */}
+          <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-4">
+            {heroStats.map((stat, i) => (
+              <div key={stat.label} className="flex items-center gap-4">
+                {i > 0 && (
+                  <span
+                    className="hidden sm:block w-px h-8"
+                    style={{ background: "color-mix(in srgb, var(--blusukan-on-primary) 25%, transparent)" }}
+                  />
+                )}
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="flex items-center justify-center w-9 h-9 rounded-full shrink-0"
+                    style={{
+                      background: "color-mix(in srgb, var(--blusukan-on-primary) 14%, transparent)",
+                      color: "var(--blusukan-primary-fixed-dim)",
+                    }}
+                  >
+                    {stat.icon}
+                  </span>
+                  <div className="text-left">
+                    <p
+                      className="text-base font-extrabold leading-none"
+                      style={{ color: "var(--blusukan-on-primary)", fontFamily: "Montserrat, sans-serif" }}
+                    >
+                      {stat.value}
+                    </p>
+                    <p
+                      className="text-[10px] uppercase tracking-wide mt-1"
+                      style={{ color: "var(--blusukan-primary-container)" }}
+                    >
+                      {stat.label}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -240,27 +322,28 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
       <main className="flex-1 px-4 lg:px-8 py-5 pb-28 max-w-7xl mx-auto w-full">
 
         {/* ── Search bar — mengambang di batas hero (logic sama persis, hanya restyle) ── */}
-        <div className="relative z-10 -mt-10 sm:-mt-12 lg:-mt-16 mb-6 max-w-2xl mx-auto lg:mx-0">
+        <div className="relative z-10 -mt-12 sm:-mt-14 lg:-mt-16 mb-8 max-w-2xl mx-auto lg:mx-0">
           <div
-            className="relative w-full rounded-full p-1.5"
+            className="relative w-full rounded-2xl p-2 flex items-center gap-2.5"
             style={{
               background: "var(--blusukan-surface-container-lowest)",
               border: "1px solid var(--blusukan-outline-variant)",
-              boxShadow: "0 16px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)",
+              boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 8px 16px -8px rgba(0,0,0,0.1)",
             }}
           >
-            <Search
-              size={18}
-              className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: "var(--blusukan-outline)" }}
-            />
+            <span
+              className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
+              style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+            >
+              <Search size={18} />
+            </span>
             <input
               id="search-destinasi"
               type="text"
               placeholder="Cari destinasi atau wilayah…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-3 pl-12 pr-4 rounded-full text-sm transition-all focus:outline-none bg-transparent"
+              className="w-full py-2.5 pr-4 text-sm transition-all focus:outline-none bg-transparent"
               style={{
                 color: "var(--blusukan-on-surface)",
                 fontFamily: "Inter, sans-serif",
@@ -269,13 +352,13 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
         {/* ── Destination cards — grid 3 kolom (Tugas 1) ── */}
         <section>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2.5">
             <h2
-              className="text-xs font-semibold uppercase tracking-wide"
-              style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
+              className="text-xs font-bold uppercase tracking-widest"
+              style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}
             >
               Wilayah
             </h2>
@@ -284,10 +367,10 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
               id="btn-lihat-peta"
               type="button"
               onClick={() => setMapOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide transition-all hover:shadow-md active:scale-95"
               style={{
-                background: "#2d5a27",
-                color: "#ffffff",
+                background: "var(--blusukan-primary)",
+                color: "var(--blusukan-on-primary)",
                 fontFamily: "Inter, sans-serif",
               }}
             >
@@ -303,19 +386,20 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                   key={opt.value}
                   id={`filter-wilayah-${opt.value.toLowerCase()}`}
                   onClick={() => setSelectedWilayah(opt.value)}
-                  className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-colors"
+                  className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all"
                   style={
                     active
                       ? {
-                          background: "#154212",
-                          color: "#ffffff",
-                          border: "1px solid #154212",
+                          background: "var(--blusukan-primary)",
+                          color: "var(--blusukan-on-primary)",
+                          border: "1px solid var(--blusukan-primary)",
                           fontFamily: "Inter, sans-serif",
+                          boxShadow: "0 4px 12px -4px color-mix(in srgb, var(--blusukan-primary) 60%, transparent)",
                         }
                       : {
-                          background: "#ffffff",
-                          color: "#1a1c1c",
-                          border: "1px solid #c2c9bb",
+                          background: "var(--blusukan-surface-container-lowest)",
+                          color: "var(--blusukan-on-surface-variant)",
+                          border: "1px solid var(--blusukan-outline-variant)",
                           fontFamily: "Inter, sans-serif",
                         }
                   }
@@ -330,8 +414,8 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
         {/* ── Kategori filter ── */}
         <section>
           <h2
-            className="text-xs font-semibold uppercase tracking-wide mb-2"
-            style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
+            className="text-xs font-bold uppercase tracking-widest mb-2.5"
+            style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}
           >
             Kategori
           </h2>
@@ -343,18 +427,19 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                   key={opt.value}
                   id={`filter-kategori-${opt.value.toLowerCase()}`}
                   onClick={() => setSelectedKategori(opt.value)}
-                  className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-colors"
+                  className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all"
                   style={
                     active
                       ? {
-                          background: "#2d5a27",
-                          color: "#ffffff",
-                          border: "1px solid #2d5a27",
+                          background: "var(--blusukan-secondary)",
+                          color: "var(--blusukan-on-secondary)",
+                          border: "1px solid var(--blusukan-secondary)",
                           fontFamily: "Inter, sans-serif",
+                          boxShadow: "0 4px 12px -4px color-mix(in srgb, var(--blusukan-secondary) 60%, transparent)",
                         }
                       : {
-                          background: "#e2e2e2",
-                          color: "#1a1c1c",
+                          background: "var(--blusukan-surface-container)",
+                          color: "var(--blusukan-on-surface-variant)",
                           border: "1px solid transparent",
                           fontFamily: "Inter, sans-serif",
                         }
@@ -371,16 +456,26 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
         <Dialog open={mapOpen} onOpenChange={setMapOpen}>
           <DialogContent
             showCloseButton={false}
-            className="!max-w-4xl !w-[calc(100vw-2rem)] !h-[80vh] !p-0 overflow-hidden"
+            className="!max-w-4xl !w-[calc(100vw-2rem)] !h-[80vh] !p-0 overflow-hidden !rounded-3xl"
+            style={{ border: "1px solid var(--blusukan-outline-variant)" }}
           >
-            <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#c2c9bb" }}>
+            <DialogHeader
+              className="flex flex-row items-center justify-between px-5 py-4 border-b"
+              style={{ borderColor: "var(--blusukan-outline-variant)", background: "var(--blusukan-surface-container-lowest)" }}
+            >
               <DialogTitle
-                className="text-sm font-bold"
-                style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+                className="text-sm font-bold flex items-center gap-2.5"
+                style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
               >
+                <span
+                  className="flex items-center justify-center w-7 h-7 rounded-full shrink-0"
+                  style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+                >
+                  <Map size={14} />
+                </span>
                 Peta Destinasi Yogyakarta
                 {(selectedWilayah !== "ALL" || selectedKategori !== "ALL") && (
-                  <span className="ml-2 text-xs font-normal" style={{ color: "#72796e" }}>
+                  <span className="ml-1 text-xs font-normal hidden sm:inline" style={{ color: "var(--blusukan-outline)" }}>
                     (pin berwarna = sesuai filter aktif)
                   </span>
                 )}
@@ -388,14 +483,14 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
               <button
                 type="button"
                 onClick={() => setMapOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
-                style={{ color: "#42493e" }}
+                className="w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-[var(--blusukan-surface-container)]"
+                style={{ color: "var(--blusukan-on-surface-variant)" }}
                 aria-label="Tutup peta"
               >
                 <X size={16} />
               </button>
             </DialogHeader>
-            <div className="flex-1" style={{ height: "calc(80vh - 52px)" }}>
+            <div className="flex-1" style={{ height: "calc(80vh - 60px)" }}>
               <DestinationMap
                 destinations={allMapDestinations}
                 highlightIds={filteredIds}
@@ -403,21 +498,36 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* ── Judul grid + jumlah hasil ── */}
+        <div className="flex items-end justify-between gap-3">
+          <h2
+            className="text-xl sm:text-2xl font-extrabold"
+            style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
+          >
+            Destinasi Pilihan
+          </h2>
+          <p className="text-xs shrink-0" style={{ color: "var(--blusukan-outline)", fontFamily: "Inter, sans-serif" }}>
+            {filtered.length} dari {destinations.length} destinasi
+          </p>
+        </div>
+
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {filtered.length === 0 ? (
-            <div className="text-center py-16">
-              <MapPin
-                size={48}
-                className="mx-auto mb-4"
-                style={{ color: "#c2c9bb" }}
-              />
+            <div className="col-span-full flex flex-col items-center justify-center text-center py-16">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                style={{ background: "var(--blusukan-primary-container)" }}
+              >
+                <MapPin size={28} style={{ color: "var(--blusukan-primary)" }} />
+              </div>
               <p
-                className="text-base font-semibold"
-                style={{ color: "#42493e", fontFamily: "Montserrat, sans-serif" }}
+                className="text-base font-bold"
+                style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
               >
                 Belum ada destinasi tersedia
               </p>
-              <p className="text-sm mt-1" style={{ color: "#72796e" }}>
+              <p className="text-sm mt-1.5 max-w-xs" style={{ color: "var(--blusukan-outline)" }}>
                 Coba ubah filter atau kata kunci pencarian
               </p>
             </div>
@@ -438,23 +548,24 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                   key={dest.id}
                   href={`/destinasi/${dest.id}`}
                   id={`card-${dest.id}`}
-                  className="block"
+                  className="group block h-full"
                 >
                   <article
-                    className="rounded-2xl overflow-hidden flex flex-col transition-all shadow-sm hover:shadow-lg hover:scale-[1.02]"
+                    className="h-full flex flex-col overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-1"
                     style={{
-                      background: "#ffffff",
-                      border: "1px solid #44372a",
+                      background: "var(--blusukan-surface-container-lowest)",
+                      border: "1px solid var(--blusukan-outline-variant)",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                     }}
                   >
-                    {/* Card photo */}
-                    <div className="h-48 relative w-full">
+                    {/* Card photo — editorial overlay: badge & judul di atas foto */}
+                    <div className="h-56 relative w-full overflow-hidden">
                       {dest.photoUrls[0] ? (
                         <Image
                           src={dest.photoUrls[0]}
                           alt={dest.name}
                           fill
-                          className="object-cover"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                           sizes="(max-width: 768px) 100vw, 672px"
                         />
                       ) : (
@@ -462,17 +573,27 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                           className="w-full h-full flex items-center justify-center"
                           style={{
                             background:
-                              "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)",
+                              "linear-gradient(135deg, var(--blusukan-primary-container) 0%, var(--blusukan-tertiary-container) 100%)",
                           }}
                         >
-                          <ImageOff size={28} style={{ color: "rgba(21,66,18,0.35)" }} />
+                          <ImageOff size={28} style={{ color: "color-mix(in srgb, var(--blusukan-tertiary) 45%, transparent)" }} />
                         </div>
                       )}
-                      {/* Road condition badge */}
-                      {badge && (
-                        <div className="absolute top-2 left-2">
+
+                      {/* Gradient overlay tipis — supaya teks di atas foto tetap terbaca */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background:
+                            "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 48%, rgba(0,0,0,0) 68%)",
+                        }}
+                      />
+
+                      {/* Baris atas: badge kondisi rute + badge popularitas */}
+                      <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+                        {badge ? (
                           <span
-                            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-bold shadow-sm"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm"
                             style={{
                               background: badge.bg,
                               color: badge.textColor,
@@ -482,75 +603,72 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                             {badge.icon}
                             {badge.label}
                           </span>
-                        </div>
-                      )}
-                    </div>
+                        ) : <span />}
 
-                    {/* Card body */}
-                    <div className="p-4 flex flex-col flex-1">
-                      {/* Category + name */}
-                      <p
-                        className="text-xs font-bold uppercase tracking-wider mb-1"
-                        style={{
-                          color: "#805533",
-                          fontFamily: "Inter, sans-serif",
-                        }}
-                      >
-                        {KATEGORI_LABEL[dest.kategori] ?? dest.kategori}
-                        {" · "}
-                        {KABUPATEN_LABEL[dest.kabupaten] ?? dest.kabupaten}
-                      </p>
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3
-                          className="text-lg font-bold leading-tight"
-                          style={{
-                            color: "#1a1c1c",
-                            fontFamily: "Montserrat, sans-serif",
-                          }}
-                        >
-                          {dest.name}
-                        </h3>
-                        {dest.totalReview > 0 && (
+                        {popularityBadge && (
                           <span
-                            className="inline-flex items-center gap-1 text-xs font-bold shrink-0"
-                            style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
-                          >
-                            <Star size={13} fill="#f5a623" style={{ color: "#f5a623" }} />
-                            {dest.rataRataRating.toFixed(1)}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Popularitas — dari upvote & laporan terverifikasi komunitas */}
-                      {popularityBadge && (
-                        <div className="mb-2">
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-sm backdrop-blur-sm shrink-0"
                             style={{
-                              background: "#fef3e7",
-                              color: "#805533",
+                              background: "color-mix(in srgb, var(--blusukan-surface-container-lowest) 90%, transparent)",
+                              color: "var(--blusukan-secondary)",
                               fontFamily: "Inter, sans-serif",
                             }}
                           >
                             {popularityBadge.kind === "trending" ? (
-                              <TrendingUp size={13} />
+                              <TrendingUp size={12} />
                             ) : (
-                              <Star size={13} />
+                              <Star size={12} />
                             )}
-                            {popularityBadge.label}
+                            <span className="max-w-[8.5rem] truncate">{popularityBadge.label}</span>
                           </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
+                      {/* Teks bawah di atas foto: kategori/wilayah, nama, rating */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3.5">
+                        <p
+                          className="text-[10px] font-bold uppercase tracking-widest mb-1"
+                          style={{ color: "var(--blusukan-primary-fixed-dim)", fontFamily: "Inter, sans-serif" }}
+                        >
+                          {KATEGORI_LABEL[dest.kategori] ?? dest.kategori}
+                          {" · "}
+                          {KABUPATEN_LABEL[dest.kabupaten] ?? dest.kabupaten}
+                        </p>
+                        <div className="flex items-end justify-between gap-2">
+                          <h3
+                            className="text-lg font-extrabold leading-tight"
+                            style={{ color: "var(--blusukan-on-primary)", fontFamily: "Montserrat, sans-serif" }}
+                          >
+                            {dest.name}
+                          </h3>
+                          {dest.totalReview > 0 && (
+                            <span
+                              className="inline-flex items-center gap-1 text-xs font-bold shrink-0 px-2 py-1 rounded-full backdrop-blur-sm"
+                              style={{
+                                background: "color-mix(in srgb, var(--blusukan-on-primary) 18%, transparent)",
+                                color: "var(--blusukan-on-primary)",
+                                fontFamily: "Inter, sans-serif",
+                              }}
+                            >
+                              <Star size={13} fill="var(--blusukan-rating)" style={{ color: "var(--blusukan-rating)" }} />
+                              {dest.rataRataRating.toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card body */}
+                    <div className="p-4 flex flex-col flex-1 gap-3">
                       {/* Signal + crowd chips */}
                       {(signalInfo || crowdLabel) && (
-                        <div className="flex flex-wrap gap-2 mb-3">
+                        <div className="flex flex-wrap gap-2">
                           {signalInfo && (
                             <span
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs"
                               style={{
-                                background: "#eeeeee",
-                                color: "#42493e",
+                                background: "var(--blusukan-surface-container)",
+                                color: "var(--blusukan-on-surface-variant)",
                                 fontFamily: "Inter, sans-serif",
                               }}
                             >
@@ -560,10 +678,10 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                           )}
                           {crowdLabel && (
                             <span
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs"
                               style={{
-                                background: "#eeeeee",
-                                color: "#42493e",
+                                background: "var(--blusukan-surface-container)",
+                                color: "var(--blusukan-on-surface-variant)",
                                 fontFamily: "Inter, sans-serif",
                               }}
                             >
@@ -576,14 +694,14 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
 
                       {/* Vibe tags */}
                       {dest.vibeTags.length > 0 && (
-                        <div className="mt-auto flex flex-wrap gap-1">
+                        <div className="mt-auto flex flex-wrap gap-1.5">
                           {dest.vibeTags.map((tag) => (
                             <span
                               key={tag}
-                              className="px-2 py-1 rounded text-xs font-semibold"
+                              className="px-2.5 py-1 rounded-full text-xs font-semibold"
                               style={{
-                                background: "rgba(161, 212, 148, 0.2)",
-                                color: "#154212",
+                                background: "var(--blusukan-primary-container)",
+                                color: "var(--blusukan-on-primary-container)",
                                 fontFamily: "Inter, sans-serif",
                               }}
                             >
@@ -600,30 +718,31 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
           )}
         </section>
 
-        </div> {/* end space-y-6 wrapper */}
+        </div> {/* end space-y-8 wrapper */}
       </main>
 
       {/* ── Fixed bottom navigation ── */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 pt-2 pb-3 md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 pt-2 md:hidden backdrop-blur-md"
         style={{
-          background: "#f9f9f9",
-          borderTop: "1px solid #44372a",
-          borderRadius: "12px 12px 0 0",
-          boxShadow: "0 -2px 12px rgba(0,0,0,0.08)",
+          background: "color-mix(in srgb, var(--blusukan-surface-container-lowest) 92%, transparent)",
+          borderTop: "1px solid var(--blusukan-outline-variant)",
+          borderRadius: "20px 20px 0 0",
+          boxShadow: "0 -8px 24px rgba(0,0,0,0.08)",
+          paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
         }}
       >
         {/* Beranda — active */}
         <Link
           href="/"
           id="nav-beranda"
-          className="flex flex-col items-center justify-center px-4 py-1 rounded-full"
-          style={{ background: "#2d5a27" }}
+          className="flex flex-col items-center justify-center px-5 py-1.5 rounded-2xl"
+          style={{ background: "var(--blusukan-primary)" }}
         >
-          <Home size={22} style={{ color: "#9dd090" }} />
+          <Home size={22} style={{ color: "var(--blusukan-on-primary)" }} />
           <span
             className="text-xs font-bold mt-0.5"
-            style={{ color: "#9dd090", fontFamily: "Inter, sans-serif" }}
+            style={{ color: "var(--blusukan-on-primary)", fontFamily: "Inter, sans-serif" }}
           >
             Beranda
           </span>
@@ -633,12 +752,12 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
         <Link
           href="/info"
           id="nav-info"
-          className="flex flex-col items-center justify-center px-4 py-1 rounded-full hover:bg-[#e8e8e8] transition-colors"
+          className="flex flex-col items-center justify-center px-5 py-1.5 rounded-2xl transition-colors hover:bg-[var(--blusukan-surface-container)]"
         >
-          <Sparkles size={22} style={{ color: "#42493e" }} />
+          <Sparkles size={22} style={{ color: "var(--blusukan-on-surface-variant)" }} />
           <span
             className="text-xs font-semibold mt-0.5"
-            style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
+            style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}
           >
             Info
           </span>
@@ -648,12 +767,12 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
         <Link
           href="/profil"
           id="nav-profil"
-          className="flex flex-col items-center justify-center px-4 py-1 rounded-full hover:bg-[#e8e8e8] transition-colors"
+          className="flex flex-col items-center justify-center px-5 py-1.5 rounded-2xl transition-colors hover:bg-[var(--blusukan-surface-container)]"
         >
-          <User size={22} style={{ color: "#42493e" }} />
+          <User size={22} style={{ color: "var(--blusukan-on-surface-variant)" }} />
           <span
             className="text-xs font-semibold mt-0.5"
-            style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
+            style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}
           >
             Profil
           </span>

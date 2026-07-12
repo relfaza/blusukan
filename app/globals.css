@@ -72,6 +72,7 @@
   --color-blusukan-outline-variant: var(--blusukan-outline-variant);
   --color-blusukan-error: var(--blusukan-error);
   --color-blusukan-error-container: var(--blusukan-error-container);
+  --color-blusukan-rating: var(--blusukan-rating);
 }
 
 :root {
@@ -132,6 +133,8 @@
   --blusukan-outline-variant: #dedad0;
   --blusukan-error: #b3261e;
   --blusukan-error-container: #f9dedc;
+  /* Rating-star gold — no existing brand hue covers this, kept as a small, deliberate addition */
+  --blusukan-rating: #f0a83c;
 }
 
 .dark {
