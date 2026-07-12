@@ -177,19 +177,21 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
             );
           })}
 
-          {/* Tentang Kami — selalu tampil untuk semua kondisi (guest & semua role), terpisah dari navLinks per-role */}
-          <Link
-            href="/tentang"
-            id="nav-link-tentang-kami"
-            className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-            style={{
-              color: pathname === "/tentang" ? "var(--blusukan-primary)" : "var(--blusukan-on-surface-variant)",
-              background: pathname === "/tentang" ? "rgba(45,90,39,0.08)" : "transparent",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            Tentang Kami
-          </Link>
+          {/* Tentang Kami — tampil untuk guest & role WISATAWAN, disembunyikan untuk ADMIN & PENGELOLA (tidak relevan dengan area kerja mereka) */}
+          {user?.role !== "ADMIN" && user?.role !== "PENGELOLA" && (
+            <Link
+              href="/tentang"
+              id="nav-link-tentang-kami"
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+              style={{
+                color: pathname === "/tentang" ? "var(--blusukan-primary)" : "var(--blusukan-on-surface-variant)",
+                background: pathname === "/tentang" ? "rgba(45,90,39,0.08)" : "transparent",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              Tentang Kami
+            </Link>
+          )}
         </div>
 
         {/* ── Right side: Notif + Avatar ── */}

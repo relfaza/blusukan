@@ -217,82 +217,64 @@ export default function ProfilPage() {
       className="min-h-screen"
       style={{ backgroundColor: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}
     >
-      {/* ── Header identitas — panel gradient brand + avatar inisial ── */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 62%, var(--blusukan-tertiary) 38%) 100%)",
-        }}
-      >
-        <div
-          className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none"
-          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
-        />
+      {/* ── Header identitas — heading sederhana + avatar inisial di atas background cream ── */}
+      <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <Link
+          href={(profil?.role && ROLE_BACK_LINK[profil.role]) ?? "/"}
+          id="profil-back"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
+          style={{ color: "var(--blusukan-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Kembali
+        </Link>
 
-        <div className="relative max-w-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-          <Link
-            href={(profil?.role && ROLE_BACK_LINK[profil.role]) ?? "/"}
-            id="profil-back"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
-            style={{ color: "var(--blusukan-on-primary)" }}
+        <div className="flex items-center gap-4">
+          <div
+            className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center text-xl font-extrabold shrink-0"
+            style={{
+              background: "var(--blusukan-primary-container)",
+              color: "var(--blusukan-primary)",
+              fontFamily: "Montserrat, sans-serif",
+            }}
           >
-            <ArrowLeft size={16} />
-            Kembali
-          </Link>
+            {initials}
+          </div>
 
-          <div className="flex items-center gap-4">
-            <div
-              className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center text-xl font-extrabold shrink-0"
+          <div className="min-w-0">
+            <h1
+              className="text-2xl sm:text-3xl font-black tracking-tight truncate"
               style={{
-                background: "color-mix(in srgb, var(--blusukan-on-primary) 18%, transparent)",
-                border: "1px solid color-mix(in srgb, var(--blusukan-on-primary) 30%, transparent)",
-                color: "var(--blusukan-on-primary)",
                 fontFamily: "Montserrat, sans-serif",
+                color: "var(--blusukan-on-surface)",
               }}
             >
-              {initials}
-            </div>
-
-            <div className="min-w-0">
-              <h1
-                className="text-2xl sm:text-3xl font-black tracking-tight truncate"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "var(--blusukan-on-primary)",
-                }}
-              >
-                {profil?.name || "Profil Saya"}
-              </h1>
-              {profil && (
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded-full"
-                    style={{
-                      background:
-                        "color-mix(in srgb, var(--blusukan-on-primary) 16%, transparent)",
-                      color: "var(--blusukan-on-primary)",
-                      border:
-                        "1px solid color-mix(in srgb, var(--blusukan-on-primary) 28%, transparent)",
-                    }}
-                  >
-                    {ROLE_LABEL[profil.role] ?? profil.role}
-                  </span>
-                  <span
-                    className="text-xs truncate"
-                    style={{ color: "var(--blusukan-primary-container)" }}
-                  >
-                    {profil.email}
-                  </span>
-                </div>
-              )}
-            </div>
+              {profil?.name || "Profil Saya"}
+            </h1>
+            {profil && (
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <span
+                  className="text-[10px] font-bold uppercase tracking-[0.16em] px-2.5 py-1 rounded-full"
+                  style={{
+                    background: "var(--blusukan-primary-container)",
+                    color: "var(--blusukan-primary)",
+                  }}
+                >
+                  {ROLE_LABEL[profil.role] ?? profil.role}
+                </span>
+                <span
+                  className="text-xs truncate"
+                  style={{ color: "var(--blusukan-on-surface-variant)" }}
+                >
+                  {profil.email}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* relative z-10 wajib: header di atas ber-position:relative, tanpa ini konten tertimpa */}
-      <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-12 space-y-6">
+      <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 space-y-6">
         {loadingProfil ? (
           <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
             Memuat data profil...
