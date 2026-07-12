@@ -41,7 +41,7 @@ function StepIndicator({ step }: { step: number }) {
             style={
               n <= step
                 ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
-                : { background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }
+                : { background: "var(--blusukan-surface-container-lowest)", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }
             }
           >
             {n}
@@ -115,7 +115,7 @@ function StepFooter({
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#ffffff",
+  background: "var(--blusukan-surface-container-lowest)",
   border: "1px solid var(--blusukan-outline-variant)",
   borderRadius: "16px",
 };
@@ -229,7 +229,7 @@ export default function AjukanDestinasiWizard() {
       >
         <div
           className="w-full max-w-sm rounded-2xl p-8 flex flex-col items-center text-center"
-          style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)", borderRadius: "16px" }}
+          style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)", borderRadius: "16px" }}
         >
           <CheckCircle2 size={48} style={{ color: "var(--blusukan-primary)" }} className="mb-4" />
           <h1
@@ -324,7 +324,7 @@ export default function AjukanDestinasiWizard() {
                       id={`btn-hapus-draft-fasilitas-${idx}`}
                       onClick={() => setFasilitasDrafts((prev) => prev.filter((_, i) => i !== idx))}
                       aria-label={`Hapus ${f.nama}`}
-                      className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8]"
+                      className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)]"
                       style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
                     >
                       <Trash2 size={14} />
@@ -384,7 +384,7 @@ export default function AjukanDestinasiWizard() {
                       id={`btn-hapus-draft-umkm-${idx}`}
                       onClick={() => setUmkmDrafts((prev) => prev.filter((_, i) => i !== idx))}
                       aria-label={`Hapus ${w.name}`}
-                      className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8]"
+                      className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)]"
                       style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
                     >
                       <Trash2 size={14} />
@@ -445,7 +445,7 @@ export default function AjukanDestinasiWizard() {
                       id={`btn-hapus-draft-transport-${idx}`}
                       onClick={() => setTransportDrafts((prev) => prev.filter((_, i) => i !== idx))}
                       aria-label={`Hapus ${t.providerName}`}
-                      className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8]"
+                      className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)]"
                       style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
                     >
                       <Trash2 size={14} />

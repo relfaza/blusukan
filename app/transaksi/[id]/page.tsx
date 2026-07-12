@@ -33,10 +33,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
-  DIKONFIRMASI: { bg: "#e3efe0", color: "#1d4ed8" },
-  SELESAI: { bg: "#e3efe0", color: "#1f4d2c" },
-  DIBATALKAN: { bg: "#eeeeee", color: "#4b4f45" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
+  DIKONFIRMASI: { bg: "var(--blusukan-primary-container)", color: "#1d4ed8" },
+  SELESAI: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
+  DIBATALKAN: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 export default async function TransaksiDetailPage({ params }: Props) {
@@ -104,7 +104,7 @@ export default async function TransaksiDetailPage({ params }: Props) {
       <div
         className="w-full max-w-md rounded-2xl p-6"
         style={{
-          background: "#ffffff",
+          background: "var(--blusukan-surface-container-lowest)",
           border: "1px solid var(--blusukan-outline-variant)",
         }}
       >
@@ -241,7 +241,7 @@ export default async function TransaksiDetailPage({ params }: Props) {
       <div
         className="w-full max-w-md rounded-2xl p-6 mt-4"
         style={{
-          background: "#ffffff",
+          background: "var(--blusukan-surface-container-lowest)",
           border: "1px solid var(--blusukan-outline-variant)",
         }}
       >
@@ -314,7 +314,7 @@ export default async function TransaksiDetailPage({ params }: Props) {
           id="btn-lihat-notifikasi"
           className="w-full text-center py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
           style={{
-            background: "#ffffff",
+            background: "var(--blusukan-surface-container-lowest)",
             color: "var(--blusukan-primary)",
             border: "1px solid var(--blusukan-primary)",
           }}

@@ -270,31 +270,45 @@ export default function PengaturanWisatawanClient() {
 
   return (
     <div
-      className="min-h-screen px-4 py-8 sm:px-6 lg:px-8"
+      className="min-h-screen"
       style={{ backgroundColor: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}
     >
-      <div className="max-w-xl mx-auto space-y-6">
-        <div>
+      {/* ── Header — panel gradient brand ── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 62%, var(--blusukan-tertiary) 38%) 100%)",
+        }}
+      >
+        <div
+          className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none"
+          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
+        />
+        <div className="relative max-w-xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
           <Link
             href="/"
             id="pengaturan-wisatawan-back"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold mb-3 hover:opacity-70 transition-opacity"
-            style={{ color: "var(--blusukan-primary)" }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
+            style={{ color: "var(--blusukan-on-primary)" }}
           >
             <ArrowLeft size={16} />
             Kembali
           </Link>
           <h1
-            className="text-2xl font-bold"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            className="text-3xl font-black tracking-tight"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-primary)" }}
           >
             Pengaturan
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          <p className="text-sm mt-2" style={{ color: "var(--blusukan-primary-container)" }}>
             Kelola akun, keamanan, dan preferensi Wisatawan.
           </p>
         </div>
+      </div>
 
+      {/* relative z-10 wajib: header di atas ber-position:relative, tanpa ini konten tertimpa */}
+      <div className="relative z-10 max-w-xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-12 space-y-6">
         {loading ? (
           <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
             Memuat pengaturan...

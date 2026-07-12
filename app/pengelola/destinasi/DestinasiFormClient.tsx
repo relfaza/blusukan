@@ -60,7 +60,7 @@ export default function DestinasiFormClient({ destinationId, initial }: Destinas
       >
         <div
           className="w-full max-w-sm rounded-2xl p-8 flex flex-col items-center text-center"
-          style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)", borderRadius: "16px" }}
+          style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)", borderRadius: "16px" }}
         >
           <CheckCircle2 size={48} style={{ color: "var(--blusukan-primary)" }} className="mb-4" />
           <h1

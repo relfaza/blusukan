@@ -39,7 +39,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "#ffffff" }}>
+          <h2 className="text-base font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-surface-container-lowest)" }}>
             {title}
           </h2>
           <button
@@ -48,7 +48,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
             onClick={onClose}
             aria-label="Tutup"
             className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: "rgba(255,255,255,0.15)", color: "#ffffff" }}
+            style={{ background: "rgba(255,255,255,0.15)", color: "var(--blusukan-surface-container-lowest)" }}
           >
             <X size={16} />
           </button>
@@ -72,9 +72,9 @@ function FasilitasCard({
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
-      <div className="w-full aspect-video" style={{ background: "#e0e0e0" }}>
+      <div className="w-full aspect-video" style={{ background: "var(--blusukan-surface-container-highest)" }}>
         {fasilitas.fotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={fasilitas.fotoUrl} alt={fasilitas.nama} className="w-full h-full object-cover" />
@@ -99,7 +99,7 @@ function FasilitasCard({
               id={`btn-edit-fasilitas-${fasilitas.id}`}
               onClick={onEdit}
               aria-label={`Edit ${fasilitas.nama}`}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
               style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-on-surface-variant)" }}
             >
               <Pencil size={12} />
@@ -109,7 +109,7 @@ function FasilitasCard({
               id={`btn-hapus-fasilitas-${fasilitas.id}`}
               onClick={onDelete}
               aria-label={`Hapus ${fasilitas.nama}`}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8]"
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)]"
               style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
             >
               <Trash2 size={12} />
@@ -269,7 +269,7 @@ export default function FasilitasLengkapClient({ destinationId, destinationName,
         <div className="grid grid-cols-2 gap-4 mb-6 max-w-md">
           <div
             className="rounded-2xl p-5"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
               Total Fasilitas
@@ -283,7 +283,7 @@ export default function FasilitasLengkapClient({ destinationId, destinationName,
           </div>
           <div
             className="rounded-2xl p-5"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
               Total Nilai Sewa
@@ -309,7 +309,7 @@ export default function FasilitasLengkapClient({ destinationId, destinationName,
         {items.length === 0 ? (
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
               Belum ada fasilitas yang ditambahkan.

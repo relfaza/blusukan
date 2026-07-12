@@ -109,7 +109,7 @@ export default function JasaTransportForm({
   const inputStyle: React.CSSProperties = {
     border: "1px solid var(--blusukan-outline-variant)",
     borderRadius: "8px",
-    background: "#ffffff",
+    background: "var(--blusukan-surface-container-lowest)",
     color: "var(--blusukan-on-surface)",
   };
 
@@ -213,7 +213,7 @@ export default function JasaTransportForm({
               onClick={removePhoto}
               aria-label="Hapus foto"
               className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(0,0,0,0.6)", color: "#ffffff" }}
+              style={{ background: "rgba(0,0,0,0.6)", color: "var(--blusukan-surface-container-lowest)" }}
             >
               <X size={12} />
             </button>

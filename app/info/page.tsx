@@ -62,7 +62,7 @@ function InfoDestinationCard({
     <Link href={`/destinasi/${id}`} id={`info-card-${id}`} className="block">
       <article
         className="rounded-2xl overflow-hidden flex flex-col transition-all shadow-sm hover:shadow-lg hover:scale-[1.02]"
-        style={{ background: "#ffffff", border: "1px solid #44372a" }}
+        style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-tertiary)" }}
       >
         <div className="h-40 relative w-full">
           {photoUrls[0] ? (
@@ -95,7 +95,7 @@ function InfoDestinationCard({
         <div className="p-4">
           <p
             className="text-xs font-bold uppercase tracking-wider mb-1"
-            style={{ color: "#805533", fontFamily: "Inter, sans-serif" }}
+            style={{ color: "var(--blusukan-secondary)", fontFamily: "Inter, sans-serif" }}
           >
             {KATEGORI_LABEL[kategori] ?? kategori}
             {" · "}
@@ -103,7 +103,7 @@ function InfoDestinationCard({
           </p>
           <h3
             className="text-base font-bold leading-tight"
-            style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+            style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
           >
             {name}
           </h3>
@@ -117,7 +117,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div
       className="rounded-2xl p-10 text-center"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
       <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
         {message}
@@ -130,27 +130,59 @@ export default async function InfoPage() {
   const [hiddenGemBaru, populerMingguIni] = await Promise.all([getHiddenGemBaru(), getPopulerMingguIni()]);
 
   return (
-    <div className="min-h-screen" style={{ background: "#f9f9f9", fontFamily: "Inter, sans-serif" }}>
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8 space-y-10">
-        <div>
-          <h1
-            className="text-2xl lg:text-3xl font-bold"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+    <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
+      {/* ── Header — panel gradient brand ── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 62%, var(--blusukan-tertiary) 38%) 100%)",
+        }}
+      >
+        <div
+          className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none"
+          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
+        />
+        <div className="relative max-w-7xl mx-auto px-4 lg:px-8 pt-12 pb-14">
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] mb-4"
+            style={{
+              background: "color-mix(in srgb, var(--blusukan-on-primary) 16%, transparent)",
+              color: "var(--blusukan-on-primary)",
+              border: "1px solid color-mix(in srgb, var(--blusukan-on-primary) 28%, transparent)",
+            }}
           >
-            Info & Update
+            <Sparkles size={12} />
+            Terkini
+          </span>
+          <h1
+            className="text-3xl sm:text-4xl font-black tracking-tight"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-primary)" }}
+          >
+            Info &amp; Update
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#72796e" }}>
+          <p className="text-sm mt-2 max-w-xl" style={{ color: "var(--blusukan-primary-container)" }}>
             Destinasi baru dan yang sedang ramai dikunjungi minggu ini.
           </p>
         </div>
+      </div>
+
+      {/* relative z-10 wajib: header di atas ber-position:relative, tanpa ini konten tertimpa */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-8 pt-10 pb-12 space-y-10">
 
         {/* ── Hidden Gem Baru ── */}
         <section>
           <h2
             className="text-lg font-bold mb-4 flex items-center gap-2"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
           >
-            ✨ Hidden Gem Baru
+            <span
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+            >
+              <Sparkles size={15} />
+            </span>
+            Hidden Gem Baru
           </h2>
           {hiddenGemBaru.length === 0 ? (
             <EmptyState message="Belum ada destinasi baru yang disetujui." />
@@ -167,8 +199,8 @@ export default async function InfoPage() {
                   badge={{
                     label: `Baru Disetujui · ${timeAgo(d.approvedAt)}`,
                     icon: <Sparkles size={12} />,
-                    bg: "#2d5a27",
-                    color: "#ffffff",
+                    bg: "var(--blusukan-primary)",
+                    color: "var(--blusukan-surface-container-lowest)",
                   }}
                 />
               ))}
@@ -180,9 +212,15 @@ export default async function InfoPage() {
         <section>
           <h2
             className="text-lg font-bold mb-4 flex items-center gap-2"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
           >
-            🔥 Populer Minggu Ini
+            <span
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" }}
+            >
+              <TrendingUp size={15} />
+            </span>
+            Populer Minggu Ini
           </h2>
           {populerMingguIni.length === 0 ? (
             <EmptyState message="Belum ada destinasi baru minggu ini." />
@@ -199,13 +237,13 @@ export default async function InfoPage() {
                     badge={{
                       label: populerBadgeLabel(d),
                       icon: <TrendingUp size={12} />,
-                      bg: "#805533",
-                      color: "#ffffff",
+                      bg: "var(--blusukan-secondary)",
+                      color: "var(--blusukan-surface-container-lowest)",
                     }}
                   />
                   {d.rataRataRating > 0 && (
-                    <p className="text-xs mt-1.5 flex items-center gap-1 px-1" style={{ color: "#72796e" }}>
-                      <Star size={12} fill="#f5a623" style={{ color: "#f5a623" }} />
+                    <p className="text-xs mt-1.5 flex items-center gap-1 px-1" style={{ color: "var(--blusukan-outline)" }}>
+                      <Star size={12} fill="var(--blusukan-rating)" style={{ color: "var(--blusukan-rating)" }} />
                       {d.rataRataRating.toFixed(1)} rata-rata rating
                     </p>
                   )}

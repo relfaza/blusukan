@@ -55,10 +55,10 @@ const BOOKING_STATUS_LABEL: Record<string, string> = {
 };
 
 const BOOKING_STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
   CONFIRMED: { bg: "var(--blusukan-primary-container)", color: "#1d4ed8" },
   COMPLETED: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
-  EXPIRED: { bg: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
+  EXPIRED: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 function formatRupiah(n: number): string {
@@ -106,7 +106,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
             type="button"
             onClick={onClose}
             aria-label="Tutup"
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
             style={{ color: "var(--blusukan-on-surface-variant)" }}
           >
             <X size={16} />
@@ -146,7 +146,7 @@ function TitikJemputForm({
   const inputStyle: React.CSSProperties = {
     border: "1px solid var(--blusukan-outline-variant)",
     borderRadius: "8px",
-    background: "#ffffff",
+    background: "var(--blusukan-surface-container-lowest)",
     color: "var(--blusukan-on-surface)",
   };
 
@@ -267,7 +267,7 @@ function TitikJemputSection({
                   type="button"
                   onClick={() => setEditingId(t.id)}
                   aria-label={`Edit ${t.namaLokasi}`}
-                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
                   style={{ color: "var(--blusukan-on-surface-variant)" }}
                 >
                   <Pencil size={11} />
@@ -277,7 +277,7 @@ function TitikJemputSection({
                   onClick={() => onDelete(t.id)}
                   disabled={submitting}
                   aria-label={`Hapus ${t.namaLokasi}`}
-                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)] disabled:opacity-50"
                   style={{ color: "var(--blusukan-error)" }}
                 >
                   <Trash2 size={11} />
@@ -367,7 +367,7 @@ function BookingMasukSection({
                     disabled={submitting}
                     onClick={() => onUpdateStatus(b.id, "EXPIRED")}
                     className="text-xs font-bold px-2.5 py-1 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
-                    style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "#ffffff" }}
+                    style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "var(--blusukan-surface-container-lowest)" }}
                   >
                     Tolak
                   </button>
@@ -416,9 +416,9 @@ function ServiceCard({
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
-      <div className="w-full aspect-video" style={{ background: "#e0e0e0" }}>
+      <div className="w-full aspect-video" style={{ background: "var(--blusukan-surface-container-highest)" }}>
         {service.fotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={service.fotoUrl} alt={service.providerName} className="w-full h-full object-cover" />
@@ -443,7 +443,7 @@ function ServiceCard({
               id={`btn-edit-transport-${service.id}`}
               onClick={onEdit}
               aria-label={`Edit ${service.providerName}`}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
               style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-on-surface-variant)" }}
             >
               <Pencil size={12} />
@@ -454,7 +454,7 @@ function ServiceCard({
               onClick={onDelete}
               disabled={submitting}
               aria-label={`Hapus ${service.providerName}`}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)] disabled:opacity-50"
               style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
             >
               <Trash2 size={12} />
@@ -475,7 +475,7 @@ function ServiceCard({
             style={
               service.isValidated
                 ? { background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }
-                : { background: "#fef3e7", color: "#805533" }
+                : { background: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" }
             }
           >
             {service.isValidated ? "Tervalidasi" : "Menunggu Validasi Admin"}
@@ -742,7 +742,7 @@ export default function TransportLengkapClient({ destinationId, destinationName,
         <div className="mb-6 max-w-xs">
           <div
             className="rounded-2xl p-5"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
               Total Jasa Transport
@@ -768,7 +768,7 @@ export default function TransportLengkapClient({ destinationId, destinationName,
         {services.length === 0 ? (
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
               Belum ada jasa transport yang ditambahkan.

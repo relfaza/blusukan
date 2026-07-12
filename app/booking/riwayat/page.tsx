@@ -25,10 +25,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
   CONFIRMED: { bg: "#e0ecfd", color: "#1d4ed8" },
-  COMPLETED: { bg: "#e3efe0", color: "#1f4d2c" },
-  EXPIRED: { bg: "#eeeeee", color: "#4b4f45" },
+  COMPLETED: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
+  EXPIRED: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 function formatTanggal(date: Date): string {
@@ -73,7 +73,7 @@ export default async function RiwayatBookingPage() {
         {bookings.length === 0 ? (
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <CalendarClock size={40} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
             <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -89,7 +89,7 @@ export default async function RiwayatBookingPage() {
                 <div
                   key={b.id}
                   className="rounded-2xl p-5"
-                  style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+                  style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div>
@@ -122,7 +122,7 @@ export default async function RiwayatBookingPage() {
                     </span>
                     <span
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ background: "#f0f0f0", color: "#4b4f45" }}
+                      style={{ background: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" }}
                     >
                       <CalendarClock size={12} />
                       {formatTanggal(b.travelDate)}

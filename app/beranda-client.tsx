@@ -220,15 +220,15 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
       style={{ background: "var(--blusukan-surface)", color: "var(--blusukan-on-surface)" }}
     >
       {/* ── Hero — foto full-bleed + overlay gradient brand, headline besar, strip statistik ── */}
-      <div className="relative overflow-hidden px-4 lg:px-8 pt-16 pb-28 sm:pt-20 sm:pb-32 lg:pt-24 lg:pb-36">
-        {/* Foto latar — object-position ditarik ke area candi supaya tidak terpotong di mobile */}
+      <div className="relative overflow-hidden px-4 lg:px-8 pt-16 pb-28 sm:pt-20 sm:pb-32 lg:pt-24 lg:pb-36 min-h-[520px] sm:min-h-[600px] lg:min-h-[680px]">
+        {/* Foto latar — object-position ditarik ke bagian atas supaya puncak candi tidak terpotong */}
         <Image
           src="/prambanan.jpg"
           alt=""
           fill
           priority
           className="object-cover z-0"
-          style={{ objectPosition: "center 55%" }}
+          style={{ objectPosition: "center 20%" }}
           sizes="100vw"
         />
 
@@ -376,7 +376,7 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                 <button
                   id="filter-wilayah-trigger"
                   type="button"
-                  className="flex items-center gap-1.5 pl-4 pr-3 py-2 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+                  className="flex items-center gap-2 pl-5 pr-4 py-2.5 rounded-full text-sm font-semibold transition-colors hover:opacity-80"
                   style={{
                     background: "var(--blusukan-surface-container-lowest)",
                     color: "var(--blusukan-on-surface)",
@@ -384,9 +384,9 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                     fontFamily: "Inter, sans-serif",
                   }}
                 >
-                  <MapPin size={13} style={{ color: "var(--blusukan-outline)" }} />
+                  <MapPin size={17} style={{ color: "var(--blusukan-outline)" }} />
                   Wilayah: {wilayahLabel}
-                  <ChevronDown size={13} style={{ color: "var(--blusukan-outline)" }} />
+                  <ChevronDown size={16} style={{ color: "var(--blusukan-outline)" }} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="min-w-48">
@@ -410,7 +410,7 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                 <button
                   id="filter-kategori-trigger"
                   type="button"
-                  className="flex items-center gap-1.5 pl-4 pr-3 py-2 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+                  className="flex items-center gap-2 pl-5 pr-4 py-2.5 rounded-full text-sm font-semibold transition-colors hover:opacity-80"
                   style={{
                     background: "var(--blusukan-surface-container-lowest)",
                     color: "var(--blusukan-on-surface)",
@@ -419,7 +419,7 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                   }}
                 >
                   Kategori: {kategoriLabel}
-                  <ChevronDown size={13} style={{ color: "var(--blusukan-outline)" }} />
+                  <ChevronDown size={16} style={{ color: "var(--blusukan-outline)" }} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="min-w-48">
@@ -443,14 +443,14 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
               id="btn-lihat-peta"
               type="button"
               onClick={() => setMapOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors hover:opacity-80"
               style={{
                 background: "var(--blusukan-primary)",
                 color: "var(--blusukan-on-primary)",
                 fontFamily: "Inter, sans-serif",
               }}
             >
-              <Map size={13} />
+              <Map size={16} />
               Lihat Peta
             </button>
           </div>
@@ -494,18 +494,10 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
           </DialogContent>
         </Dialog>
 
-        {/* ── Judul grid + jumlah hasil ── */}
-        <div className="flex items-end justify-between gap-3">
-          <h2
-            className="text-xl sm:text-2xl font-extrabold"
-            style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
-          >
-            Destinasi Pilihan
-          </h2>
-          <p className="text-xs shrink-0" style={{ color: "var(--blusukan-outline)", fontFamily: "Inter, sans-serif" }}>
-            {filtered.length} dari {destinations.length} destinasi
-          </p>
-        </div>
+        {/* ── Jumlah hasil ── */}
+        <p className="text-xs" style={{ color: "var(--blusukan-outline)", fontFamily: "Inter, sans-serif" }}>
+          {filtered.length} dari {destinations.length} destinasi
+        </p>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {filtered.length === 0 ? (
@@ -553,8 +545,8 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                       boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                     }}
                   >
-                    {/* Card photo — editorial overlay: badge & judul menumpang di atas foto */}
-                    <div className="h-56 relative w-full overflow-hidden">
+                    {/* Card photo — polos, tanpa overlay/badge/teks di atasnya */}
+                    <div className="aspect-[4/3] relative w-full overflow-hidden shrink-0">
                       {dest.photoUrls[0] ? (
                         <Image
                           src={dest.photoUrls[0]}
@@ -574,87 +566,75 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                           <ImageOff size={28} style={{ color: "color-mix(in srgb, var(--blusukan-tertiary) 45%, transparent)" }} />
                         </div>
                       )}
+                    </div>
 
-                      {/* Gradient overlay tipis — supaya teks di atas foto tetap terbaca */}
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background:
-                            "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 48%, rgba(0,0,0,0) 68%)",
-                        }}
-                      />
+                    {/* Card body — seluruh keterangan ada di sini, tinggi antar-card dijaga konsisten oleh flex-col + mt-auto pada vibe tags */}
+                    <div className="p-4 flex flex-col flex-1 gap-2.5">
+                      {/* Kategori + wilayah */}
+                      <p
+                        className="text-[10px] font-bold uppercase tracking-widest"
+                        style={{ color: "var(--blusukan-secondary)", fontFamily: "Inter, sans-serif" }}
+                      >
+                        {KATEGORI_LABEL[dest.kategori] ?? dest.kategori}
+                        {" · "}
+                        {KABUPATEN_LABEL[dest.kabupaten] ?? dest.kabupaten}
+                      </p>
 
-                      {/* Baris atas: badge kondisi rute + badge popularitas */}
-                      <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-                        {badge ? (
+                      {/* Nama + rating */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h3
+                          className="text-lg font-extrabold leading-tight"
+                          style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
+                        >
+                          {dest.name}
+                        </h3>
+                        {dest.totalReview > 0 && (
                           <span
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm"
-                            style={{
-                              background: badge.bg,
-                              color: badge.textColor,
-                              fontFamily: "Inter, sans-serif",
-                            }}
+                            className="inline-flex items-center gap-1 text-xs font-bold shrink-0"
+                            style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
                           >
-                            {badge.icon}
-                            {badge.label}
-                          </span>
-                        ) : <span />}
-
-                        {popularityBadge && (
-                          <span
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-sm backdrop-blur-sm shrink-0"
-                            style={{
-                              background: "color-mix(in srgb, var(--blusukan-surface-container-lowest) 90%, transparent)",
-                              color: "var(--blusukan-secondary)",
-                              fontFamily: "Inter, sans-serif",
-                            }}
-                          >
-                            {popularityBadge.kind === "trending" ? (
-                              <TrendingUp size={12} />
-                            ) : (
-                              <Star size={12} />
-                            )}
-                            <span className="max-w-[8.5rem] truncate">{popularityBadge.label}</span>
+                            <Star size={13} fill="var(--blusukan-rating)" style={{ color: "var(--blusukan-rating)" }} />
+                            {dest.rataRataRating.toFixed(1)}
                           </span>
                         )}
                       </div>
 
-                      {/* Teks bawah di atas foto: kategori/wilayah, nama, rating */}
-                      <div className="absolute bottom-0 left-0 right-0 p-3.5">
-                        <p
-                          className="text-[10px] font-bold uppercase tracking-widest mb-1"
-                          style={{ color: "var(--blusukan-primary-fixed-dim)", fontFamily: "Inter, sans-serif" }}
-                        >
-                          {KATEGORI_LABEL[dest.kategori] ?? dest.kategori}
-                          {" · "}
-                          {KABUPATEN_LABEL[dest.kabupaten] ?? dest.kabupaten}
-                        </p>
-                        <div className="flex items-end justify-between gap-2">
-                          <h3
-                            className="text-lg font-extrabold leading-tight"
-                            style={{ color: "var(--blusukan-on-primary)", fontFamily: "Montserrat, sans-serif" }}
-                          >
-                            {dest.name}
-                          </h3>
-                          {dest.totalReview > 0 && (
+                      {/* Badge kondisi rute + badge popularitas */}
+                      {(badge || popularityBadge) && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {badge && (
                             <span
-                              className="inline-flex items-center gap-1 text-xs font-bold shrink-0 px-2 py-1 rounded-full backdrop-blur-sm"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
                               style={{
-                                background: "color-mix(in srgb, var(--blusukan-on-primary) 18%, transparent)",
-                                color: "var(--blusukan-on-primary)",
+                                background: badge.bg,
+                                color: badge.textColor,
                                 fontFamily: "Inter, sans-serif",
                               }}
                             >
-                              <Star size={13} fill="var(--blusukan-rating)" style={{ color: "var(--blusukan-rating)" }} />
-                              {dest.rataRataRating.toFixed(1)}
+                              {badge.icon}
+                              {badge.label}
+                            </span>
+                          )}
+                          {popularityBadge && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                              style={{
+                                background: "var(--blusukan-secondary-container)",
+                                color: "var(--blusukan-secondary)",
+                                fontFamily: "Inter, sans-serif",
+                              }}
+                            >
+                              {popularityBadge.kind === "trending" ? (
+                                <TrendingUp size={12} />
+                              ) : (
+                                <Star size={12} />
+                              )}
+                              <span className="max-w-[8.5rem] truncate">{popularityBadge.label}</span>
                             </span>
                           )}
                         </div>
-                      </div>
-                    </div>
+                      )}
 
-                    {/* Card body */}
-                    <div className="p-4 flex flex-col flex-1 gap-3">
                       {/* Signal + crowd chips */}
                       {(signalInfo || crowdLabel) && (
                         <div className="flex flex-wrap gap-2">
@@ -687,9 +667,9 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
                         </div>
                       )}
 
-                      {/* Vibe tags */}
+                      {/* Vibe tags — mt-auto supaya menempel di bawah, menjaga tinggi card tetap sejajar antar-baris */}
                       {dest.vibeTags.length > 0 && (
-                        <div className="mt-auto flex flex-wrap gap-1.5">
+                        <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
                           {dest.vibeTags.map((tag) => (
                             <span
                               key={tag}

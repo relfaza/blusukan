@@ -30,10 +30,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
   CONFIRMED: { bg: "#e0ecfd", color: "#1d4ed8" },
-  COMPLETED: { bg: "#e3efe0", color: "#1f4d2c" },
-  EXPIRED: { bg: "#eeeeee", color: "#4b4f45" },
+  COMPLETED: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
+  EXPIRED: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 function formatTanggal(date: Date): string {
@@ -86,7 +86,7 @@ export default async function BookingDetailPage({ params }: Props) {
 
       <div
         className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+        style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
       >
         <div className="flex items-start justify-between gap-3 mb-5 pb-5" style={{ borderBottom: "1px dashed var(--blusukan-outline-variant)" }}>
           <div>

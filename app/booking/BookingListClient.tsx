@@ -35,8 +35,8 @@ const SERVICE_TYPE_LABEL: Record<string, string> = {
 };
 
 const SERVICE_TYPE_STYLE: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
-  OJEK: { bg: "#e3efe0", color: "#1f4d2c", icon: <Bike size={13} /> },
-  JEEP: { bg: "#fdf0e0", color: "#805533", icon: <Car size={13} /> },
+  OJEK: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)", icon: <Bike size={13} /> },
+  JEEP: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)", icon: <Car size={13} /> },
   GUIDE: { bg: "#e0ecfd", color: "#1d4ed8", icon: <Compass size={13} /> },
 };
 
@@ -65,23 +65,52 @@ export default function BookingListClient({ services, destinations }: Props) {
       className="min-h-screen"
       style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}
     >
-      <div className="max-w-5xl mx-auto px-4 lg:px-8 py-8">
-        <div className="mb-6">
+      {/* ── Header — panel gradient brand ── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 62%, var(--blusukan-tertiary) 38%) 100%)",
+        }}
+      >
+        <div
+          className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none"
+          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
+        />
+        <div className="relative max-w-5xl mx-auto px-4 lg:px-8 pt-12 pb-16">
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] mb-4"
+            style={{
+              background: "color-mix(in srgb, var(--blusukan-on-primary) 16%, transparent)",
+              color: "var(--blusukan-on-primary)",
+              border: "1px solid color-mix(in srgb, var(--blusukan-on-primary) 28%, transparent)",
+            }}
+          >
+            Transportasi Lokal
+          </span>
           <h1
-            className="text-2xl font-bold mb-1"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            className="text-3xl sm:text-4xl font-black tracking-tight"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-primary)" }}
           >
             Booking Jasa Transportasi Lokal
           </h1>
-          <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          <p className="text-sm mt-2 max-w-xl" style={{ color: "var(--blusukan-primary-container)" }}>
             Pesan ojek, sewa jeep, atau pemandu wisata dari warga lokal terverifikasi
           </p>
         </div>
+      </div>
+
+      {/* relative z-10 wajib: header di atas ber-position:relative, tanpa ini konten tertimpa */}
+      <div className="relative z-10 max-w-5xl mx-auto px-4 lg:px-8 -mt-8 pb-12">
 
         {/* ── Filter bar ── */}
         <div
           className="flex flex-col sm:flex-row gap-3 mb-6 p-4 rounded-2xl"
-          style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+          style={{
+            background: "var(--blusukan-surface-container-lowest)",
+            border: "1px solid var(--blusukan-outline-variant)",
+            boxShadow: "0 6px 20px -10px rgba(0,0,0,0.18)",
+          }}
         >
           <div className="flex items-center gap-2 shrink-0" style={{ color: "var(--blusukan-on-surface-variant)" }}>
             <SlidersHorizontal size={16} />
@@ -96,7 +125,7 @@ export default function BookingListClient({ services, destinations }: Props) {
               border: "1px solid var(--blusukan-outline-variant)",
               borderRadius: "8px",
               color: "var(--blusukan-on-surface)",
-              background: "#ffffff",
+              background: "var(--blusukan-surface-container-lowest)",
             }}
           >
             <option value="">Semua Destinasi</option>
@@ -115,7 +144,7 @@ export default function BookingListClient({ services, destinations }: Props) {
               border: "1px solid var(--blusukan-outline-variant)",
               borderRadius: "8px",
               color: "var(--blusukan-on-surface)",
-              background: "#ffffff",
+              background: "var(--blusukan-surface-container-lowest)",
             }}
           >
             <option value="">Semua Jenis Layanan</option>
@@ -129,7 +158,7 @@ export default function BookingListClient({ services, destinations }: Props) {
         {filtered.length === 0 ? (
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <Compass size={40} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
             <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -140,8 +169,8 @@ export default function BookingListClient({ services, destinations }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filtered.map((s) => {
               const typeStyle = SERVICE_TYPE_STYLE[s.serviceType] ?? {
-                bg: "#eeeeee",
-                color: "#4b4f45",
+                bg: "var(--blusukan-surface-container)",
+                color: "var(--blusukan-on-surface-variant)",
                 icon: <Compass size={13} />,
               };
               return (
@@ -149,13 +178,13 @@ export default function BookingListClient({ services, destinations }: Props) {
                   key={s.id}
                   href={`/booking/${s.id}`}
                   id={`service-card-${s.id}`}
-                  className="rounded-2xl p-5 transition-shadow hover:shadow-md"
-                  style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+                  className="flex flex-col h-full rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div>
                       <p
-                        className="text-sm font-bold"
+                        className="text-base font-extrabold"
                         style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
                       >
                         {s.providerName}
@@ -175,7 +204,7 @@ export default function BookingListClient({ services, destinations }: Props) {
                   </div>
 
                   <div
-                    className="flex items-center justify-between pt-3"
+                    className="mt-auto flex items-center justify-between pt-3"
                     style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}
                   >
                     <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
