@@ -219,8 +219,11 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
       className="min-h-screen flex flex-col"
       style={{ background: "var(--blusukan-surface)", color: "var(--blusukan-on-surface)" }}
     >
-      {/* ── Hero — foto full-bleed + overlay gradient brand, headline besar, strip statistik ── */}
-      <div className="relative overflow-hidden px-4 lg:px-8 pt-16 pb-28 sm:pt-20 sm:pb-32 lg:pt-24 lg:pb-36 min-h-[520px] sm:min-h-[600px] lg:min-h-[680px]">
+      {/* ── Hero — foto full-bleed + overlay gradient brand, headline besar, strip statistik ──
+          -mt menarik foto sampai mentok ke ujung atas viewport, menembus "ruang kosong" yang
+          ditinggalkan navbar sticky (yang in-flow). Kompensasinya ada di wrapper konten teks
+          di bawah (pt sebesar nilai yang sama), supaya posisi teks TIDAK ikut naik. ── */}
+      <div className="relative overflow-hidden px-4 lg:px-8 pt-16 pb-28 sm:pt-20 sm:pb-32 lg:pt-24 lg:pb-36 min-h-[520px] sm:min-h-[600px] lg:min-h-[680px] -mt-[72px] sm:-mt-[76px]">
         {/* Foto latar — object-position ditarik ke bagian atas supaya puncak candi tidak terpotong */}
         <Image
           src="/prambanan.jpg"
@@ -251,7 +254,9 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
           style={{ background: "var(--blusukan-secondary-container)" }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto text-center lg:text-left">
+        {/* pt di sini mengkompensasi -mt pada wrapper hero, supaya teks tetap di posisi
+            visual semula meski foto sudah ditarik mentok ke atas viewport ── */}
+        <div className="relative z-10 max-w-7xl mx-auto text-center lg:text-left pt-[72px] sm:pt-[76px]">
           <span
             className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] mb-6"
             style={{
