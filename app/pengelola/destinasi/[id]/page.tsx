@@ -17,6 +17,8 @@ const STATUS_RANK: Record<string, number> = {
   DIBATALKAN: 1,
 };
 
+const TRANSAKSI_PREVIEW_LIMIT = 8;
+
 function TidakDiizinkan() {
   return (
     <div
@@ -54,15 +56,17 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
     return <TidakDiizinkan />;
   }
 
-  const [transaksis, fasilitasList, warungList, bookings] = await Promise.all([
+  const [transaksis, transaksiCount, fasilitasList, warungList, bookings] = await Promise.all([
     prisma.transaksi.findMany({
       where: { destinationId: id },
       orderBy: { createdAt: "desc" },
+      take: TRANSAKSI_PREVIEW_LIMIT,
       include: {
         items: true,
         user: { select: { name: true } },
       },
     }),
+    prisma.transaksi.count({ where: { destinationId: id } }),
     prisma.fasilitas.findMany({ where: { destinationId: id }, orderBy: { nama: "asc" } }),
     prisma.localWarung.findMany({
       where: { destinationId: id },
@@ -129,8 +133,27 @@ export default async function PengelolaDestinasiPage({ params }: Props) {
 
   return (
     <PengelolaDestinasiClient
-      destination={{ id: destination.id, name: destination.name, status: destination.status }}
+      destination={{
+        id: destination.id,
+        name: destination.name,
+        status: destination.status,
+        kabupaten: destination.kabupaten,
+        kategori: destination.kategori,
+        latitude: destination.latitude,
+        longitude: destination.longitude,
+        jamOperasional: destination.jamOperasional,
+        htmResmi: Number(destination.htmResmi),
+        htmAnak: destination.htmAnak != null ? Number(destination.htmAnak) : null,
+        hasToilet: destination.hasToilet,
+        hasParkir: destination.hasParkir,
+        hasTempatIbadah: destination.hasTempatIbadah,
+        hasTempatDuduk: destination.hasTempatDuduk,
+        hasPenitipanBarang: destination.hasPenitipanBarang,
+        createdAt: destination.createdAt.toISOString(),
+        approvedAt: destination.approvedAt ? destination.approvedAt.toISOString() : null,
+      }}
       initialTransaksis={initialTransaksis}
+      transaksiCount={transaksiCount}
       initialFasilitas={initialFasilitas}
       initialWarungs={initialWarungs}
       initialBookings={initialBookings}

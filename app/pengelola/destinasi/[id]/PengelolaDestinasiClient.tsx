@@ -3,12 +3,31 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Ticket, Pencil, Trash2, Plus, ImageOff, User, Power, PowerOff } from "lucide-react";
+import {
+  ArrowLeft,
+  Ticket,
+  Pencil,
+  Trash2,
+  Plus,
+  ImageOff,
+  User,
+  Power,
+  PowerOff,
+  Droplets,
+  Car,
+  Cross,
+  Armchair,
+  Package,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+} from "lucide-react";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import RupiahInput from "@/components/ui/rupiah-input";
 import FasilitasForm from "@/components/pengelola/fasilitas-form";
 import UmkmForm, { KATEGORI_UMKM_LABEL, type WarungFormValues } from "@/components/pengelola/umkm-form";
 import { SERVICE_TYPE_LABEL } from "@/components/pengelola/jasa-transport-form";
+import PetaLokasi from "./PetaLokasi";
 
 type TransaksiRow = {
   id: string;
@@ -92,9 +111,46 @@ const DESTINASI_STATUS_STYLE: Record<string, { background: string; color: string
   NONAKTIF: { background: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
 };
 
+const KABUPATEN_LABEL: Record<string, string> = {
+  SLEMAN: "Sleman",
+  GUNUNGKIDUL: "Gunungkidul",
+  BANTUL: "Bantul",
+  KULON_PROGO: "Kulon Progo",
+  KOTA_YOGYAKARTA: "Kota Yogyakarta",
+};
+
+const KATEGORI_LABEL: Record<string, string> = {
+  PANTAI: "Pantai",
+  AIR_TERJUN: "Air Terjun",
+  GUNUNG: "Gunung",
+  BUKIT: "Bukit",
+  TEBING: "Tebing",
+};
+
+type DestinationDetail = {
+  id: string;
+  name: string;
+  status: string;
+  kabupaten: string;
+  kategori: string;
+  latitude: number;
+  longitude: number;
+  jamOperasional: string | null;
+  htmResmi: number;
+  htmAnak: number | null;
+  hasToilet: boolean;
+  hasParkir: boolean;
+  hasTempatIbadah: boolean;
+  hasTempatDuduk: boolean;
+  hasPenitipanBarang: boolean;
+  createdAt: string;
+  approvedAt: string | null;
+};
+
 interface Props {
-  destination: { id: string; name: string; status: string };
+  destination: DestinationDetail;
   initialTransaksis: TransaksiRow[];
+  transaksiCount: number;
   initialFasilitas: FasilitasRow[];
   initialWarungs: WarungRow[];
   initialBookings: BookingRow[];
@@ -106,6 +162,146 @@ function formatRupiah(n: number): string {
     currency: "IDR",
     maximumFractionDigits: 0,
   }).format(n);
+}
+
+function formatTanggalLengkap(iso: string): string {
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeStyle: "short" }).format(new Date(iso));
+}
+
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="rounded-2xl p-6"
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      className="text-base font-bold mb-4"
+      style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        {label}
+      </p>
+      <p className="text-sm font-semibold mt-0.5" style={{ color: "var(--blusukan-on-surface)" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function FasilitasGratisItem({
+  label,
+  available,
+  icon,
+}: {
+  label: string;
+  available: boolean;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div
+      className="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl"
+      style={{
+        background: available ? "var(--blusukan-primary-container)" : "var(--blusukan-surface)",
+        border: `1px solid ${available ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
+      }}
+    >
+      <span style={{ color: available ? "var(--blusukan-primary)" : "var(--blusukan-outline)" }}>{icon}</span>
+      <span
+        className="text-sm font-medium flex-1"
+        style={{ color: available ? "var(--blusukan-on-surface)" : "var(--blusukan-on-surface-variant)" }}
+      >
+        {label}
+      </span>
+      {available ? (
+        <CheckCircle2 size={15} style={{ color: "var(--blusukan-primary)" }} />
+      ) : (
+        <XCircle size={15} style={{ color: "var(--blusukan-outline)" }} />
+      )}
+    </div>
+  );
+}
+
+/** Section: Informasi Destinasi — info dasar read-only, sama lengkapnya dengan versi Admin */
+function InformasiDestinasiSection({ destination }: { destination: DestinationDetail }) {
+  return (
+    <div className="space-y-6 mb-6">
+      <SectionCard>
+        <SectionTitle>Informasi Destinasi</SectionTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <InfoItem label="Kabupaten" value={KABUPATEN_LABEL[destination.kabupaten] ?? destination.kabupaten} />
+          <InfoItem label="Kategori" value={KATEGORI_LABEL[destination.kategori] ?? destination.kategori} />
+          <InfoItem label="Jam Operasional" value={destination.jamOperasional || "Tidak ada data"} />
+          <InfoItem
+            label="Harga Tiket Dewasa"
+            value={destination.htmResmi === 0 ? "Gratis" : formatRupiah(destination.htmResmi)}
+          />
+          <InfoItem
+            label="Harga Tiket Anak-anak"
+            value={
+              destination.htmAnak == null
+                ? "Tidak dibedakan (1 harga untuk semua)"
+                : destination.htmAnak === 0
+                  ? "Gratis"
+                  : formatRupiah(destination.htmAnak)
+            }
+          />
+          <InfoItem label="Tanggal Diajukan" value={formatTanggalLengkap(destination.createdAt)} />
+          <InfoItem
+            label="Tanggal Disetujui"
+            value={destination.approvedAt ? formatTanggalLengkap(destination.approvedAt) : "Belum disetujui"}
+          />
+        </div>
+
+        <div className="mt-4">
+          <p className="text-xs mb-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Koordinat
+          </p>
+          <PetaLokasi latitude={destination.latitude} longitude={destination.longitude} />
+          <p className="text-xs mt-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            {destination.latitude}, {destination.longitude}
+          </p>
+        </div>
+      </SectionCard>
+
+      <SectionCard>
+        <SectionTitle>Fasilitas Umum (Gratis)</SectionTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <FasilitasGratisItem label="Toilet" available={destination.hasToilet} icon={<Droplets size={16} />} />
+          <FasilitasGratisItem label="Parkir" available={destination.hasParkir} icon={<Car size={16} />} />
+          <FasilitasGratisItem
+            label="Tempat Ibadah"
+            available={destination.hasTempatIbadah}
+            icon={<Cross size={16} />}
+          />
+          <FasilitasGratisItem
+            label="Tempat Duduk"
+            available={destination.hasTempatDuduk}
+            icon={<Armchair size={16} />}
+          />
+          <FasilitasGratisItem
+            label="Penitipan Barang"
+            available={destination.hasPenitipanBarang}
+            icon={<Package size={16} />}
+          />
+        </div>
+      </SectionCard>
+    </div>
+  );
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -140,11 +336,15 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-/** Section: Transaksi Masuk — list + tombol aksi konfirmasi/tolak/selesai */
+/** Section: Transaksi Masuk — preview transaksi terbaru + tombol aksi konfirmasi/tolak/selesai */
 function TransaksiMasukSection({
+  destinationId,
   initialTransaksis,
+  transaksiCount,
 }: {
+  destinationId: string;
   initialTransaksis: TransaksiRow[];
+  transaksiCount: number;
 }) {
   const [items, setItems] = useState(initialTransaksis);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -263,6 +463,21 @@ function TransaksiMasukSection({
           </div>
         );
       })}
+
+      <div className="flex flex-col items-center gap-1.5 pt-2">
+        <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Menampilkan {items.length} dari {transaksiCount} transaksi terbaru
+        </p>
+        <Link
+          href={`/pengelola/destinasi/${destinationId}/transaksi`}
+          id="btn-lihat-semua-transaksi"
+          className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
+          style={{ background: "#ffffff", color: "var(--blusukan-primary)", border: "1px solid var(--blusukan-primary)" }}
+        >
+          Lihat Semua Transaksi Masuk
+          <ArrowRight size={14} />
+        </Link>
+      </div>
     </div>
   );
 }
@@ -1234,7 +1449,14 @@ function DestinasiStatusActions({ destinationId, status }: { destinationId: stri
   );
 }
 
-export default function PengelolaDestinasiClient({ destination, initialTransaksis, initialFasilitas, initialWarungs, initialBookings }: Props) {
+export default function PengelolaDestinasiClient({
+  destination,
+  initialTransaksis,
+  transaksiCount,
+  initialFasilitas,
+  initialWarungs,
+  initialBookings,
+}: Props) {
   const [activeTab, setActiveTab] = useState<"transaksi" | "fasilitas" | "umkm" | "booking">("transaksi");
 
   return (
@@ -1266,6 +1488,8 @@ export default function PengelolaDestinasiClient({ destination, initialTransaksi
           </div>
           <DestinasiStatusActions destinationId={destination.id} status={destination.status} />
         </div>
+
+        <InformasiDestinasiSection destination={destination} />
 
         <div className="flex gap-2 mb-6">
           <button
@@ -1322,7 +1546,13 @@ export default function PengelolaDestinasiClient({ destination, initialTransaksi
           </button>
         </div>
 
-        {activeTab === "transaksi" && <TransaksiMasukSection initialTransaksis={initialTransaksis} />}
+        {activeTab === "transaksi" && (
+          <TransaksiMasukSection
+            destinationId={destination.id}
+            initialTransaksis={initialTransaksis}
+            transaksiCount={transaksiCount}
+          />
+        )}
         {activeTab === "fasilitas" && (
           <KelolaFasilitasSection destinationId={destination.id} initialFasilitas={initialFasilitas} />
         )}
