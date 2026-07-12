@@ -27,7 +27,6 @@ import {
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import RupiahInput from "@/components/ui/rupiah-input";
 import UmkmForm, { KATEGORI_UMKM_LABEL, type WarungFormValues } from "@/components/pengelola/umkm-form";
-import { SERVICE_TYPE_LABEL } from "@/components/pengelola/jasa-transport-form";
 import PetaLokasi from "./PetaLokasi";
 
 type TransaksiRow = {
@@ -47,16 +46,6 @@ type FasilitasRow = {
   hargaSewa: number;
   satuanWaktu: string;
   jumlahUnit: number;
-};
-
-type BookingRow = {
-  id: string;
-  status: string;
-  travelDate: string;
-  createdAt: string;
-  contactNumber: string;
-  namaPemesan: string | null;
-  service: { providerName: string; serviceType: string };
 };
 
 type MenuItemRow = {
@@ -154,7 +143,7 @@ interface Props {
   transaksiCount: number;
   initialFasilitas: FasilitasRow[];
   initialWarungs: WarungRow[];
-  initialBookings: BookingRow[];
+  localServiceCount: number;
 }
 
 function formatRupiah(n: number): string {
@@ -483,160 +472,34 @@ function TransaksiMasukSection({
   );
 }
 
-const BOOKING_STATUS_LABEL: Record<string, string> = {
-  PENDING: "Menunggu Konfirmasi",
-  CONFIRMED: "Dikonfirmasi",
-  COMPLETED: "Selesai",
-  EXPIRED: "Ditolak",
-};
-
-const BOOKING_STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
-  CONFIRMED: { bg: "var(--blusukan-primary-container)", color: "#1d4ed8" },
-  COMPLETED: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
-  EXPIRED: { bg: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
-};
-
-function BookingStatusBadge({ status }: { status: string }) {
-  const style = BOOKING_STATUS_STYLE[status] ?? BOOKING_STATUS_STYLE.PENDING;
+/** Section: Booking Transport — ringkasan singkat, kelola jasa/titik jemput/booking masuk dipindah ke halaman /transport tersendiri */
+function KelolaTransportSection({ destinationId, localServiceCount }: { destinationId: string; localServiceCount: number }) {
   return (
-    <span
-      className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
-      style={{ background: style.bg, color: style.color }}
+    <div
+      className="rounded-2xl p-6"
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
     >
-      {BOOKING_STATUS_LABEL[status] ?? status}
-    </span>
-  );
-}
-
-function formatTanggal(iso: string): string {
-  return new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(iso));
-}
-
-/** Section: Booking Transport — list booking jasa lokal + tombol konfirmasi/tolak/selesai */
-function BookingTransportSection({ initialBookings }: { initialBookings: BookingRow[] }) {
-  const [items, setItems] = useState(initialBookings);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [error, setError] = useState("");
-
-  async function updateStatus(id: string, status: string) {
-    setUpdatingId(id);
-    setError("");
-    try {
-      const res = await fetch(`/api/pengelola/booking/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Gagal memperbarui status.");
-        return;
-      }
-      setItems((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
-    } catch {
-      setError("Terjadi kesalahan. Coba lagi.");
-    } finally {
-      setUpdatingId(null);
-    }
-  }
-
-  if (items.length === 0) {
-    return (
-      <div
-        className="rounded-2xl p-10 flex flex-col items-center text-center"
-        style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
-      >
-        <User size={36} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
-        <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-          Belum ada booking transport untuk destinasi ini.
+      <div className="mb-5">
+        <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Jasa Transport Terdaftar
+        </p>
+        <p
+          className="text-xl font-bold mt-0.5"
+          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+        >
+          {localServiceCount}
         </p>
       </div>
-    );
-  }
 
-  return (
-    <div className="space-y-3">
-      {error && (
-        <p className="text-sm px-4 py-2.5 rounded-lg" style={{ background: "var(--blusukan-error-container)", color: "var(--blusukan-error)" }}>
-          {error}
-        </p>
-      )}
-      {items.map((b) => {
-        const busy = updatingId === b.id;
-        return (
-          <div
-            key={b.id}
-            className="rounded-2xl p-5"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
-          >
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <p
-                  className="text-sm font-bold"
-                  style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-                >
-                  {b.namaPemesan ?? "Wisatawan"}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                  {b.service.providerName} · {SERVICE_TYPE_LABEL[b.service.serviceType] ?? b.service.serviceType}
-                </p>
-              </div>
-              <BookingStatusBadge status={b.status} />
-            </div>
-
-            <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}>
-              <div>
-                <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                  Tanggal Perjalanan
-                </p>
-                <p className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)" }}>
-                  {formatTanggal(b.travelDate)}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {b.status === "PENDING" && (
-                  <>
-                    <button
-                      type="button"
-                      id={`btn-booking-konfirmasi-${b.id}`}
-                      disabled={busy}
-                      onClick={() => updateStatus(b.id, "CONFIRMED")}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
-                      style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
-                    >
-                      Konfirmasi
-                    </button>
-                    <button
-                      type="button"
-                      id={`btn-booking-tolak-${b.id}`}
-                      disabled={busy}
-                      onClick={() => updateStatus(b.id, "EXPIRED")}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
-                      style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "#ffffff" }}
-                    >
-                      Tolak
-                    </button>
-                  </>
-                )}
-                {b.status === "CONFIRMED" && (
-                  <button
-                    type="button"
-                    id={`btn-booking-selesai-${b.id}`}
-                    disabled={busy}
-                    onClick={() => updateStatus(b.id, "COMPLETED")}
-                    className="text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
-                    style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
-                  >
-                    Tandai Selesai
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
+      <Link
+        href={`/pengelola/destinasi/${destinationId}/transport`}
+        id="btn-kelola-transportasi"
+        className="flex items-center justify-center gap-1.5 w-full text-sm font-bold px-4 py-3 rounded-lg transition-opacity hover:opacity-90"
+        style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+      >
+        Kelola Transportasi
+        <ArrowRight size={16} />
+      </Link>
     </div>
   );
 }
@@ -1707,7 +1570,7 @@ export default function PengelolaDestinasiClient({
   transaksiCount,
   initialFasilitas,
   initialWarungs,
-  initialBookings,
+  localServiceCount,
 }: Props) {
   const [activeTab, setActiveTab] = useState<"transaksi" | "fasilitas" | "umkm" | "booking">("transaksi");
 
@@ -1811,7 +1674,9 @@ export default function PengelolaDestinasiClient({
         {activeTab === "umkm" && (
           <KelolaUmkmSection destinationId={destination.id} initialWarungs={initialWarungs} />
         )}
-        {activeTab === "booking" && <BookingTransportSection initialBookings={initialBookings} />}
+        {activeTab === "booking" && (
+          <KelolaTransportSection destinationId={destination.id} localServiceCount={localServiceCount} />
+        )}
       </div>
     </div>
   );

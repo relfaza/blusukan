@@ -39,6 +39,7 @@ export default async function DestinasiDetailPage({ params }: Props) {
         },
         localServices: {
           where: { isValidated: true },
+          include: { titikJemput: true },
         },
         warungs: {
           include: { menuItems: true },
@@ -133,6 +134,14 @@ export default async function DestinasiDetailPage({ params }: Props) {
       serviceType: s.serviceType,
       contactWa: s.contactWa,
       baseRate: s.baseRate ? Number(s.baseRate) : null,
+      kapasitasPenumpang: s.kapasitasPenumpang,
+      fotoUrl: s.fotoUrl,
+      titikJemput: s.titikJemput.map((t) => ({
+        id: t.id,
+        namaLokasi: t.namaLokasi,
+        hargaTambahan: Number(t.hargaTambahan),
+        estimasiWaktu: t.estimasiWaktu,
+      })),
     })),
     warungs: raw.warungs.map((w) => ({
       id: w.id,
