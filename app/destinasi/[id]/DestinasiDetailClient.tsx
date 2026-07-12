@@ -2411,69 +2411,76 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
         </span>
       </header>
 
-      {/* ── Hero — foto besar dengan judul menumpang di atasnya (editorial) ── */}
-      <section className="relative w-full">
-        <div
-          className="relative w-full overflow-hidden"
-          style={{
-            height: "clamp(360px, 52vh, 560px)",
-            background: "var(--blusukan-surface-container-highest)",
-          }}
-        >
-          {d.photoUrls[activePhotoIdx] ? (
-            <Image
-              src={d.photoUrls[activePhotoIdx]}
-              alt={d.name}
-              fill
-              className="object-cover"
-              priority
-              sizes="100vw"
-            />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center"
-              style={{
-                background:
-                  "linear-gradient(135deg, var(--blusukan-primary-container) 0%, var(--blusukan-tertiary-container) 100%)",
-              }}
-            >
-              <ImageOff
-                size={40}
-                style={{ color: "color-mix(in srgb, var(--blusukan-tertiary) 45%, transparent)" }}
-              />
-            </div>
-          )}
-
-          {/* Overlay gradient — menjaga teks tetap terbaca di atas foto apa pun */}
+      {/* ── Hero — foto besar dengan judul menumpang di atasnya (editorial) ──
+          -mt menarik foto sampai mentok ke ujung atas viewport, menembus "ruang kosong" yang
+          ditinggalkan navbar (sticky, in-flow) + breadcrumb (sticky, in-flow) di atasnya.
+          Breadcrumb tidak diubah — ia tetap sticky di top-[72px]/[76px] dan otomatis melayang
+          di atas foto ini berkat z-30-nya. ── */}
+      <section className="relative w-full -mt-[120px] sm:-mt-[128px]">
+        {/* Lebar foto disamakan dengan container konten di bawahnya (max-w-7xl px-4 lg:px-8) */}
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div
-            className="absolute inset-0 pointer-events-none"
+            className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl"
             style={{
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.45) 38%, rgba(0,0,0,0.06) 70%)",
+              height: "clamp(360px, 52vh, 560px)",
+              background: "var(--blusukan-surface-container-highest)",
             }}
-          />
-
-          {/* Badge status jalan — pojok kiri atas */}
-          {badge && (
-            <div className="absolute top-5 left-4 lg:left-8">
-              <span
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+          >
+            {d.photoUrls[activePhotoIdx] ? (
+              <Image
+                src={d.photoUrls[activePhotoIdx]}
+                alt={d.name}
+                fill
+                className="object-cover"
+                style={{ objectPosition: "center 30%" }}
+                priority
+                sizes="(max-width: 1280px) 100vw, 1280px"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
                 style={{
-                  background: badge.bg,
-                  color: badge.textColor,
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.28)",
+                  background:
+                    "linear-gradient(135deg, var(--blusukan-primary-container) 0%, var(--blusukan-tertiary-container) 100%)",
                 }}
               >
-                {badge.icon}
-                {badge.label}
-              </span>
-            </div>
-          )}
+                <ImageOff
+                  size={40}
+                  style={{ color: "color-mix(in srgb, var(--blusukan-tertiary) 45%, transparent)" }}
+                />
+              </div>
+            )}
 
-          {/* Judul & meta — menumpang di bagian bawah foto */}
-          <div className="absolute inset-x-0 bottom-0">
-            <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-7">
-              <div className="flex flex-wrap gap-2 items-center mb-3">
+            {/* Overlay gradient — menjaga teks tetap terbaca di atas foto apa pun */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.45) 38%, rgba(0,0,0,0.06) 70%)",
+              }}
+            />
+
+            {/* Badge status jalan — pojok kiri atas */}
+            {badge && (
+              <div className="absolute top-5 left-4 sm:left-5">
+                <span
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+                  style={{
+                    background: badge.bg,
+                    color: badge.textColor,
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.28)",
+                  }}
+                >
+                  {badge.icon}
+                  {badge.label}
+                </span>
+              </div>
+            )}
+
+            {/* Judul & meta — menumpang di bagian bawah foto */}
+            <div className="absolute inset-x-0 bottom-0">
+              <div className="px-5 sm:px-7 lg:px-8 pb-6 sm:pb-7">
+                <div className="flex flex-wrap gap-2 items-center mb-3">
                 <span
                   className="text-[10px] font-bold uppercase tracking-[0.18em] px-2.5 py-1 rounded-full"
                   style={{
@@ -2567,6 +2574,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </section>
 
