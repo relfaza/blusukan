@@ -295,6 +295,19 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                     </Link>
                   )}
 
+                  {user?.role === "WISATAWAN" && (
+                    <Link
+                      href="/pengaturan-wisatawan"
+                      id="dropdown-pengaturan-wisatawan"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
+                      style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                    >
+                      <Settings size={15} style={{ color: "#42493e" }} />
+                      Pengaturan
+                    </Link>
+                  )}
+
                   <button
                     id="dropdown-logout"
                     type="button"
