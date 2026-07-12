@@ -21,6 +21,8 @@ import {
   CheckCircle2,
   XCircle,
   ArrowRight,
+  X,
+  ChevronRight,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import RupiahInput from "@/components/ui/rupiah-input";
@@ -777,61 +779,370 @@ function MenuItemForm({
   );
 }
 
-/** Card satu warung: info + daftar menu, dengan aksi edit/hapus untuk warung maupun tiap menu item */
-function WarungCard({
+/** Modal generik — overlay + card putih, dipakai untuk detail/edit UMKM */
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 overflow-y-auto"
+      style={{ background: "rgba(0,0,0,0.5)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg my-auto rounded-2xl p-6"
+        style={{ background: "var(--blusukan-surface)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
+            {title}
+          </h2>
+          <button
+            type="button"
+            id="btn-tutup-modal-warung"
+            onClick={onClose}
+            aria-label="Tutup"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+            style={{ color: "var(--blusukan-on-surface-variant)" }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Card ringkasan UMKM di list — hanya foto, nama, kategori, jumlah produk, badge bisaBooking. Klik untuk buka detail. */
+function WarungSummaryCard({ warung, onOpen }: { warung: WarungRow; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      id={`card-warung-${warung.id}`}
+      onClick={onOpen}
+      className="w-full text-left rounded-2xl p-5 flex items-center gap-3 transition-shadow hover:shadow-md"
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "#e0e0e0" }}>
+        {warung.photoUrls[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={warung.photoUrls[0]} alt={warung.name} className="w-full h-full object-cover" />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
+          >
+            <ImageOff size={18} style={{ color: "rgba(21,66,18,0.35)" }} />
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+          <p className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
+            {warung.name}
+          </p>
+          <KategoriUmkmBadge kategori={warung.kategori} />
+        </div>
+        <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          {warung.menuItems.length} produk
+        </p>
+        {warung.bisaBooking && (
+          <span
+            className="inline-block text-xs font-bold px-2 py-0.5 rounded-full mt-1"
+            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+          >
+            Bisa reservasi tempat
+          </span>
+        )}
+      </div>
+      <ChevronRight size={18} className="shrink-0" style={{ color: "var(--blusukan-on-surface-variant)" }} />
+    </button>
+  );
+}
+
+type ProdukDraft = { key: number; nama: string; harga: number | "" };
+
+/** Form batch tambah produk ke UMKM yang sudah ada — beberapa baris sekaligus, 1x "Simpan Semua" kirim semuanya bersamaan */
+function TambahProdukBatchForm({
+  onCancel,
+  onSubmit,
+  submitting,
+}: {
+  onCancel: () => void;
+  onSubmit: (items: { nama: string; harga: number }[]) => void;
+  submitting: boolean;
+}) {
+  const [rows, setRows] = useState<ProdukDraft[]>([{ key: 0, nama: "", harga: "" }]);
+  const [nextKey, setNextKey] = useState(1);
+  const [error, setError] = useState("");
+
+  function updateRow(key: number, patch: Partial<ProdukDraft>) {
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+
+  function addRow() {
+    setRows((prev) => [...prev, { key: nextKey, nama: "", harga: "" }]);
+    setNextKey((k) => k + 1);
+  }
+
+  function removeRow(key: number) {
+    setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.key !== key) : prev));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const items = rows
+      .filter((r) => r.nama.trim() !== "" || r.harga !== "")
+      .map((r) => ({ nama: r.nama.trim(), harga: Number(r.harga) }));
+
+    if (items.length === 0 || items.some((it) => !it.nama || !Number.isFinite(it.harga) || it.harga < 0)) {
+      setError("Minimal 1 produk dengan nama dan harga yang valid wajib diisi.");
+      return;
+    }
+    setError("");
+    onSubmit(items);
+  }
+
+  const inputStyle: React.CSSProperties = {
+    border: "1px solid var(--blusukan-outline-variant)",
+    borderRadius: "8px",
+    background: "#ffffff",
+    color: "var(--blusukan-on-surface)",
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-xl p-4 space-y-3"
+      style={{ background: "var(--blusukan-primary-container)", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div className="space-y-2">
+        {rows.map((r, idx) => (
+          <div key={r.key} className="grid grid-cols-2 gap-2 items-start">
+            <input
+              required
+              value={r.nama}
+              onChange={(e) => updateRow(r.key, { nama: e.target.value })}
+              placeholder="Nama Produk"
+              className="w-full px-3 py-2 text-sm"
+              style={inputStyle}
+            />
+            <div className="flex items-center gap-1.5">
+              <RupiahInput
+                value={r.harga}
+                onChange={(harga) => updateRow(r.key, { harga })}
+                className="w-full pl-9 pr-3 py-2 text-sm"
+                style={inputStyle}
+              />
+              {rows.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeRow(r.key)}
+                  aria-label={`Hapus baris produk ${idx + 1}`}
+                  className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8]"
+                  style={{ color: "var(--blusukan-error)" }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {error && (
+        <p className="text-xs" style={{ color: "var(--blusukan-error)" }}>
+          {error}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={addRow}
+        className="flex items-center gap-1 text-xs font-bold hover:opacity-80 transition-opacity"
+        style={{ color: "var(--blusukan-primary)" }}
+      >
+        <Plus size={14} />
+        Tambah Produk Lain
+      </button>
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+        >
+          {submitting ? "Menyimpan..." : "Simpan Semua"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="text-sm font-medium px-4 py-2 rounded-lg"
+          style={{ color: "var(--blusukan-on-surface-variant)" }}
+        >
+          Batal
+        </button>
+      </div>
+    </form>
+  );
+}
+
+type ProdukEditDraft = { id: string; name: string; price: number | "" };
+
+/** Form batch edit semua produk existing sekaligus — 1x "Simpan Semua Perubahan" kirim semua perubahan bersamaan */
+function EditProdukBatchForm({
+  menuItems,
+  onCancel,
+  onSubmit,
+  submitting,
+}: {
+  menuItems: MenuItemRow[];
+  onCancel: () => void;
+  onSubmit: (edits: { id: string; name: string; price: number }[]) => void;
+  submitting: boolean;
+}) {
+  const [rows, setRows] = useState<ProdukEditDraft[]>(
+    menuItems.map((m) => ({ id: m.id, name: m.name, price: m.price }))
+  );
+  const [error, setError] = useState("");
+
+  function updateRow(id: string, patch: Partial<ProdukEditDraft>) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const edits = rows.map((r) => ({ id: r.id, name: r.name.trim(), price: Number(r.price) }));
+
+    if (edits.some((it) => !it.name || !Number.isFinite(it.price) || it.price < 0)) {
+      setError("Nama dan harga semua produk wajib diisi dengan valid.");
+      return;
+    }
+    setError("");
+    onSubmit(edits);
+  }
+
+  const inputStyle: React.CSSProperties = {
+    border: "1px solid var(--blusukan-outline-variant)",
+    borderRadius: "8px",
+    background: "#ffffff",
+    color: "var(--blusukan-on-surface)",
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-xl p-4 space-y-3"
+      style={{ background: "var(--blusukan-primary-container)", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.id} className="grid grid-cols-2 gap-2 items-start">
+            <input
+              required
+              value={r.name}
+              onChange={(e) => updateRow(r.id, { name: e.target.value })}
+              placeholder="Nama Produk"
+              className="w-full px-3 py-2 text-sm"
+              style={inputStyle}
+            />
+            <RupiahInput
+              value={r.price}
+              onChange={(price) => updateRow(r.id, { price })}
+              className="w-full pl-9 pr-3 py-2 text-sm"
+              style={inputStyle}
+            />
+          </div>
+        ))}
+      </div>
+
+      {error && (
+        <p className="text-xs" style={{ color: "var(--blusukan-error)" }}>
+          {error}
+        </p>
+      )}
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+        >
+          {submitting ? "Menyimpan..." : "Simpan Semua Perubahan"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="text-sm font-medium px-4 py-2 rounded-lg"
+          style={{ color: "var(--blusukan-on-surface-variant)" }}
+        >
+          Batal
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/** Modal detail satu warung: info lengkap + daftar menu, aksi edit/hapus warung, tambah/edit produk (single & batch) */
+function WarungDetailModal({
   warung,
   submitting,
+  onClose,
   onEditWarung,
   onDeleteWarung,
-  onAddMenuItem,
+  onAddProdukBatch,
+  onEditProdukBatch,
   onEditMenuItem,
   onDeleteMenuItem,
 }: {
   warung: WarungRow;
   submitting: boolean;
+  onClose: () => void;
   onEditWarung: (values: WarungFormValues) => void;
   onDeleteWarung: () => void;
-  onAddMenuItem: (values: { name: string; price: number }) => void;
+  onAddProdukBatch: (items: { nama: string; harga: number }[]) => void;
+  onEditProdukBatch: (edits: { id: string; name: string; price: number }[]) => void;
   onEditMenuItem: (menuItemId: string, values: { name: string; price: number }) => void;
   onDeleteMenuItem: (menuItemId: string) => void;
 }) {
   const [isEditingWarung, setIsEditingWarung] = useState(false);
-  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showAddProduk, setShowAddProduk] = useState(false);
+  const [isBulkEditingProduk, setIsBulkEditingProduk] = useState(false);
   const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
 
   if (isEditingWarung) {
     return (
-      <UmkmForm
-        mode="edit"
-        initial={{
-          name: warung.name,
-          location: warung.location,
-          kategori: warung.kategori,
-          namaPemilik: warung.namaPemilik,
-          photoUrls: warung.photoUrls,
-          bisaBooking: warung.bisaBooking,
-        }}
-        onCancel={() => setIsEditingWarung(false)}
-        onSubmit={({ items: _items, ...values }) => {
-          onEditWarung(values);
-          setIsEditingWarung(false);
-        }}
-        submitting={submitting}
-      />
+      <Modal title={`Edit ${warung.name}`} onClose={onClose}>
+        <UmkmForm
+          mode="edit"
+          initial={{
+            name: warung.name,
+            location: warung.location,
+            kategori: warung.kategori,
+            namaPemilik: warung.namaPemilik,
+            photoUrls: warung.photoUrls,
+            bisaBooking: warung.bisaBooking,
+          }}
+          onCancel={() => setIsEditingWarung(false)}
+          onSubmit={({ items: _items, ...values }) => {
+            onEditWarung(values);
+            setIsEditingWarung(false);
+          }}
+          submitting={submitting}
+        />
+      </Modal>
     );
   }
 
   return (
-    <div
-      className="rounded-2xl p-5"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
-    >
-      <div className="flex items-start justify-between gap-3 mb-3">
+    <Modal title={warung.name} onClose={onClose}>
+      <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-start gap-3 min-w-0">
-          <div
-            className="w-14 h-14 rounded-xl overflow-hidden shrink-0"
-            style={{ background: "#e0e0e0" }}
-          >
+          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "#e0e0e0" }}>
             {warung.photoUrls[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={warung.photoUrls[0]} alt={warung.name} className="w-full h-full object-cover" />
@@ -845,14 +1156,9 @@ function WarungCard({
             )}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-              <p className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
-                {warung.name}
-              </p>
-              <KategoriUmkmBadge kategori={warung.kategori} />
-            </div>
+            <KategoriUmkmBadge kategori={warung.kategori} />
             {warung.namaPemilik && (
-              <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+              <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                 <User size={11} />
                 {warung.namaPemilik}
               </p>
@@ -861,6 +1167,14 @@ function WarungCard({
               <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                 {warung.location}
               </p>
+            )}
+            {warung.bisaBooking && (
+              <span
+                className="inline-block text-xs font-bold px-2 py-0.5 rounded-full mt-1"
+                style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+              >
+                Bisa reservasi tempat
+              </span>
             )}
           </div>
         </div>
@@ -889,80 +1203,115 @@ function WarungCard({
         </div>
       </div>
 
-      <div className="space-y-2 pt-3" style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}>
-        {warung.menuItems.length === 0 && !showAddMenu && (
-          <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-            Belum ada menu.
+      <div className="pt-3" style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-bold" style={{ color: "var(--blusukan-on-surface)" }}>
+            Daftar Produk/Menu
           </p>
-        )}
-        {warung.menuItems.map((m) =>
-          editingMenuId === m.id ? (
-            <MenuItemForm
-              key={m.id}
-              initial={{ name: m.name, price: m.price }}
-              onCancel={() => setEditingMenuId(null)}
-              onSubmit={(values) => {
-                onEditMenuItem(m.id, values);
-                setEditingMenuId(null);
-              }}
-              submitting={submitting}
-            />
-          ) : (
-            <div key={m.id} className="flex items-center justify-between gap-3 px-1">
-              <p className="text-sm" style={{ color: "var(--blusukan-on-surface)" }}>
-                {m.name}{" "}
-                <span style={{ color: "var(--blusukan-on-surface-variant)" }}>· {formatRupiah(m.price)}</span>
-              </p>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  id={`btn-edit-menu-${m.id}`}
-                  onClick={() => setEditingMenuId(m.id)}
-                  aria-label={`Edit ${m.name}`}
-                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
-                  style={{ color: "var(--blusukan-on-surface-variant)" }}
-                >
-                  <Pencil size={12} />
-                </button>
-                <button
-                  type="button"
-                  id={`btn-hapus-menu-${m.id}`}
-                  onClick={() => onDeleteMenuItem(m.id)}
-                  disabled={submitting}
-                  aria-label={`Hapus ${m.name}`}
-                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
-                  style={{ color: "var(--blusukan-error)" }}
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-            </div>
-          )
-        )}
+          {!isBulkEditingProduk && warung.menuItems.length > 0 && (
+            <button
+              type="button"
+              id={`btn-edit-semua-produk-${warung.id}`}
+              onClick={() => setIsBulkEditingProduk(true)}
+              className="text-xs font-bold hover:opacity-80 transition-opacity"
+              style={{ color: "var(--blusukan-primary)" }}
+            >
+              Edit Semua Produk
+            </button>
+          )}
+        </div>
 
-        {showAddMenu ? (
-          <MenuItemForm
-            onCancel={() => setShowAddMenu(false)}
-            onSubmit={(values) => {
-              onAddMenuItem(values);
-              setShowAddMenu(false);
+        {isBulkEditingProduk ? (
+          <EditProdukBatchForm
+            menuItems={warung.menuItems}
+            onCancel={() => setIsBulkEditingProduk(false)}
+            onSubmit={(edits) => {
+              onEditProdukBatch(edits);
+              setIsBulkEditingProduk(false);
             }}
             submitting={submitting}
           />
         ) : (
-          <button
-            type="button"
-            id={`btn-tambah-menu-${warung.id}`}
-            onClick={() => setShowAddMenu(true)}
-            className="flex items-center gap-1 text-xs font-bold mt-1 hover:opacity-80 transition-opacity"
-            style={{ color: "var(--blusukan-primary)" }}
-          >
-            <Plus size={14} />
-            Tambah Menu
-          </button>
+          <div className="space-y-2">
+            {warung.menuItems.length === 0 && (
+              <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                Belum ada menu.
+              </p>
+            )}
+            {warung.menuItems.map((m) =>
+              editingMenuId === m.id ? (
+                <MenuItemForm
+                  key={m.id}
+                  initial={{ name: m.name, price: m.price }}
+                  onCancel={() => setEditingMenuId(null)}
+                  onSubmit={(values) => {
+                    onEditMenuItem(m.id, values);
+                    setEditingMenuId(null);
+                  }}
+                  submitting={submitting}
+                />
+              ) : (
+                <div key={m.id} className="flex items-center justify-between gap-3 px-1">
+                  <p className="text-sm" style={{ color: "var(--blusukan-on-surface)" }}>
+                    {m.name}{" "}
+                    <span style={{ color: "var(--blusukan-on-surface-variant)" }}>· {formatRupiah(m.price)}</span>
+                  </p>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      id={`btn-edit-menu-${m.id}`}
+                      onClick={() => setEditingMenuId(m.id)}
+                      aria-label={`Edit ${m.name}`}
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+                      style={{ color: "var(--blusukan-on-surface-variant)" }}
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      id={`btn-hapus-menu-${m.id}`}
+                      onClick={() => onDeleteMenuItem(m.id)}
+                      disabled={submitting}
+                      aria-label={`Hapus ${m.name}`}
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+                      style={{ color: "var(--blusukan-error)" }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        )}
+
+        {!isBulkEditingProduk && (
+          <div className="mt-3 pt-3" style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}>
+            {showAddProduk ? (
+              <TambahProdukBatchForm
+                onCancel={() => setShowAddProduk(false)}
+                onSubmit={(items) => {
+                  onAddProdukBatch(items);
+                  setShowAddProduk(false);
+                }}
+                submitting={submitting}
+              />
+            ) : (
+              <button
+                type="button"
+                id={`btn-tambah-produk-${warung.id}`}
+                onClick={() => setShowAddProduk(true)}
+                className="flex items-center gap-1 text-xs font-bold hover:opacity-80 transition-opacity"
+                style={{ color: "var(--blusukan-primary)" }}
+              >
+                <Plus size={14} />
+                Tambah Produk Baru
+              </button>
+            )}
+          </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -980,6 +1329,7 @@ function KelolaUmkmSection({
   const [error, setError] = useState("");
   const [deleteWarungTargetId, setDeleteWarungTargetId] = useState<string | null>(null);
   const [deleteMenuTarget, setDeleteMenuTarget] = useState<{ warungId: string; menuItemId: string } | null>(null);
+  const [expandedWarungId, setExpandedWarungId] = useState<string | null>(null);
 
   async function handleAddWarung(values: {
     name: string;
@@ -1066,6 +1416,7 @@ function KelolaUmkmSection({
         return;
       }
       setWarungs((prev) => prev.filter((w) => w.id !== id));
+      setExpandedWarungId((prev) => (prev === id ? null : prev));
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");
     } finally {
@@ -1073,21 +1424,52 @@ function KelolaUmkmSection({
     }
   }
 
-  async function handleAddMenuItem(warungId: string, values: { name: string; price: number }) {
+  async function handleAddProdukBatch(warungId: string, items: { nama: string; harga: number }[]) {
     setSubmitting(true);
     setError("");
     try {
       const res = await fetch("/api/pengelola/menu-item", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ warungId, ...values }),
+        body: JSON.stringify({ warungId, items }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Gagal menambah menu.");
+        setError(data.message || "Gagal menambah produk.");
         return;
       }
-      setWarungs((prev) => prev.map((w) => (w.id === warungId ? { ...w, menuItems: [...w.menuItems, data] } : w)));
+      setWarungs((prev) =>
+        prev.map((w) => (w.id === warungId ? { ...w, menuItems: [...w.menuItems, ...data] } : w))
+      );
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleEditProdukBatch(warungId: string, edits: { id: string; name: string; price: number }[]) {
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/pengelola/menu-item", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: edits }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Gagal memperbarui produk.");
+        return;
+      }
+      const updated = data as MenuItemRow[];
+      setWarungs((prev) =>
+        prev.map((w) =>
+          w.id === warungId
+            ? { ...w, menuItems: w.menuItems.map((m) => updated.find((d) => d.id === m.id) ?? m) }
+            : w
+        )
+      );
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");
     } finally {
@@ -1186,19 +1568,28 @@ function KelolaUmkmSection({
       ) : (
         <div className="space-y-3">
           {warungs.map((w) => (
-            <WarungCard
-              key={w.id}
-              warung={w}
-              submitting={submitting}
-              onEditWarung={(values) => handleEditWarung(w.id, values)}
-              onDeleteWarung={() => handleDeleteWarung(w.id)}
-              onAddMenuItem={(values) => handleAddMenuItem(w.id, values)}
-              onEditMenuItem={(menuItemId, values) => handleEditMenuItem(w.id, menuItemId, values)}
-              onDeleteMenuItem={(menuItemId) => handleDeleteMenuItem(w.id, menuItemId)}
-            />
+            <WarungSummaryCard key={w.id} warung={w} onOpen={() => setExpandedWarungId(w.id)} />
           ))}
         </div>
       )}
+
+      {(() => {
+        const expanded = warungs.find((w) => w.id === expandedWarungId);
+        if (!expanded) return null;
+        return (
+          <WarungDetailModal
+            warung={expanded}
+            submitting={submitting}
+            onClose={() => setExpandedWarungId(null)}
+            onEditWarung={(values) => handleEditWarung(expanded.id, values)}
+            onDeleteWarung={() => handleDeleteWarung(expanded.id)}
+            onAddProdukBatch={(items) => handleAddProdukBatch(expanded.id, items)}
+            onEditProdukBatch={(edits) => handleEditProdukBatch(expanded.id, edits)}
+            onEditMenuItem={(menuItemId, values) => handleEditMenuItem(expanded.id, menuItemId, values)}
+            onDeleteMenuItem={(menuItemId) => handleDeleteMenuItem(expanded.id, menuItemId)}
+          />
+        );
+      })()}
 
       <ConfirmDialog
         open={deleteWarungTargetId !== null}
