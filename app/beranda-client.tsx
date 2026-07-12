@@ -21,6 +21,7 @@ import {
   TrendingUp,
   ImageOff,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import {
   Dialog,
@@ -28,6 +29,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
 
@@ -192,6 +200,11 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
   // ID destinasi yang sesuai filter aktif (untuk highlight di peta)
   const filteredIds = new Set(filtered.map((d) => d.id));
 
+  const wilayahLabel =
+    WILAYAH_OPTIONS.find((o) => o.value === selectedWilayah)?.label ?? "Semua";
+  const kategoriLabel =
+    KATEGORI_OPTIONS.find((o) => o.value === selectedKategori)?.label ?? "Semua";
+
   return (
     <div
       className="min-h-screen flex flex-col"
@@ -239,8 +252,8 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
       {/* ── Main scrollable content ── */}
       <main className="flex-1 px-4 lg:px-8 py-5 pb-28 max-w-7xl mx-auto w-full">
 
-        {/* ── Search bar — mengambang di batas hero (logic sama persis, hanya restyle) ── */}
-        <div className="relative z-10 -mt-10 sm:-mt-12 lg:-mt-16 mb-6 max-w-2xl mx-auto lg:mx-0">
+        {/* ── Search bar — center, fokus utama di bawah headline hero ── */}
+        <div className="relative z-10 -mt-10 sm:-mt-12 lg:-mt-16 mb-4 max-w-3xl mx-auto">
           <div
             className="relative w-full rounded-full p-1.5"
             style={{
@@ -267,24 +280,82 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
               }}
             />
           </div>
-        </div>
 
-        <div className="space-y-6">
-        {/* ── Destination cards — grid 3 kolom (Tugas 1) ── */}
-        <section>
-          <div className="flex items-center justify-between mb-2">
-            <h2
-              className="text-xs font-semibold uppercase tracking-wide"
-              style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
-            >
-              Wilayah
-            </h2>
-            {/* Tombol Lihat Peta di samping label filter */}
+          {/* ── Filter dropdowns: Wilayah & Kategori, + tombol Lihat Peta ── */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  id="filter-wilayah-trigger"
+                  type="button"
+                  className="flex items-center gap-1.5 pl-4 pr-3 py-2 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+                  style={{
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "#1a1c1c",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                    fontFamily: "Inter, sans-serif",
+                  }}
+                >
+                  <MapPin size={13} style={{ color: "var(--blusukan-outline)" }} />
+                  Wilayah: {wilayahLabel}
+                  <ChevronDown size={13} style={{ color: "var(--blusukan-outline)" }} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="min-w-48">
+                <DropdownMenuRadioGroup value={selectedWilayah}>
+                  {WILAYAH_OPTIONS.map((opt) => (
+                    <DropdownMenuRadioItem
+                      key={opt.value}
+                      id={`filter-wilayah-${opt.value.toLowerCase()}`}
+                      value={opt.value}
+                      onClick={() => setSelectedWilayah(opt.value)}
+                    >
+                      {opt.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  id="filter-kategori-trigger"
+                  type="button"
+                  className="flex items-center gap-1.5 pl-4 pr-3 py-2 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+                  style={{
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "#1a1c1c",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                    fontFamily: "Inter, sans-serif",
+                  }}
+                >
+                  Kategori: {kategoriLabel}
+                  <ChevronDown size={13} style={{ color: "var(--blusukan-outline)" }} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="min-w-48">
+                <DropdownMenuRadioGroup value={selectedKategori}>
+                  {KATEGORI_OPTIONS.map((opt) => (
+                    <DropdownMenuRadioItem
+                      key={opt.value}
+                      id={`filter-kategori-${opt.value.toLowerCase()}`}
+                      value={opt.value}
+                      onClick={() => setSelectedKategori(opt.value)}
+                    >
+                      {opt.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Tombol Lihat Peta sejajar dengan filter dropdown */}
             <button
               id="btn-lihat-peta"
               type="button"
               onClick={() => setMapOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-colors hover:opacity-80"
               style={{
                 background: "#2d5a27",
                 color: "#ffffff",
@@ -295,78 +366,9 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
               Lihat Peta
             </button>
           </div>
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1">
-            {WILAYAH_OPTIONS.map((opt) => {
-              const active = selectedWilayah === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  id={`filter-wilayah-${opt.value.toLowerCase()}`}
-                  onClick={() => setSelectedWilayah(opt.value)}
-                  className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-colors"
-                  style={
-                    active
-                      ? {
-                          background: "#154212",
-                          color: "#ffffff",
-                          border: "1px solid #154212",
-                          fontFamily: "Inter, sans-serif",
-                        }
-                      : {
-                          background: "#ffffff",
-                          color: "#1a1c1c",
-                          border: "1px solid #c2c9bb",
-                          fontFamily: "Inter, sans-serif",
-                        }
-                  }
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        </div>
 
-        {/* ── Kategori filter ── */}
-        <section>
-          <h2
-            className="text-xs font-semibold uppercase tracking-wide mb-2"
-            style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}
-          >
-            Kategori
-          </h2>
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1">
-            {KATEGORI_OPTIONS.map((opt) => {
-              const active = selectedKategori === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  id={`filter-kategori-${opt.value.toLowerCase()}`}
-                  onClick={() => setSelectedKategori(opt.value)}
-                  className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-colors"
-                  style={
-                    active
-                      ? {
-                          background: "#2d5a27",
-                          color: "#ffffff",
-                          border: "1px solid #2d5a27",
-                          fontFamily: "Inter, sans-serif",
-                        }
-                      : {
-                          background: "#e2e2e2",
-                          color: "#1a1c1c",
-                          border: "1px solid transparent",
-                          fontFamily: "Inter, sans-serif",
-                        }
-                  }
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
+        <div className="space-y-6">
         {/* ── Modal Peta (Tugas 4) ── */}
         <Dialog open={mapOpen} onOpenChange={setMapOpen}>
           <DialogContent

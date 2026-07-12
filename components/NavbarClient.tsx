@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, LogOut, User, MapPin, LayoutDashboard, Settings } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, LayoutDashboard, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 type NotifikasiItem = {
@@ -118,24 +119,35 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
   }
 
   return (
-    <nav
-      className="sticky top-0 z-50 w-full transition-shadow"
-      style={{
-        background: "rgba(255,255,255,0.95)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid #c2c9bb",
-        boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.08)" : "none",
-      }}
-    >
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between gap-4">
+    <div className="sticky top-0 z-50 w-full flex justify-center px-3 sm:px-4 lg:px-6 pt-3 sm:pt-4 pointer-events-none">
+      <nav
+        className="pointer-events-auto w-full max-w-6xl rounded-full transition-all duration-300"
+        style={{
+          background:
+            "color-mix(in srgb, var(--blusukan-surface-container-lowest) 85%, transparent)",
+          backdropFilter: "blur(20px) saturate(160%)",
+          WebkitBackdropFilter: "blur(20px) saturate(160%)",
+          border: "1px solid var(--blusukan-outline-variant)",
+          boxShadow: scrolled
+            ? "0 12px 36px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.06)"
+            : "0 8px 28px rgba(0,0,0,0.10)",
+        }}
+      >
+      <div className="px-3 sm:px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
 
         {/* ── Logo ── */}
         <Link
           href={dashboardLink?.href ?? "/"}
           id="nav-logo"
-          className="flex items-center gap-1.5 shrink-0"
+          className="flex items-center gap-2 shrink-0"
         >
-          <MapPin size={20} style={{ color: "#2d5a27" }} />
+          <Image
+            src="/logo.png"
+            alt="Blusukan"
+            width={32}
+            height={32}
+            className="object-contain shrink-0"
+          />
           <span
             className="text-lg font-bold"
             style={{ fontFamily: "Montserrat, sans-serif", color: "#2d5a27" }}
@@ -341,6 +353,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
           </div>
         </div>
       </div>
-    </nav>
+      </nav>
+    </div>
   );
 }
