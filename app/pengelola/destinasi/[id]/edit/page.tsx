@@ -49,7 +49,6 @@ export default async function EditDestinasiPage({ params }: Props) {
 
   return (
     <DestinasiFormClient
-      mode="edit"
       destinationId={destination.id}
       initial={{
         name: destination.name,
