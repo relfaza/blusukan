@@ -150,7 +150,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
           />
           <span
             className="text-lg font-bold"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "#2d5a27" }}
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-primary)" }}
           >
             Blusukan
           </span>
@@ -167,7 +167,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                 id={`nav-link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                 className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                 style={{
-                  color: active ? "#2d5a27" : "#42493e",
+                  color: active ? "var(--blusukan-primary)" : "var(--blusukan-on-surface-variant)",
                   background: active ? "rgba(45,90,39,0.08)" : "transparent",
                   fontFamily: "Inter, sans-serif",
                 }}
@@ -183,7 +183,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
             id="nav-link-tentang-kami"
             className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
             style={{
-              color: pathname === "/tentang" ? "#2d5a27" : "#42493e",
+              color: pathname === "/tentang" ? "var(--blusukan-primary)" : "var(--blusukan-on-surface-variant)",
               background: pathname === "/tentang" ? "rgba(45,90,39,0.08)" : "transparent",
               fontFamily: "Inter, sans-serif",
             }}
@@ -201,10 +201,10 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
               href="/notifikasi"
               id="nav-notif"
               onClick={() => setDropdownOpen(false)}
-              className="relative w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
+              className="relative w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-[var(--blusukan-surface-low)]"
               aria-label="Notifikasi"
             >
-              <Bell size={20} style={{ color: "#42493e" }} />
+              <Bell size={20} style={{ color: "var(--blusukan-on-surface-variant)" }} />
               {unreadCount > 0 && (
                 <span
                   className="absolute top-1 right-1 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold"
@@ -222,12 +222,12 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
               id="nav-avatar"
               type="button"
               onClick={() => setDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 transition-colors hover:bg-[#f3f3f3]"
+              className="flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 transition-colors hover:bg-[var(--blusukan-surface-low)]"
             >
               {/* Inisial avatar */}
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                style={{ background: "#e3efe0", color: "#2d5a27" }}
+                style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
               >
                 {initials}
               </div>
@@ -235,7 +235,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                 size={14}
                 className="hidden sm:block transition-transform"
                 style={{
-                  color: "#72796e",
+                  color: "var(--blusukan-outline)",
                   transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
                 }}
               />
@@ -246,24 +246,24 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
               <div
                 className="absolute right-0 top-full mt-2 w-52 rounded-2xl overflow-hidden z-50"
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #c2c9bb",
+                  background: "var(--blusukan-surface-container-lowest)",
+                  border: "1px solid var(--blusukan-outline-variant)",
                   boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                 }}
               >
                 {/* User info */}
                 <div
                   className="px-4 py-3 border-b"
-                  style={{ borderColor: "#c2c9bb" }}
+                  style={{ borderColor: "var(--blusukan-outline-variant)" }}
                 >
                   <p
                     className="text-sm font-semibold truncate"
-                    style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                    style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
                   >
                     {user?.name ?? "Pengguna"}
                   </p>
                   {roleLabel && (
-                    <p className="text-xs mt-0.5 truncate" style={{ color: "#72796e" }}>
+                    <p className="text-xs mt-0.5 truncate" style={{ color: "var(--blusukan-outline)" }}>
                       {roleLabel}
                     </p>
                   )}
@@ -276,7 +276,7 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                       href={dashboardLink.href}
                       id="dropdown-dashboard"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--blusukan-surface-low)]"
                       style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
                     >
                       <LayoutDashboard size={15} style={{ color: "var(--blusukan-on-surface-variant)" }} />
@@ -288,10 +288,10 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                     href="/profil"
                     id="dropdown-profil"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
-                    style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--blusukan-surface-low)]"
+                    style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
                   >
-                    <User size={15} style={{ color: "#42493e" }} />
+                    <User size={15} style={{ color: "var(--blusukan-on-surface-variant)" }} />
                     Profil Saya
                   </Link>
 
@@ -300,10 +300,10 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                       href="/pengaturan"
                       id="dropdown-pengaturan"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
-                      style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--blusukan-surface-low)]"
+                      style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
                     >
-                      <Settings size={15} style={{ color: "#42493e" }} />
+                      <Settings size={15} style={{ color: "var(--blusukan-on-surface-variant)" }} />
                       Pengaturan
                     </Link>
                   )}
@@ -313,10 +313,10 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                       href="/pengaturan-pengelola"
                       id="dropdown-pengaturan-pengelola"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
-                      style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--blusukan-surface-low)]"
+                      style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
                     >
-                      <Settings size={15} style={{ color: "#42493e" }} />
+                      <Settings size={15} style={{ color: "var(--blusukan-on-surface-variant)" }} />
                       Pengaturan
                     </Link>
                   )}
@@ -326,10 +326,10 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                       href="/pengaturan-wisatawan"
                       id="dropdown-pengaturan-wisatawan"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#f3f3f3]"
-                      style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--blusukan-surface-low)]"
+                      style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
                     >
-                      <Settings size={15} style={{ color: "#42493e" }} />
+                      <Settings size={15} style={{ color: "var(--blusukan-on-surface-variant)" }} />
                       Pengaturan
                     </Link>
                   )}
@@ -341,8 +341,8 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
                       setDropdownOpen(false);
                       signOut({ callbackUrl: "/login" });
                     }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[#fff0f0]"
-                    style={{ color: "#ba1a1a", fontFamily: "Inter, sans-serif" }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-[color-mix(in_srgb,var(--blusukan-error)_10%,transparent)]"
+                    style={{ color: "var(--blusukan-error)", fontFamily: "Inter, sans-serif" }}
                   >
                     <LogOut size={15} />
                     Keluar
