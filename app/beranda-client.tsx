@@ -197,59 +197,76 @@ export default function BerandaClient({ destinations }: BerandaClientProps) {
       className="min-h-screen flex flex-col"
       style={{ background: "#f9f9f9", color: "#1a1c1c" }}
     >
-      {/* ── Hero banner ── */}
+      {/* ── Hero banner (full-width gradient, headline besar, tekstur subtle) ── */}
       <div
-        className="px-4 lg:px-8 py-8"
+        className="relative overflow-hidden px-4 lg:px-8 pt-14 pb-24 sm:pt-16 sm:pb-28 lg:pt-20 lg:pb-32"
         style={{
-          background: "linear-gradient(135deg, rgba(45,90,39,0.08) 0%, rgba(21,66,18,0.14) 100%)",
-          borderBottom: "1px solid #c2c9bb",
+          background:
+            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 45%, var(--blusukan-primary-fixed-dim) 55%) 65%, var(--blusukan-primary-fixed-dim) 100%)",
         }}
       >
-        <div className="max-w-7xl mx-auto">
+        {/* Overlay tekstur subtle — hanya turunan warna palet (on-primary), bukan warna baru */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--blusukan-on-primary) 14%, transparent) 0%, transparent 45%), radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--blusukan-on-primary) 10%, transparent) 0%, transparent 40%)",
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto text-center lg:text-left">
           <p
-            className="text-xs font-semibold uppercase tracking-widest mb-1"
-            style={{ color: "#2d5a27", fontFamily: "Inter, sans-serif" }}
+            className="text-xs sm:text-sm font-semibold uppercase tracking-widest mb-3"
+            style={{ color: "var(--blusukan-primary-fixed-dim)", fontFamily: "Inter, sans-serif" }}
           >
             Yogyakarta · Hidden Gem
           </p>
           <h1
-            className="text-2xl font-bold leading-tight"
-            style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] max-w-3xl mx-auto lg:mx-0"
+            style={{ color: "var(--blusukan-on-primary)", fontFamily: "Montserrat, sans-serif" }}
           >
-            Jelajahi Hidden Gem<br />Yogyakarta
+            Jelajahi Hidden Gem Yogyakarta
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+          <p
+            className="text-sm sm:text-base mt-4 max-w-xl mx-auto lg:mx-0"
+            style={{ color: "var(--blusukan-primary-container)", fontFamily: "Inter, sans-serif" }}
+          >
             Temukan destinasi wisata tersembunyi yang menakjubkan
           </p>
         </div>
       </div>
 
-
       {/* ── Main scrollable content ── */}
       <main className="flex-1 px-4 lg:px-8 py-5 pb-28 max-w-7xl mx-auto w-full">
 
-        {/* ── Search bar (Tugas 3: bukan sticky lagi) ── */}
-        <div className="relative w-full max-w-2xl mb-6">
-          <Search
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: "#72796e" }}
-          />
-          <input
-            id="search-destinasi"
-            type="text"
-            placeholder="Cari destinasi atau wilayah…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-3 pl-11 pr-4 rounded-full text-sm transition-all focus:outline-none"
+        {/* ── Search bar — mengambang di batas hero (logic sama persis, hanya restyle) ── */}
+        <div className="relative z-10 -mt-10 sm:-mt-12 lg:-mt-16 mb-6 max-w-2xl mx-auto lg:mx-0">
+          <div
+            className="relative w-full rounded-full p-1.5"
             style={{
-              background: "#ffffff",
-              border: "1px solid #c2c9bb",
-              color: "#1a1c1c",
-              fontFamily: "Inter, sans-serif",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+              background: "var(--blusukan-surface-container-lowest)",
+              border: "1px solid var(--blusukan-outline-variant)",
+              boxShadow: "0 16px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)",
             }}
-          />
+          >
+            <Search
+              size={18}
+              className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: "var(--blusukan-outline)" }}
+            />
+            <input
+              id="search-destinasi"
+              type="text"
+              placeholder="Cari destinasi atau wilayah…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full py-3 pl-12 pr-4 rounded-full text-sm transition-all focus:outline-none bg-transparent"
+              style={{
+                color: "var(--blusukan-on-surface)",
+                fontFamily: "Inter, sans-serif",
+              }}
+            />
+          </div>
         </div>
 
         <div className="space-y-6">
