@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requirePengelolaApi, findOwnedDestination } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 
+const SATUAN_WAKTU_VALUES = ["per menit", "per jam", "per hari"] as const;
+
 function serializeFasilitas(f: {
   id: string;
   destinationId: string;
@@ -9,6 +11,9 @@ function serializeFasilitas(f: {
   hargaSewa: unknown;
   satuanWaktu: string;
   jumlahUnit: number;
+  lokasiDalamDestinasi: string | null;
+  deskripsiManfaat: string | null;
+  fotoUrl: string | null;
 }) {
   return {
     id: f.id,
@@ -17,11 +22,18 @@ function serializeFasilitas(f: {
     hargaSewa: Number(f.hargaSewa),
     satuanWaktu: f.satuanWaktu,
     jumlahUnit: f.jumlahUnit,
+    lokasiDalamDestinasi: f.lokasiDalamDestinasi,
+    deskripsiManfaat: f.deskripsiManfaat,
+    fotoUrl: f.fotoUrl,
   };
 }
 
 function isValidHargaSewa(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function isValidSatuanWaktu(value: unknown): value is (typeof SATUAN_WAKTU_VALUES)[number] {
+  return typeof value === "string" && (SATUAN_WAKTU_VALUES as readonly string[]).includes(value);
 }
 
 export async function POST(req: Request) {
@@ -30,7 +42,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: authResult.message }, { status: authResult.status });
   }
 
-  const { destinationId, nama, hargaSewa, satuanWaktu, jumlahUnit } = await req.json();
+  const { destinationId, nama, hargaSewa, satuanWaktu, jumlahUnit, lokasiDalamDestinasi, deskripsiManfaat, fotoUrl } =
+    await req.json();
 
   if (typeof destinationId !== "string" || !destinationId) {
     return NextResponse.json({ message: "destinationId wajib diisi." }, { status: 400 });
@@ -40,6 +53,9 @@ export async function POST(req: Request) {
   }
   if (!isValidHargaSewa(hargaSewa)) {
     return NextResponse.json({ message: "Harga sewa tidak valid." }, { status: 400 });
+  }
+  if (satuanWaktu !== undefined && !isValidSatuanWaktu(satuanWaktu)) {
+    return NextResponse.json({ message: "Satuan waktu tidak valid." }, { status: 400 });
   }
 
   const jumlah = jumlahUnit != null ? Number(jumlahUnit) : 1;
@@ -57,8 +73,13 @@ export async function POST(req: Request) {
       destinationId,
       nama: nama.trim(),
       hargaSewa,
-      satuanWaktu: typeof satuanWaktu === "string" && satuanWaktu.trim() ? satuanWaktu.trim() : "per jam",
+      satuanWaktu: isValidSatuanWaktu(satuanWaktu) ? satuanWaktu : "per jam",
       jumlahUnit: jumlah,
+      lokasiDalamDestinasi:
+        typeof lokasiDalamDestinasi === "string" && lokasiDalamDestinasi.trim() ? lokasiDalamDestinasi.trim() : null,
+      deskripsiManfaat:
+        typeof deskripsiManfaat === "string" && deskripsiManfaat.trim() ? deskripsiManfaat.trim() : null,
+      fotoUrl: typeof fotoUrl === "string" && fotoUrl.trim() ? fotoUrl.trim() : null,
     },
   });
 
@@ -71,7 +92,8 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ message: authResult.message }, { status: authResult.status });
   }
 
-  const { id, nama, hargaSewa, satuanWaktu, jumlahUnit } = await req.json();
+  const { id, nama, hargaSewa, satuanWaktu, jumlahUnit, lokasiDalamDestinasi, deskripsiManfaat, fotoUrl } =
+    await req.json();
 
   if (typeof id !== "string" || !id) {
     return NextResponse.json({ message: "id wajib diisi." }, { status: 400 });
@@ -94,6 +116,9 @@ export async function PATCH(req: Request) {
     hargaSewa?: number;
     satuanWaktu?: string;
     jumlahUnit?: number;
+    lokasiDalamDestinasi?: string | null;
+    deskripsiManfaat?: string | null;
+    fotoUrl?: string | null;
   } = {};
 
   if (nama !== undefined) {
@@ -109,10 +134,10 @@ export async function PATCH(req: Request) {
     data.hargaSewa = hargaSewa;
   }
   if (satuanWaktu !== undefined) {
-    if (typeof satuanWaktu !== "string" || !satuanWaktu.trim()) {
+    if (!isValidSatuanWaktu(satuanWaktu)) {
       return NextResponse.json({ message: "Satuan waktu tidak valid." }, { status: 400 });
     }
-    data.satuanWaktu = satuanWaktu.trim();
+    data.satuanWaktu = satuanWaktu;
   }
   if (jumlahUnit !== undefined) {
     const jumlah = Number(jumlahUnit);
@@ -120,6 +145,17 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ message: "Jumlah unit tidak valid." }, { status: 400 });
     }
     data.jumlahUnit = jumlah;
+  }
+  if (lokasiDalamDestinasi !== undefined) {
+    data.lokasiDalamDestinasi =
+      typeof lokasiDalamDestinasi === "string" && lokasiDalamDestinasi.trim() ? lokasiDalamDestinasi.trim() : null;
+  }
+  if (deskripsiManfaat !== undefined) {
+    data.deskripsiManfaat =
+      typeof deskripsiManfaat === "string" && deskripsiManfaat.trim() ? deskripsiManfaat.trim() : null;
+  }
+  if (fotoUrl !== undefined) {
+    data.fotoUrl = typeof fotoUrl === "string" && fotoUrl.trim() ? fotoUrl.trim() : null;
   }
 
   const updated = await prisma.fasilitas.update({ where: { id }, data });
