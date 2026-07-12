@@ -44,13 +44,6 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   REJECTED: { bg: "var(--blusukan-error-container)", color: "var(--blusukan-error)" },
 };
 
-// Aksen kiri kartu — menandai status secara cepat tanpa harus membaca badge
-const STATUS_ACCENT: Record<string, string> = {
-  APPROVED: "var(--blusukan-primary)",
-  PENDING: "var(--blusukan-secondary)",
-  REJECTED: "var(--blusukan-error)",
-};
-
 const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "ALL", label: "Semua" },
   { value: "APPROVED", label: "Disetujui" },
@@ -314,25 +307,18 @@ export default function PengelolaClient({ destinations }: { destinations: Destin
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((d) => {
             const statusStyle = STATUS_STYLE[d.status] ?? STATUS_STYLE.PENDING;
-            const accent = STATUS_ACCENT[d.status] ?? STATUS_ACCENT.PENDING;
 
             return (
               <Link
                 key={d.id}
                 href={`/pengelola/destinasi/${d.id}`}
                 id={`card-destinasi-${d.id}`}
-                className="group relative flex flex-col h-full overflow-hidden rounded-3xl p-5 pl-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                className="group relative flex flex-col h-full overflow-hidden rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                 style={{
                   background: "var(--blusukan-surface-container-lowest)",
                   border: "1px solid var(--blusukan-outline-variant)",
                 }}
               >
-                {/* Aksen status di tepi kiri kartu */}
-                <span
-                  className="absolute left-0 top-0 bottom-0 w-1.5"
-                  style={{ background: accent }}
-                />
-
                 {d.pendingCount > 0 && (
                   <span
                     className="absolute top-4 right-4 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-xs font-bold shadow-sm"

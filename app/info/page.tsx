@@ -131,44 +131,20 @@ export default async function InfoPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
-      {/* ── Header — panel gradient brand ── */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 62%, var(--blusukan-tertiary) 38%) 100%)",
-        }}
-      >
-        <div
-          className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none"
-          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
-        />
-        <div className="relative max-w-7xl mx-auto px-4 lg:px-8 pt-12 pb-14">
-          <span
-            className="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] mb-4"
-            style={{
-              background: "color-mix(in srgb, var(--blusukan-on-primary) 16%, transparent)",
-              color: "var(--blusukan-on-primary)",
-              border: "1px solid color-mix(in srgb, var(--blusukan-on-primary) 28%, transparent)",
-            }}
-          >
-            <Sparkles size={12} />
-            Terkini
-          </span>
-          <h1
-            className="text-3xl sm:text-4xl font-black tracking-tight"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-primary)" }}
-          >
-            Info &amp; Update
-          </h1>
-          <p className="text-sm mt-2 max-w-xl" style={{ color: "var(--blusukan-primary-container)" }}>
-            Destinasi baru dan yang sedang ramai dikunjungi minggu ini.
-          </p>
-        </div>
+      {/* ── Header — heading sederhana di atas background cream ── */}
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-10">
+        <h1
+          className="text-2xl font-bold mb-1"
+          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+        >
+          Info &amp; Update
+        </h1>
+        <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+          Destinasi baru dan yang sedang ramai dikunjungi minggu ini.
+        </p>
       </div>
 
-      {/* relative z-10 wajib: header di atas ber-position:relative, tanpa ini konten tertimpa */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-8 pt-10 pb-12 space-y-10">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-8 pb-12 space-y-10">
 
         {/* ── Hidden Gem Baru ── */}
         <section>

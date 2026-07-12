@@ -1590,50 +1590,37 @@ export default function PengelolaDestinasiClient({
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
-      {/* ── Header — panel gradient brand ── */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 62%, var(--blusukan-tertiary) 38%) 100%)",
-        }}
-      >
-        <div
-          className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none"
-          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
-        />
-        <div className="relative max-w-3xl mx-auto px-4 lg:px-8 pt-8 pb-16">
-          <Link
-            href="/pengelola"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
-            style={{ color: "var(--blusukan-on-primary)" }}
-          >
-            <ArrowLeft size={16} />
-            Kembali ke Dashboard
-          </Link>
+      {/* ── Header — heading sederhana di atas background cream ── */}
+      <div className="max-w-3xl mx-auto px-4 lg:px-8 pt-8">
+        <Link
+          href="/pengelola"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold mb-4 hover:opacity-70 transition-opacity"
+          style={{ color: "var(--blusukan-primary)" }}
+        >
+          <ArrowLeft size={16} />
+          Kembali ke Dashboard
+        </Link>
 
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div className="min-w-0">
-              <h1
-                className="text-3xl font-black tracking-tight"
-                style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-primary)" }}
-              >
-                {destination.name}
-              </h1>
-              <span
-                className="inline-block text-[11px] font-bold px-2.5 py-1 rounded-full mt-3"
-                style={DESTINASI_STATUS_STYLE[destination.status] ?? DESTINASI_STATUS_STYLE.PENDING}
-              >
-                {DESTINASI_STATUS_LABEL[destination.status] ?? destination.status}
-              </span>
-            </div>
-            <DestinasiStatusActions destinationId={destination.id} status={destination.status} />
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <h1
+              className="text-2xl font-bold tracking-tight"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            >
+              {destination.name}
+            </h1>
+            <span
+              className="inline-block text-[11px] font-bold px-2.5 py-1 rounded-full mt-3"
+              style={DESTINASI_STATUS_STYLE[destination.status] ?? DESTINASI_STATUS_STYLE.PENDING}
+            >
+              {DESTINASI_STATUS_LABEL[destination.status] ?? destination.status}
+            </span>
           </div>
+          <DestinasiStatusActions destinationId={destination.id} status={destination.status} />
         </div>
       </div>
 
-      {/* relative z-10 wajib: header di atas ber-position:relative, tanpa ini konten tertimpa */}
-      <div className="relative z-10 max-w-3xl mx-auto px-4 lg:px-8 -mt-8 pb-12">
+      <div className="max-w-3xl mx-auto px-4 lg:px-8 pt-6 pb-12">
         <InformasiDestinasiSection destination={destination} />
 
         <div className="flex gap-2 mb-6 mt-6 overflow-x-auto hide-scrollbar pb-1">
