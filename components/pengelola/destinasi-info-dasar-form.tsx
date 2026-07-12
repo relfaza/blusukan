@@ -10,9 +10,9 @@ const MapPicker = dynamic(() => import("@/components/map-picker"), {
   loading: () => (
     <div
       className="w-full h-64 sm:h-80 flex items-center justify-center rounded-2xl"
-      style={{ background: "#f3f3f3", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-low)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
-      <span className="text-sm" style={{ color: "#72796e" }}>
+      <span className="text-sm" style={{ color: "var(--blusukan-outline)" }}>
         Memuat peta…
       </span>
     </div>
@@ -290,7 +290,7 @@ export default function DestinasiInfoDasarForm({
           style={{
             border: `1px solid ${errors.name ? "var(--blusukan-error)" : "var(--blusukan-outline-variant)"}`,
             borderRadius: "8px",
-            background: "#ffffff",
+            background: "var(--blusukan-surface-container-lowest)",
             color: "var(--blusukan-on-surface)",
           }}
         />
@@ -314,7 +314,7 @@ export default function DestinasiInfoDasarForm({
           style={{
             border: `1px solid ${errors.kabupaten ? "var(--blusukan-error)" : "var(--blusukan-outline-variant)"}`,
             borderRadius: "8px",
-            background: "#ffffff",
+            background: "var(--blusukan-surface-container-lowest)",
             color: "var(--blusukan-on-surface)",
           }}
         >
@@ -345,7 +345,7 @@ export default function DestinasiInfoDasarForm({
           style={{
             border: `1px solid ${errors.kategori ? "var(--blusukan-error)" : "var(--blusukan-outline-variant)"}`,
             borderRadius: "8px",
-            background: "#ffffff",
+            background: "var(--blusukan-surface-container-lowest)",
             color: "var(--blusukan-on-surface)",
           }}
         >
@@ -417,7 +417,7 @@ export default function DestinasiInfoDasarForm({
                 style={{
                   border: "1px solid var(--blusukan-outline-variant)",
                   borderRadius: "8px",
-                  background: "#ffffff",
+                  background: "var(--blusukan-surface-container-lowest)",
                   color: "var(--blusukan-on-surface)",
                 }}
               />
@@ -440,7 +440,7 @@ export default function DestinasiInfoDasarForm({
                 style={{
                   border: "1px solid var(--blusukan-outline-variant)",
                   borderRadius: "8px",
-                  background: "#ffffff",
+                  background: "var(--blusukan-surface-container-lowest)",
                   color: "var(--blusukan-on-surface)",
                 }}
               />
@@ -499,7 +499,7 @@ export default function DestinasiInfoDasarForm({
               className="flex items-center gap-3 px-4 py-3.5 cursor-pointer"
               style={{
                 borderTop: idx === 0 ? "none" : "1px solid var(--blusukan-outline-variant)",
-                background: "#ffffff",
+                background: "var(--blusukan-surface-container-lowest)",
               }}
             >
               <input
@@ -534,7 +534,7 @@ export default function DestinasiInfoDasarForm({
                 style={{
                   borderRadius: "8px",
                   border: `1.5px solid ${selected ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
-                  background: selected ? "var(--blusukan-primary-container)" : "#ffffff",
+                  background: selected ? "var(--blusukan-primary-container)" : "var(--blusukan-surface-container-lowest)",
                   color: selected ? "var(--blusukan-primary)" : "var(--blusukan-on-surface)",
                 }}
               >
@@ -584,7 +584,7 @@ export default function DestinasiInfoDasarForm({
                   onClick={() => removePhoto(idx)}
                   aria-label={`Hapus foto ${idx + 1}`}
                   className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(0,0,0,0.6)", color: "#ffffff" }}
+                  style={{ background: "rgba(0,0,0,0.6)", color: "var(--blusukan-surface-container-lowest)" }}
                 >
                   <X size={12} />
                 </button>
@@ -609,7 +609,7 @@ export default function DestinasiInfoDasarForm({
           style={{
             border: "1px solid var(--blusukan-outline-variant)",
             borderRadius: "8px",
-            background: "#ffffff",
+            background: "var(--blusukan-surface-container-lowest)",
             color: "var(--blusukan-on-surface)",
           }}
         />

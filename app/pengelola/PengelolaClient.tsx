@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { MapPin, Inbox, Search } from "lucide-react";
+import {
+  MapPin,
+  Inbox,
+  Search,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  ArrowUpRight,
+} from "lucide-react";
 
 type DestinasiRow = {
   id: string;
@@ -29,8 +37,18 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   APPROVED: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
-  PENDING: { bg: "#fef3e7", color: "#805533" },
+  PENDING: {
+    bg: "color-mix(in srgb, var(--blusukan-secondary-container) 55%, transparent)",
+    color: "var(--blusukan-secondary)",
+  },
   REJECTED: { bg: "var(--blusukan-error-container)", color: "var(--blusukan-error)" },
+};
+
+// Aksen kiri kartu — menandai status secara cepat tanpa harus membaca badge
+const STATUS_ACCENT: Record<string, string> = {
+  APPROVED: "var(--blusukan-primary)",
+  PENDING: "var(--blusukan-secondary)",
+  REJECTED: "var(--blusukan-error)",
 };
 
 const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
@@ -64,11 +82,21 @@ function FilterChipRow({
             type="button"
             id={`filter-status-${opt.value.toLowerCase()}`}
             onClick={() => onChange(opt.value)}
-            className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-colors"
+            className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all active:scale-95"
             style={
               active
-                ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)", border: "1px solid var(--blusukan-primary)" }
-                : { background: "#ffffff", color: "var(--blusukan-on-surface)", border: "1px solid var(--blusukan-outline-variant)" }
+                ? {
+                    background: "var(--blusukan-primary)",
+                    color: "var(--blusukan-on-primary)",
+                    border: "1px solid var(--blusukan-primary)",
+                    boxShadow:
+                      "0 6px 16px -6px color-mix(in srgb, var(--blusukan-primary) 65%, transparent)",
+                  }
+                : {
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "var(--blusukan-on-surface-variant)",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                  }
             }
           >
             {opt.label}
@@ -82,13 +110,70 @@ function FilterChipRow({
 function EmptyState({ message }: { message: string }) {
   return (
     <div
-      className="rounded-2xl p-10 flex flex-col items-center text-center"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      className="rounded-3xl p-12 flex flex-col items-center text-center"
+      style={{
+        background: "var(--blusukan-surface-container-lowest)",
+        border: "1px dashed var(--blusukan-outline-variant)",
+      }}
     >
-      <Inbox size={40} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
-      <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+        style={{ background: "var(--blusukan-primary-container)" }}
+      >
+        <Inbox size={28} style={{ color: "var(--blusukan-primary)" }} />
+      </div>
+      <p
+        className="text-base font-bold"
+        style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
+      >
         {message}
       </p>
+    </div>
+  );
+}
+
+// Kartu statistik ringkas — angka diturunkan dari summary, bukan fetch baru
+function StatCard({
+  icon,
+  value,
+  label,
+  accent,
+  tint,
+}: {
+  icon: React.ReactNode;
+  value: number;
+  label: string;
+  accent: string;
+  tint: string;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-4 flex items-center gap-3.5 transition-shadow hover:shadow-sm"
+      style={{
+        background: "var(--blusukan-surface-container-lowest)",
+        border: "1px solid var(--blusukan-outline-variant)",
+      }}
+    >
+      <span
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+        style={{ background: tint, color: accent }}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p
+          className="text-2xl font-extrabold leading-none"
+          style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
+        >
+          {value}
+        </p>
+        <p
+          className="text-xs mt-1 truncate"
+          style={{ color: "var(--blusukan-on-surface-variant)" }}
+        >
+          {label}
+        </p>
+      </div>
     </div>
   );
 }
@@ -136,74 +221,91 @@ export default function PengelolaClient({ destinations }: { destinations: Destin
 
   return (
     <>
-      <p className="text-sm font-semibold mb-6" style={{ color: "var(--blusukan-on-surface)" }}>
-        {summary.approved} Disetujui · {summary.rejected} Ditolak · {summary.pending} Menunggu
-      </p>
-
-      <div className="relative w-full max-w-md mb-5">
-        <Search
-          size={18}
-          className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ color: "var(--blusukan-on-surface-variant)" }}
+      {/* ── Strip statistik — turunan dari summary yang sudah dihitung ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+        <StatCard
+          icon={<CheckCircle2 size={20} />}
+          value={summary.approved}
+          label="Disetujui"
+          accent="var(--blusukan-primary)"
+          tint="var(--blusukan-primary-container)"
         />
-        <input
-          id="search-destinasi-pengelola"
-          type="text"
-          placeholder="Cari nama destinasi…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full py-2.5 pl-11 pr-4 rounded-full text-sm transition-all focus:outline-none"
-          style={{
-            background: "#ffffff",
-            border: "1px solid var(--blusukan-outline-variant)",
-            color: "var(--blusukan-on-surface)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}
+        <StatCard
+          icon={<Clock size={20} />}
+          value={summary.pending}
+          label="Menunggu Persetujuan"
+          accent="var(--blusukan-secondary)"
+          tint="color-mix(in srgb, var(--blusukan-secondary-container) 55%, transparent)"
+        />
+        <StatCard
+          icon={<XCircle size={20} />}
+          value={summary.rejected}
+          label="Ditolak"
+          accent="var(--blusukan-error)"
+          tint="var(--blusukan-error-container)"
         />
       </div>
 
-      <div className="space-y-4 mb-6">
-        <section>
-          <h2
-            className="text-xs font-semibold uppercase tracking-wide mb-2"
-            style={{ color: "var(--blusukan-on-surface-variant)" }}
-          >
-            Status
-          </h2>
-          <FilterChipRow options={STATUS_FILTER_OPTIONS} value={status} onChange={setStatus} />
-        </section>
+      {/* ── Toolbar: pencarian + urutkan ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-5">
+        <div className="relative w-full lg:max-w-md">
+          <Search
+            size={18}
+            className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: "var(--blusukan-outline)" }}
+          />
+          <input
+            id="search-destinasi-pengelola"
+            type="text"
+            placeholder="Cari nama destinasi…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full py-3 pl-11 pr-4 rounded-full text-sm transition-all focus:outline-none"
+            style={{
+              background: "var(--blusukan-surface-container-lowest)",
+              border: "1px solid var(--blusukan-outline-variant)",
+              color: "var(--blusukan-on-surface)",
+              boxShadow: "0 4px 14px -6px rgba(0,0,0,0.12)",
+            }}
+          />
+        </div>
 
-        <section>
-          <h2
-            className="text-xs font-semibold uppercase tracking-wide mb-2"
-            style={{ color: "var(--blusukan-on-surface-variant)" }}
-          >
-            Urutkan
-          </h2>
-          <div
-            className="inline-flex gap-1 rounded-lg p-1"
-            style={{ background: "var(--blusukan-surface)", border: "1px solid var(--blusukan-outline-variant)" }}
-          >
-            {SORT_OPTIONS.map((opt) => {
-              const active = opt.value === sortBy;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  id={`sort-${opt.value}`}
-                  onClick={() => setSortBy(opt.value)}
-                  className="text-xs font-semibold px-3.5 py-1.5 rounded-md transition-colors"
-                  style={{
-                    background: active ? "var(--blusukan-primary)" : "transparent",
-                    color: active ? "#ffffff" : "var(--blusukan-on-surface-variant)",
-                  }}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <div
+          className="inline-flex gap-1 rounded-full p-1 self-start lg:ml-auto shrink-0"
+          style={{
+            background: "var(--blusukan-surface-container)",
+            border: "1px solid var(--blusukan-outline-variant)",
+          }}
+        >
+          {SORT_OPTIONS.map((opt) => {
+            const active = opt.value === sortBy;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                id={`sort-${opt.value}`}
+                onClick={() => setSortBy(opt.value)}
+                className="text-xs font-semibold px-4 py-2 rounded-full transition-all"
+                style={{
+                  background: active
+                    ? "var(--blusukan-surface-container-lowest)"
+                    : "transparent",
+                  color: active
+                    ? "var(--blusukan-primary)"
+                    : "var(--blusukan-on-surface-variant)",
+                  boxShadow: active ? "0 2px 8px -2px rgba(0,0,0,0.14)" : "none",
+                }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Filter status ── */}
+      <div className="mb-8">
+        <FilterChipRow options={STATUS_FILTER_OPTIONS} value={status} onChange={setStatus} />
       </div>
 
       {filtered.length === 0 ? (
@@ -212,18 +314,28 @@ export default function PengelolaClient({ destinations }: { destinations: Destin
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((d) => {
             const statusStyle = STATUS_STYLE[d.status] ?? STATUS_STYLE.PENDING;
+            const accent = STATUS_ACCENT[d.status] ?? STATUS_ACCENT.PENDING;
 
             return (
               <Link
                 key={d.id}
                 href={`/pengelola/destinasi/${d.id}`}
                 id={`card-destinasi-${d.id}`}
-                className="relative rounded-2xl p-5 transition-shadow hover:shadow-md"
-                style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+                className="group relative flex flex-col h-full overflow-hidden rounded-3xl p-5 pl-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                style={{
+                  background: "var(--blusukan-surface-container-lowest)",
+                  border: "1px solid var(--blusukan-outline-variant)",
+                }}
               >
+                {/* Aksen status di tepi kiri kartu */}
+                <span
+                  className="absolute left-0 top-0 bottom-0 w-1.5"
+                  style={{ background: accent }}
+                />
+
                 {d.pendingCount > 0 && (
                   <span
-                    className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1 rounded-full flex items-center justify-center text-xs font-bold"
+                    className="absolute top-4 right-4 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-xs font-bold shadow-sm"
                     style={{ background: "var(--blusukan-error)", color: "#ffffff" }}
                   >
                     {d.pendingCount}
@@ -231,30 +343,46 @@ export default function PengelolaClient({ destinations }: { destinations: Destin
                 )}
 
                 <div className="flex items-center gap-1.5 mb-2">
-                  <MapPin size={14} style={{ color: "var(--blusukan-on-surface-variant)" }} />
-                  <span className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+                  <MapPin size={14} style={{ color: "var(--blusukan-outline)" }} />
+                  <span
+                    className="text-[11px] font-bold uppercase tracking-widest"
+                    style={{ color: "var(--blusukan-outline)" }}
+                  >
                     {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}
                   </span>
                 </div>
 
                 <p
-                  className="text-base font-bold mb-3"
-                  style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+                  className="text-lg font-extrabold leading-tight mb-4 pr-6"
+                  style={{
+                    fontFamily: "Montserrat, sans-serif",
+                    color: "var(--blusukan-on-surface)",
+                  }}
                 >
                   {d.name}
                 </p>
 
-                <div className="flex items-center justify-between">
+                <div className="mt-auto flex items-center justify-between gap-2">
                   <span
-                    className="text-xs font-bold px-2.5 py-1 rounded-full"
+                    className="text-[11px] font-bold px-2.5 py-1 rounded-full"
                     style={{ background: statusStyle.bg, color: statusStyle.color }}
                   >
                     {STATUS_LABEL[d.status] ?? d.status}
                   </span>
-                  {d.pendingCount > 0 && (
-                    <span className="text-xs font-semibold" style={{ color: "var(--blusukan-error)" }}>
+
+                  {d.pendingCount > 0 ? (
+                    <span
+                      className="text-[11px] font-semibold"
+                      style={{ color: "var(--blusukan-error)" }}
+                    >
                       {d.pendingCount} perlu dikonfirmasi
                     </span>
+                  ) : (
+                    <ArrowUpRight
+                      size={18}
+                      className="opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0"
+                      style={{ color: "var(--blusukan-primary)" }}
+                    />
                   )}
                 </div>
               </Link>

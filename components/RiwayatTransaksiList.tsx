@@ -50,10 +50,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
-  DIKONFIRMASI: { bg: "#e3efe0", color: "#1d4ed8" },
-  SELESAI: { bg: "#e3efe0", color: "#1f4d2c" },
-  DIBATALKAN: { bg: "#eeeeee", color: "#4b4f45" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
+  DIKONFIRMASI: { bg: "var(--blusukan-primary-container)", color: "#1d4ed8" },
+  SELESAI: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
+  DIBATALKAN: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 const TYPE_BADGE_LABEL: Record<string, string> = {
@@ -70,10 +70,10 @@ const BOOKING_STATUS_LABEL: Record<string, string> = {
 };
 
 const BOOKING_STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
   CONFIRMED: { bg: "#e0ecfd", color: "#1d4ed8" },
-  COMPLETED: { bg: "#e3efe0", color: "#1f4d2c" },
-  EXPIRED: { bg: "#eeeeee", color: "#4b4f45" },
+  COMPLETED: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
+  EXPIRED: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 const SERVICE_TYPE_LABEL: Record<string, string> = {
@@ -101,7 +101,7 @@ function BookingCard({ b }: { b: RiwayatBookingItem }) {
       href={`/booking/${b.id}`}
       id={`riwayat-item-${b.id}`}
       className="block rounded-2xl p-5 transition-opacity hover:opacity-90"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
@@ -157,7 +157,7 @@ export default function RiwayatTransaksiList({ transaksis }: { transaksis: Riway
     return (
       <div
         className="rounded-2xl p-10 flex flex-col items-center text-center"
-        style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+        style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
       >
         <ReceiptText size={40} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
         <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -186,7 +186,7 @@ export default function RiwayatTransaksiList({ transaksis }: { transaksis: Riway
             href={`/transaksi/${t.id}`}
             id={`riwayat-item-${t.id}`}
             className="block rounded-2xl p-5 transition-opacity hover:opacity-90"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>

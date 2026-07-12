@@ -170,7 +170,7 @@ export default function LaporanFormClient() {
       >
         <div
           className="w-full max-w-sm rounded-2xl p-8 flex flex-col items-center text-center"
-          style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)", borderRadius: "16px" }}
+          style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)", borderRadius: "16px" }}
         >
           <CheckCircle2 size={48} style={{ color: "var(--blusukan-primary)" }} className="mb-4" />
           <h1
@@ -218,8 +218,8 @@ export default function LaporanFormClient() {
           style={{
             borderRadius: "16px",
             background:
-              geoStatus === "granted" ? "var(--blusukan-primary-container)" : "#fef3e7",
-            color: geoStatus === "granted" ? "var(--blusukan-primary)" : "#805533",
+              geoStatus === "granted" ? "var(--blusukan-primary-container)" : "var(--blusukan-secondary-container)",
+            color: geoStatus === "granted" ? "var(--blusukan-primary)" : "var(--blusukan-secondary)",
           }}
         >
           {geoStatus === "loading" && (
@@ -278,7 +278,7 @@ export default function LaporanFormClient() {
               style={{
                 border: `1px solid ${errors.destinationId ? "var(--blusukan-error)" : "var(--blusukan-outline-variant)"}`,
                 borderRadius: "8px",
-                background: "#ffffff",
+                background: "var(--blusukan-surface-container-lowest)",
                 color: "var(--blusukan-on-surface)",
               }}
               disabled={destinations === null}
@@ -344,7 +344,7 @@ export default function LaporanFormClient() {
                   className="flex items-center gap-3 px-4 py-3.5 cursor-pointer"
                   style={{
                     borderTop: idx === 0 ? "none" : "1px solid var(--blusukan-outline-variant)",
-                    background: "#ffffff",
+                    background: "var(--blusukan-surface-container-lowest)",
                   }}
                 >
                   <input
@@ -400,7 +400,7 @@ export default function LaporanFormClient() {
               style={{
                 border: "1px solid var(--blusukan-outline-variant)",
                 borderRadius: "8px",
-                background: "#ffffff",
+                background: "var(--blusukan-surface-container-lowest)",
                 color: "var(--blusukan-on-surface)",
               }}
             />
@@ -456,7 +456,7 @@ function PillGroup({
               style={{
                 borderRadius: "8px",
                 border: `1.5px solid ${selected ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
-                background: selected ? "var(--blusukan-primary-container)" : "#ffffff",
+                background: selected ? "var(--blusukan-primary-container)" : "var(--blusukan-surface-container-lowest)",
                 color: selected ? "var(--blusukan-primary)" : "var(--blusukan-on-surface)",
               }}
             >

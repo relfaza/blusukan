@@ -155,7 +155,7 @@ export default function NotifikasiPageClient({
                   onClick={() => selectTab(t.key)}
                   className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                   style={{
-                    background: active ? "var(--blusukan-primary)" : "#ffffff",
+                    background: active ? "var(--blusukan-primary)" : "var(--blusukan-surface-container-lowest)",
                     color: active ? "var(--blusukan-on-primary)" : "var(--blusukan-on-surface-variant)",
                     border: `1px solid ${active ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
                   }}
@@ -185,7 +185,7 @@ export default function NotifikasiPageClient({
                       onClick={() => setKategoriFilter(c.key)}
                       className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
                       style={{
-                        background: active ? "var(--blusukan-primary)" : "#ffffff",
+                        background: active ? "var(--blusukan-primary)" : "var(--blusukan-surface-container-lowest)",
                         color: active ? "var(--blusukan-on-primary)" : "var(--blusukan-on-surface-variant)",
                         border: `1px solid ${active ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
                       }}
@@ -199,7 +199,7 @@ export default function NotifikasiPageClient({
               {filteredNotifications && filteredNotifications.length === 0 ? (
                 <div
                   className="rounded-2xl p-10 flex flex-col items-center text-center"
-                  style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+                  style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
                 >
                   <Bell size={40} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
                   <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -216,7 +216,7 @@ export default function NotifikasiPageClient({
                       onClick={() => handleNotifClick(n)}
                       className="w-full text-left rounded-2xl p-4 transition-colors hover:opacity-90"
                       style={{
-                        background: n.isRead ? "#ffffff" : "var(--blusukan-primary-container)",
+                        background: n.isRead ? "var(--blusukan-surface-container-lowest)" : "var(--blusukan-primary-container)",
                         border: "1px solid var(--blusukan-outline-variant)",
                       }}
                     >
@@ -261,7 +261,7 @@ export default function NotifikasiPageClient({
                     onClick={() => setRiwayatFilter(c.key)}
                     className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
                     style={{
-                      background: active ? "var(--blusukan-primary)" : "#ffffff",
+                      background: active ? "var(--blusukan-primary)" : "var(--blusukan-surface-container-lowest)",
                       color: active ? "var(--blusukan-on-primary)" : "var(--blusukan-on-surface-variant)",
                       border: `1px solid ${active ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
                     }}

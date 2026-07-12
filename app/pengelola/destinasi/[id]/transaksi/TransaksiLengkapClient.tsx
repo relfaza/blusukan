@@ -28,10 +28,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
   DIKONFIRMASI: { bg: "var(--blusukan-primary-container)", color: "#1d4ed8" },
   SELESAI: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
-  DIBATALKAN: { bg: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
+  DIBATALKAN: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
@@ -89,7 +89,7 @@ function FilterChipRow({
             style={
               active
                 ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)", border: "1px solid var(--blusukan-primary)" }
-                : { background: "#ffffff", color: "var(--blusukan-on-surface)", border: "1px solid var(--blusukan-outline-variant)" }
+                : { background: "var(--blusukan-surface-container-lowest)", color: "var(--blusukan-on-surface)", border: "1px solid var(--blusukan-outline-variant)" }
             }
           >
             {opt.label}
@@ -195,7 +195,7 @@ export default function TransaksiLengkapClient({ destinationId, destinationName,
                   value={dari}
                   onChange={(e) => setDari(e.target.value)}
                   className="px-3 py-2 text-sm rounded-lg"
-                  style={{ border: "1px solid var(--blusukan-outline-variant)", background: "#ffffff", color: "var(--blusukan-on-surface)" }}
+                  style={{ border: "1px solid var(--blusukan-outline-variant)", background: "var(--blusukan-surface-container-lowest)", color: "var(--blusukan-on-surface)" }}
                 />
               </div>
               <span className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -211,7 +211,7 @@ export default function TransaksiLengkapClient({ destinationId, destinationName,
                   value={sampai}
                   onChange={(e) => setSampai(e.target.value)}
                   className="px-3 py-2 text-sm rounded-lg"
-                  style={{ border: "1px solid var(--blusukan-outline-variant)", background: "#ffffff", color: "var(--blusukan-on-surface)" }}
+                  style={{ border: "1px solid var(--blusukan-outline-variant)", background: "var(--blusukan-surface-container-lowest)", color: "var(--blusukan-on-surface)" }}
                 />
               </div>
               {(dari || sampai) && (
@@ -235,7 +235,7 @@ export default function TransaksiLengkapClient({ destinationId, destinationName,
         {initialTransaksis.length === 0 ? (
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <Ticket size={36} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
             <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -245,7 +245,7 @@ export default function TransaksiLengkapClient({ destinationId, destinationName,
         ) : filtered.length === 0 ? (
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <Inbox size={36} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
             <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -261,7 +261,7 @@ export default function TransaksiLengkapClient({ destinationId, destinationName,
               <div
                 key={t.id}
                 className="rounded-2xl p-5"
-                style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+                style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>

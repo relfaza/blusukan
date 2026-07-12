@@ -68,11 +68,11 @@ type WarungRow = {
 };
 
 const KATEGORI_UMKM_STYLE: Record<string, { bg: string; color: string }> = {
-  KULINER: { bg: "#fef3e7", color: "#805533" },
-  KERAJINAN: { bg: "rgba(45,90,39,0.1)", color: "#154212" },
+  KULINER: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
+  KERAJINAN: { bg: "rgba(45,90,39,0.1)", color: "var(--blusukan-primary)" },
   FASHION: { bg: "#f3e8fd", color: "#6b21a8" },
   JASA: { bg: "#e3f2fd", color: "#1565c0" },
-  LAINNYA: { bg: "#f0f0f0", color: "#72796e" },
+  LAINNYA: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-outline)" },
 };
 
 function KategoriUmkmBadge({ kategori }: { kategori: string }) {
@@ -95,10 +95,10 @@ const DESTINASI_STATUS_LABEL: Record<string, string> = {
 };
 
 const DESTINASI_STATUS_STYLE: Record<string, { background: string; color: string }> = {
-  PENDING: { background: "#fef3e7", color: "#805533" },
+  PENDING: { background: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
   APPROVED: { background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
   REJECTED: { background: "var(--blusukan-error-container)", color: "var(--blusukan-error)" },
-  NONAKTIF: { background: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
+  NONAKTIF: { background: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 const KABUPATEN_LABEL: Record<string, string> = {
@@ -161,8 +161,12 @@ function formatTanggalLengkap(iso: string): string {
 function SectionCard({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="rounded-2xl p-6"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      className="rounded-3xl p-6"
+      style={{
+        background: "var(--blusukan-surface-container-lowest)",
+        border: "1px solid var(--blusukan-outline-variant)",
+        boxShadow: "0 2px 10px -4px rgba(0,0,0,0.08)",
+      }}
     >
       {children}
     </div>
@@ -172,9 +176,13 @@ function SectionCard({ children }: { children: React.ReactNode }) {
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2
-      className="text-base font-bold mb-4"
+      className="flex items-center gap-2.5 text-base font-extrabold mb-4"
       style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
     >
+      <span
+        className="w-1 h-5 rounded-full shrink-0"
+        style={{ background: "var(--blusukan-primary)" }}
+      />
       {children}
     </h2>
   );
@@ -182,11 +190,17 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+    <div
+      className="p-3 rounded-2xl"
+      style={{ background: "var(--blusukan-surface-low)" }}
+    >
+      <p
+        className="text-[11px] font-semibold uppercase tracking-wider"
+        style={{ color: "var(--blusukan-outline)" }}
+      >
         {label}
       </p>
-      <p className="text-sm font-semibold mt-0.5" style={{ color: "var(--blusukan-on-surface)" }}>
+      <p className="text-sm font-bold mt-0.5" style={{ color: "var(--blusukan-on-surface)" }}>
         {value}
       </p>
     </div>
@@ -308,10 +322,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDING: { bg: "#fef3e7", color: "#805533" },
+  PENDING: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
   DIKONFIRMASI: { bg: "var(--blusukan-primary-container)", color: "#1d4ed8" },
   SELESAI: { bg: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" },
-  DIBATALKAN: { bg: "#eeeeee", color: "var(--blusukan-on-surface-variant)" },
+  DIBATALKAN: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-on-surface-variant)" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -366,7 +380,7 @@ function TransaksiMasukSection({
     return (
       <div
         className="rounded-2xl p-10 flex flex-col items-center text-center"
-        style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+        style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
       >
         <Ticket size={36} style={{ color: "var(--blusukan-outline)" }} className="mb-3" />
         <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -389,7 +403,7 @@ function TransaksiMasukSection({
           <div
             key={t.id}
             className="rounded-2xl p-5"
-            style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+            style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
@@ -430,7 +444,7 @@ function TransaksiMasukSection({
                       disabled={busy}
                       onClick={() => updateStatus(t.id, "DIBATALKAN")}
                       className="text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
-                      style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "#ffffff" }}
+                      style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "var(--blusukan-surface-container-lowest)" }}
                     >
                       Tolak
                     </button>
@@ -462,7 +476,7 @@ function TransaksiMasukSection({
           href={`/pengelola/destinasi/${destinationId}/transaksi`}
           id="btn-lihat-semua-transaksi"
           className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
-          style={{ background: "#ffffff", color: "var(--blusukan-primary)", border: "1px solid var(--blusukan-primary)" }}
+          style={{ background: "var(--blusukan-surface-container-lowest)", color: "var(--blusukan-primary)", border: "1px solid var(--blusukan-primary)" }}
         >
           Lihat Semua Transaksi Masuk
           <ArrowRight size={14} />
@@ -477,7 +491,7 @@ function KelolaTransportSection({ destinationId, localServiceCount }: { destinat
   return (
     <div
       className="rounded-2xl p-6"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
       <div className="mb-5">
         <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
@@ -518,7 +532,7 @@ function KelolaFasilitasSection({
   return (
     <div
       className="rounded-2xl p-6"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
       <div className="grid grid-cols-2 gap-4 mb-5">
         <div>
@@ -581,7 +595,7 @@ function MenuItemForm({
   const inputStyle: React.CSSProperties = {
     border: "1px solid var(--blusukan-outline-variant)",
     borderRadius: "8px",
-    background: "#ffffff",
+    background: "var(--blusukan-surface-container-lowest)",
     color: "var(--blusukan-on-surface)",
   };
 
@@ -664,7 +678,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
             id="btn-tutup-modal-warung"
             onClick={onClose}
             aria-label="Tutup"
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
             style={{ color: "var(--blusukan-on-surface-variant)" }}
           >
             <X size={16} />
@@ -684,9 +698,9 @@ function WarungSummaryCard({ warung, onOpen }: { warung: WarungRow; onOpen: () =
       id={`card-warung-${warung.id}`}
       onClick={onOpen}
       className="w-full text-left rounded-2xl p-5 flex items-center gap-3 transition-shadow hover:shadow-md"
-      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+      style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
     >
-      <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "#e0e0e0" }}>
+      <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "var(--blusukan-surface-container-highest)" }}>
         {warung.photoUrls[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={warung.photoUrls[0]} alt={warung.name} className="w-full h-full object-cover" />
@@ -769,7 +783,7 @@ function TambahProdukBatchForm({
   const inputStyle: React.CSSProperties = {
     border: "1px solid var(--blusukan-outline-variant)",
     borderRadius: "8px",
-    background: "#ffffff",
+    background: "var(--blusukan-surface-container-lowest)",
     color: "var(--blusukan-on-surface)",
   };
 
@@ -802,7 +816,7 @@ function TambahProdukBatchForm({
                   type="button"
                   onClick={() => removeRow(r.key)}
                   aria-label={`Hapus baris produk ${idx + 1}`}
-                  className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8]"
+                  className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)]"
                   style={{ color: "var(--blusukan-error)" }}
                 >
                   <X size={14} />
@@ -890,7 +904,7 @@ function EditProdukBatchForm({
   const inputStyle: React.CSSProperties = {
     border: "1px solid var(--blusukan-outline-variant)",
     borderRadius: "8px",
-    background: "#ffffff",
+    background: "var(--blusukan-surface-container-lowest)",
     color: "var(--blusukan-on-surface)",
   };
 
@@ -1005,7 +1019,7 @@ function WarungDetailModal({
     <Modal title={warung.name} onClose={onClose}>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "#e0e0e0" }}>
+          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "var(--blusukan-surface-container-highest)" }}>
             {warung.photoUrls[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={warung.photoUrls[0]} alt={warung.name} className="w-full h-full object-cover" />
@@ -1047,7 +1061,7 @@ function WarungDetailModal({
             id={`btn-edit-warung-${warung.id}`}
             onClick={() => setIsEditingWarung(true)}
             aria-label={`Edit ${warung.name}`}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
             style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-on-surface-variant)" }}
           >
             <Pencil size={14} />
@@ -1058,7 +1072,7 @@ function WarungDetailModal({
             onClick={onDeleteWarung}
             disabled={submitting}
             aria-label={`Hapus ${warung.name}`}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)] disabled:opacity-50"
             style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
           >
             <Trash2 size={14} />
@@ -1125,7 +1139,7 @@ function WarungDetailModal({
                       id={`btn-edit-menu-${m.id}`}
                       onClick={() => setEditingMenuId(m.id)}
                       aria-label={`Edit ${m.name}`}
-                      className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
                       style={{ color: "var(--blusukan-on-surface-variant)" }}
                     >
                       <Pencil size={12} />
@@ -1136,7 +1150,7 @@ function WarungDetailModal({
                       onClick={() => onDeleteMenuItem(m.id)}
                       disabled={submitting}
                       aria-label={`Hapus ${m.name}`}
-                      className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-error-container)] disabled:opacity-50"
                       style={{ color: "var(--blusukan-error)" }}
                     >
                       <Trash2 size={12} />
@@ -1422,7 +1436,7 @@ function KelolaUmkmSection({
       {warungs.length === 0 && !showAddForm ? (
         <div
           className="rounded-2xl p-10 flex flex-col items-center text-center"
-          style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+          style={{ background: "var(--blusukan-surface-container-lowest)", border: "1px solid var(--blusukan-outline-variant)" }}
         >
           <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
             Belum ada UMKM yang ditambahkan.
@@ -1522,7 +1536,7 @@ function DestinasiStatusActions({ destinationId, status }: { destinationId: stri
           href={`/pengelola/destinasi/${destinationId}/edit`}
           id="btn-edit-destinasi"
           className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
-          style={{ background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }}
+          style={{ background: "var(--blusukan-surface-container-lowest)", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }}
         >
           <Pencil size={14} />
           Edit Destinasi
@@ -1537,7 +1551,7 @@ function DestinasiStatusActions({ destinationId, status }: { destinationId: stri
             style={
               isNonaktif
                 ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
-                : { border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "#ffffff" }
+                : { border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)", background: "var(--blusukan-surface-container-lowest)" }
             }
           >
             {isNonaktif ? <Power size={14} /> : <PowerOff size={14} />}
@@ -1576,46 +1590,70 @@ export default function PengelolaDestinasiClient({
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
-      <div className="max-w-3xl mx-auto px-4 lg:px-8 py-10">
-        <Link
-          href="/pengelola"
-          className="flex items-center gap-1.5 text-sm font-semibold mb-4 hover:opacity-70 transition-opacity"
-          style={{ color: "var(--blusukan-primary)" }}
-        >
-          <ArrowLeft size={16} />
-          Kembali ke Dashboard
-        </Link>
+      {/* ── Header — panel gradient brand ── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--blusukan-primary) 0%, color-mix(in srgb, var(--blusukan-primary) 62%, var(--blusukan-tertiary) 38%) 100%)",
+        }}
+      >
+        <div
+          className="absolute -top-20 -right-10 w-64 h-64 rounded-full blur-3xl opacity-25 pointer-events-none"
+          style={{ background: "var(--blusukan-primary-fixed-dim)" }}
+        />
+        <div className="relative max-w-3xl mx-auto px-4 lg:px-8 pt-8 pb-16">
+          <Link
+            href="/pengelola"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold mb-6 hover:opacity-70 transition-opacity"
+            style={{ color: "var(--blusukan-on-primary)" }}
+          >
+            <ArrowLeft size={16} />
+            Kembali ke Dashboard
+          </Link>
 
-        <div className="flex items-start justify-between gap-3 mb-6 flex-wrap">
-          <div>
-            <h1
-              className="text-2xl font-bold"
-              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-            >
-              {destination.name}
-            </h1>
-            <span
-              className="inline-block text-xs font-bold px-2.5 py-1 rounded-full mt-2"
-              style={DESTINASI_STATUS_STYLE[destination.status] ?? DESTINASI_STATUS_STYLE.PENDING}
-            >
-              {DESTINASI_STATUS_LABEL[destination.status] ?? destination.status}
-            </span>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="min-w-0">
+              <h1
+                className="text-3xl font-black tracking-tight"
+                style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-primary)" }}
+              >
+                {destination.name}
+              </h1>
+              <span
+                className="inline-block text-[11px] font-bold px-2.5 py-1 rounded-full mt-3"
+                style={DESTINASI_STATUS_STYLE[destination.status] ?? DESTINASI_STATUS_STYLE.PENDING}
+              >
+                {DESTINASI_STATUS_LABEL[destination.status] ?? destination.status}
+              </span>
+            </div>
+            <DestinasiStatusActions destinationId={destination.id} status={destination.status} />
           </div>
-          <DestinasiStatusActions destinationId={destination.id} status={destination.status} />
         </div>
+      </div>
 
+      {/* relative z-10 wajib: header di atas ber-position:relative, tanpa ini konten tertimpa */}
+      <div className="relative z-10 max-w-3xl mx-auto px-4 lg:px-8 -mt-8 pb-12">
         <InformasiDestinasiSection destination={destination} />
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 mt-6 overflow-x-auto hide-scrollbar pb-1">
           <button
             type="button"
             id="tab-transaksi"
             onClick={() => setActiveTab("transaksi")}
-            className="text-sm font-bold px-4 py-2 rounded-lg transition-colors"
+            className="text-sm font-bold px-4 py-2.5 rounded-full transition-all active:scale-95"
             style={
               activeTab === "transaksi"
-                ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
-                : { background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }
+                ? {
+                    background: "var(--blusukan-primary)",
+                    color: "var(--blusukan-on-primary)",
+                    boxShadow: "0 6px 16px -6px color-mix(in srgb, var(--blusukan-primary) 65%, transparent)",
+                  }
+                : {
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "var(--blusukan-on-surface-variant)",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                  }
             }
           >
             Transaksi Masuk
@@ -1624,11 +1662,19 @@ export default function PengelolaDestinasiClient({
             type="button"
             id="tab-fasilitas"
             onClick={() => setActiveTab("fasilitas")}
-            className="text-sm font-bold px-4 py-2 rounded-lg transition-colors"
+            className="text-sm font-bold px-4 py-2.5 rounded-full transition-all active:scale-95"
             style={
               activeTab === "fasilitas"
-                ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
-                : { background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }
+                ? {
+                    background: "var(--blusukan-primary)",
+                    color: "var(--blusukan-on-primary)",
+                    boxShadow: "0 6px 16px -6px color-mix(in srgb, var(--blusukan-primary) 65%, transparent)",
+                  }
+                : {
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "var(--blusukan-on-surface-variant)",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                  }
             }
           >
             Kelola Fasilitas
@@ -1637,11 +1683,19 @@ export default function PengelolaDestinasiClient({
             type="button"
             id="tab-umkm"
             onClick={() => setActiveTab("umkm")}
-            className="text-sm font-bold px-4 py-2 rounded-lg transition-colors"
+            className="text-sm font-bold px-4 py-2.5 rounded-full transition-all active:scale-95"
             style={
               activeTab === "umkm"
-                ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
-                : { background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }
+                ? {
+                    background: "var(--blusukan-primary)",
+                    color: "var(--blusukan-on-primary)",
+                    boxShadow: "0 6px 16px -6px color-mix(in srgb, var(--blusukan-primary) 65%, transparent)",
+                  }
+                : {
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "var(--blusukan-on-surface-variant)",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                  }
             }
           >
             Kelola UMKM
@@ -1650,11 +1704,19 @@ export default function PengelolaDestinasiClient({
             type="button"
             id="tab-booking"
             onClick={() => setActiveTab("booking")}
-            className="text-sm font-bold px-4 py-2 rounded-lg transition-colors"
+            className="text-sm font-bold px-4 py-2.5 rounded-full transition-all active:scale-95"
             style={
               activeTab === "booking"
-                ? { background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }
-                : { background: "#ffffff", color: "var(--blusukan-on-surface-variant)", border: "1px solid var(--blusukan-outline-variant)" }
+                ? {
+                    background: "var(--blusukan-primary)",
+                    color: "var(--blusukan-on-primary)",
+                    boxShadow: "0 6px 16px -6px color-mix(in srgb, var(--blusukan-primary) 65%, transparent)",
+                  }
+                : {
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "var(--blusukan-on-surface-variant)",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                  }
             }
           >
             Booking Transport

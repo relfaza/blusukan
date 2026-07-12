@@ -47,8 +47,8 @@ import { formatJamOperasionalLabel, isJamBukaValid, type JamOperasionalDestinati
 const DestinationMap = dynamic(() => import("@/components/DestinationMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center" style={{ background: "#f0f0f0" }}>
-      <span className="text-sm" style={{ color: "#72796e" }}>Memuat peta…</span>
+    <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--blusukan-surface-container)" }}>
+      <span className="text-sm" style={{ color: "var(--blusukan-outline)" }}>Memuat peta…</span>
     </div>
   ),
 });
@@ -104,11 +104,11 @@ const KATEGORI_UMKM_LABEL: Record<string, string> = {
 };
 
 const KATEGORI_UMKM_STYLE: Record<string, { bg: string; color: string }> = {
-  KULINER: { bg: "#fef3e7", color: "#805533" },
-  KERAJINAN: { bg: "rgba(45,90,39,0.1)", color: "#154212" },
+  KULINER: { bg: "var(--blusukan-secondary-container)", color: "var(--blusukan-secondary)" },
+  KERAJINAN: { bg: "rgba(45,90,39,0.1)", color: "var(--blusukan-primary)" },
   FASHION: { bg: "#f3e8fd", color: "#6b21a8" },
   JASA: { bg: "#e3f2fd", color: "#1565c0" },
-  LAINNYA: { bg: "#f0f0f0", color: "#72796e" },
+  LAINNYA: { bg: "var(--blusukan-surface-container)", color: "var(--blusukan-outline)" },
 };
 
 function KategoriUmkmBadge({ kategori }: { kategori: string }) {
@@ -201,6 +201,14 @@ const KATEGORI_LABEL: Record<string, string> = {
   TEBING: "Tebing",
 };
 
+// Label vibe tag — samakan dengan beranda supaya tidak menampilkan enum mentah (SPOT_FOTO)
+const VIBE_LABEL: Record<string, string> = {
+  SUNSET: "Sunset Spot",
+  SUNRISE: "Sunrise Spot",
+  SPOT_FOTO: "Spot Foto",
+  QUIET_PLACE: "Quiet Place",
+};
+
 const ROAD_LABEL: Record<string, string> = {
   MUDAH: "Mudah",
   SEDANG: "Sedang",
@@ -225,11 +233,11 @@ function getRouteBadge(routeStatus: string) {
   switch (routeStatus) {
     case "MUDAH":
     case "SEDANG":
-      return { label: "Kondisi Aman", bg: "#2d5a27", textColor: "#ffffff", icon: <CheckCircle size={14} /> };
+      return { label: "Kondisi Aman", bg: "var(--blusukan-primary)", textColor: "#ffffff", icon: <CheckCircle size={14} /> };
     case "SULIT":
-      return { label: "Berlumpur / Sulit", bg: "#44372a", textColor: "#ffffff", icon: <Droplets size={14} /> };
+      return { label: "Berlumpur / Sulit", bg: "var(--blusukan-tertiary)", textColor: "#ffffff", icon: <Droplets size={14} /> };
     case "RUSAK":
-      return { label: "Perlu Perhatian", bg: "#ba1a1a", textColor: "#ffffff", icon: <AlertTriangle size={14} /> };
+      return { label: "Perlu Perhatian", bg: "var(--blusukan-error)", textColor: "#ffffff", icon: <AlertTriangle size={14} /> };
     default:
       return null;
   }
@@ -263,7 +271,7 @@ function getInitials(name: string): string {
 
 // ── Sub-components ──────────────────────────────────────────────
 
-/** Card wrapper dengan shadow dan rounded-2xl */
+/** Card wrapper dengan shadow dan sudut membulat */
 function SectionCard({
   children,
   className = "",
@@ -273,11 +281,11 @@ function SectionCard({
 }) {
   return (
     <div
-      className={`rounded-2xl p-6 ${className}`}
+      className={`rounded-3xl p-6 ${className}`}
       style={{
-        background: "#ffffff",
-        border: "1px solid #e8e8e8",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        background: "var(--blusukan-surface-container-lowest)",
+        border: "1px solid var(--blusukan-outline-variant)",
+        boxShadow: "0 2px 10px -4px rgba(0,0,0,0.08)",
       }}
     >
       {children}
@@ -285,13 +293,17 @@ function SectionCard({
   );
 }
 
-/** Judul section dengan garis aksen */
+/** Judul section dengan garis aksen di kiri */
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2
-      className="text-base font-bold mb-5"
-      style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+      className="flex items-center gap-2.5 text-base font-extrabold mb-5"
+      style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
     >
+      <span
+        className="w-1 h-5 rounded-full shrink-0"
+        style={{ background: "var(--blusukan-primary)" }}
+      />
       {children}
     </h2>
   );
@@ -301,8 +313,8 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function InfoChip({
   icon,
   label,
-  color = "#42493e",
-  bg = "#f0f0f0",
+  color = "var(--blusukan-on-surface-variant)",
+  bg = "var(--blusukan-surface-container)",
 }: {
   icon?: React.ReactNode;
   label: string;
@@ -311,7 +323,7 @@ function InfoChip({
 }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
       style={{ background: bg, color }}
     >
       {icon}
@@ -325,8 +337,8 @@ function InfoItem({
   icon,
   label,
   value,
-  iconBg = "#e8f4e8",
-  iconColor = "#2d5a27",
+  iconBg = "var(--blusukan-primary-container)",
+  iconColor = "var(--blusukan-primary)",
 }: {
   icon: React.ReactNode;
   label: string;
@@ -335,18 +347,27 @@ function InfoItem({
   iconColor?: string;
 }) {
   return (
-    <div className="flex items-center gap-3.5">
+    <div
+      className="flex items-center gap-3.5 p-3 rounded-2xl transition-colors"
+      style={{ background: "var(--blusukan-surface-low)" }}
+    >
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: iconBg, color: iconColor }}
       >
         {icon}
       </div>
-      <div>
-        <p className="text-xs" style={{ color: "#72796e", fontFamily: "Inter, sans-serif" }}>
+      <div className="min-w-0">
+        <p
+          className="text-[11px] font-semibold uppercase tracking-wider"
+          style={{ color: "var(--blusukan-outline)", fontFamily: "Inter, sans-serif" }}
+        >
           {label}
         </p>
-        <p className="text-sm font-semibold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+        <p
+          className="text-sm font-bold mt-0.5"
+          style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
+        >
           {value}
         </p>
       </div>
@@ -358,23 +379,34 @@ function InfoItem({
 function FasilitasItem({ label, value, icon }: { label: string; value: boolean; icon: React.ReactNode }) {
   return (
     <div
-      className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl"
-      style={{ background: value ? "#f0f8f0" : "#fafafa", border: `1px solid ${value ? "#c8e6c9" : "#eeeeee"}` }}
+      className="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl transition-colors"
+      style={{
+        background: value
+          ? "color-mix(in srgb, var(--blusukan-primary-container) 55%, transparent)"
+          : "var(--blusukan-surface-low)",
+        border: `1px solid ${
+          value
+            ? "color-mix(in srgb, var(--blusukan-primary) 22%, transparent)"
+            : "var(--blusukan-outline-variant)"
+        }`,
+      }}
     >
-      <span style={{ color: value ? "#2d5a27" : "#c2c9bb" }}>{icon}</span>
+      <span style={{ color: value ? "var(--blusukan-primary)" : "var(--blusukan-outline)" }}>
+        {icon}
+      </span>
       <span
-        className="text-sm flex-1"
+        className="text-sm flex-1 font-medium"
         style={{
-          color: value ? "#1a1c1c" : "#9e9e9e",
+          color: value ? "var(--blusukan-on-surface)" : "var(--blusukan-outline)",
           fontFamily: "Inter, sans-serif",
         }}
       >
         {label}
       </span>
       {value ? (
-        <CheckCircle2 size={15} style={{ color: "#2d5a27" }} />
+        <CheckCircle2 size={15} style={{ color: "var(--blusukan-primary)" }} />
       ) : (
-        <XCircle size={15} style={{ color: "#c2c9bb" }} />
+        <XCircle size={15} style={{ color: "var(--blusukan-outline)" }} />
       )}
     </div>
   );
@@ -397,10 +429,10 @@ function TiketStepperRow({
   return (
     <div className="flex items-center justify-between mb-4">
       <div>
-        <p className="text-sm font-semibold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+        <p className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}>
           {label}
         </p>
-        <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+        <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-outline)" }}>
           {formatRupiah(harga)} / orang
         </p>
       </div>
@@ -410,20 +442,20 @@ function TiketStepperRow({
           onClick={() => onChange(Math.max(min, jumlah - 1))}
           disabled={jumlah <= min}
           aria-label={`Kurangi jumlah ${label}`}
-          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
         >
           <Minus size={14} />
         </button>
-        <span className="w-6 text-center text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+        <span className="w-6 text-center text-sm font-bold" style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}>
           {jumlah}
         </span>
         <button
           type="button"
           onClick={() => onChange(jumlah + 1)}
           aria-label={`Tambah jumlah ${label}`}
-          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
-          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
+          style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
         >
           <Plus size={14} />
         </button>
@@ -492,14 +524,14 @@ function CheckoutTiketCard({
       <div className="flex items-center justify-between mb-5">
         <h2
           className="text-base font-bold"
-          style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
         >
           Beli Tiket Masuk
         </h2>
         {isGratis && (
           <span
             className="text-xs font-bold px-2.5 py-1 rounded-full"
-            style={{ background: "#e8f4e8", color: "#2d5a27" }}
+            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
           >
             Gratis
           </span>
@@ -507,11 +539,11 @@ function CheckoutTiketCard({
       </div>
 
       {isTidakTersedia ? (
-        <p className="text-sm" style={{ color: "#72796e" }}>
+        <p className="text-sm" style={{ color: "var(--blusukan-outline)" }}>
           Informasi harga tiket belum tersedia untuk destinasi ini.
         </p>
       ) : isGratis ? (
-        <p className="text-sm" style={{ color: "#42493e" }}>
+        <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Tidak ada biaya masuk untuk destinasi ini.
         </p>
       ) : adaHargaAnak ? (
@@ -520,24 +552,24 @@ function CheckoutTiketCard({
           <TiketStepperRow label="Tiket Anak-anak" harga={htmAnak ?? 0} jumlah={jumlahAnak} onChange={setJumlahAnak} />
 
           {/* Live price breakdown */}
-          <div className="rounded-xl p-4 mb-3 space-y-1" style={{ background: "#f0f8f0" }}>
+          <div className="rounded-xl p-4 mb-3 space-y-1" style={{ background: "var(--blusukan-primary-container)" }}>
             {jumlahDewasa > 0 && (
-              <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+              <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
                 {jumlahDewasa} x {formatRupiah(htmResmi ?? 0)} (Dewasa) = {formatRupiah(totalDewasa)}
               </p>
             )}
             {jumlahAnak > 0 && (
-              <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+              <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
                 {jumlahAnak} x {formatRupiah(htmAnak ?? 0)} (Anak-anak) = {formatRupiah(totalAnak)}
               </p>
             )}
-            <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
-              Total: <strong style={{ color: "#2d5a27" }}>{formatRupiah(totalGabungan)}</strong>
+            <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
+              Total: <strong style={{ color: "var(--blusukan-primary)" }}>{formatRupiah(totalGabungan)}</strong>
             </p>
           </div>
 
           {error && (
-            <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+            <p className="text-xs mb-3" style={{ color: "var(--blusukan-error)" }}>
               {error}
             </p>
           )}
@@ -553,12 +585,12 @@ function CheckoutTiketCard({
             {loading ? "Memproses..." : "Konfirmasi Pesanan"}
           </button>
           {!bisaCheckoutGabungan && (
-            <p className="text-xs mt-2 text-center" style={{ color: "#72796e" }}>
+            <p className="text-xs mt-2 text-center" style={{ color: "var(--blusukan-outline)" }}>
               Pilih minimal 1 tiket Dewasa atau Anak-anak
             </p>
           )}
 
-          <p className="text-xs mt-3" style={{ color: "#72796e" }}>
+          <p className="text-xs mt-3" style={{ color: "var(--blusukan-outline)" }}>
             Pembayaran dilakukan tunai di lokasi (COD). Tunjukkan kode pesanan ke petugas.
           </p>
         </>
@@ -569,11 +601,11 @@ function CheckoutTiketCard({
             <div>
               <p
                 className="text-sm font-semibold"
-                style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
               >
                 Tiket Masuk Dewasa
               </p>
-              <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+              <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-outline)" }}>
                 {formatRupiah(htmResmi)} / orang
               </p>
             </div>
@@ -583,14 +615,14 @@ function CheckoutTiketCard({
                 onClick={() => setJumlah((j) => Math.max(1, j - 1))}
                 disabled={jumlah <= 1}
                 aria-label="Kurangi jumlah tiket"
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
               >
                 <Minus size={14} />
               </button>
               <span
                 className="w-6 text-center text-sm font-bold"
-                style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+                style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}
               >
                 {jumlah}
               </span>
@@ -598,8 +630,8 @@ function CheckoutTiketCard({
                 type="button"
                 onClick={() => setJumlah((j) => j + 1)}
                 aria-label="Tambah jumlah tiket"
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
-                style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
+                style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
               >
                 <Plus size={14} />
               </button>
@@ -607,15 +639,15 @@ function CheckoutTiketCard({
           </div>
 
           {/* Live price breakdown */}
-          <div className="rounded-xl p-4 mb-3" style={{ background: "#f0f8f0" }}>
-            <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+          <div className="rounded-xl p-4 mb-3" style={{ background: "var(--blusukan-primary-container)" }}>
+            <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
               {jumlah} x {formatRupiah(htmResmi)} ={" "}
-              <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
+              <strong style={{ color: "var(--blusukan-primary)" }}>{formatRupiah(total)}</strong>
             </p>
           </div>
 
           {error && (
-            <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+            <p className="text-xs mb-3" style={{ color: "var(--blusukan-error)" }}>
               {error}
             </p>
           )}
@@ -631,7 +663,7 @@ function CheckoutTiketCard({
             {loading ? "Memproses..." : "Konfirmasi Pesanan"}
           </button>
 
-          <p className="text-xs mt-3" style={{ color: "#72796e" }}>
+          <p className="text-xs mt-3" style={{ color: "var(--blusukan-outline)" }}>
             Pembayaran dilakukan tunai di lokasi (COD). Tunjukkan kode pesanan ke petugas.
           </p>
         </>
@@ -708,7 +740,7 @@ function FasilitasBookingRow({
   }
 
   return (
-    <div className="rounded-xl p-4" style={{ border: "1px solid #e8e8e8" }}>
+    <div className="rounded-xl p-4" style={{ border: "1px solid var(--blusukan-outline-variant)" }}>
       {fasilitas.fotoUrl && (
         <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-3">
           <Image src={fasilitas.fotoUrl} alt={fasilitas.nama} fill className="object-cover" sizes="(max-width: 640px) 100vw, 400px" />
@@ -716,20 +748,20 @@ function FasilitasBookingRow({
       )}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-sm font-semibold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+          <p className="text-sm font-semibold" style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}>
             {fasilitas.nama}
           </p>
-          <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+          <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-outline)" }}>
             {formatRupiah(fasilitas.hargaSewa)} / {fasilitas.satuanWaktu}
           </p>
           {fasilitas.lokasiDalamDestinasi && (
-            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#72796e" }}>
+            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--blusukan-outline)" }}>
               <MapPin size={11} />
               {fasilitas.lokasiDalamDestinasi}
             </p>
           )}
           {fasilitas.deskripsiManfaat && (
-            <p className="text-xs italic mt-1" style={{ color: "#72796e" }}>
+            <p className="text-xs italic mt-1" style={{ color: "var(--blusukan-outline)" }}>
               &ldquo;{fasilitas.deskripsiManfaat}&rdquo;
             </p>
           )}
@@ -740,12 +772,12 @@ function FasilitasBookingRow({
             onClick={() => setJumlah((j) => Math.max(1, j - 1))}
             disabled={jumlah <= 1}
             aria-label={`Kurangi jumlah ${fasilitas.nama}`}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-            style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
           >
             <Minus size={14} />
           </button>
-          <span className="w-6 text-center text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+          <span className="w-6 text-center text-sm font-bold" style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}>
             {jumlah}
           </span>
           <button
@@ -753,8 +785,8 @@ function FasilitasBookingRow({
             onClick={() => setJumlah((j) => Math.min(fasilitas.jumlahUnit, j + 1))}
             disabled={jumlah >= fasilitas.jumlahUnit}
             aria-label={`Tambah jumlah ${fasilitas.nama}`}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-            style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
           >
             <Plus size={14} />
           </button>
@@ -765,7 +797,7 @@ function FasilitasBookingRow({
         <label
           htmlFor={`jadwal-${fasilitas.id}`}
           className="block text-xs font-medium mb-1"
-          style={{ color: "#72796e" }}
+          style={{ color: "var(--blusukan-outline)" }}
         >
           Jadwal Booking
         </label>
@@ -782,15 +814,15 @@ function FasilitasBookingRow({
         )}
       </div>
 
-      <div className="rounded-xl p-3 mb-3" style={{ background: "#f0f8f0" }}>
-        <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+      <div className="rounded-xl p-3 mb-3" style={{ background: "var(--blusukan-primary-container)" }}>
+        <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
           {jumlah} x {formatRupiah(fasilitas.hargaSewa)} ={" "}
-          <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
+          <strong style={{ color: "var(--blusukan-primary)" }}>{formatRupiah(total)}</strong>
         </p>
       </div>
 
       {error && (
-        <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+        <p className="text-xs mb-3" style={{ color: "var(--blusukan-error)" }}>
           {error}
         </p>
       )}
@@ -822,13 +854,13 @@ function MenuItemRow({
   return (
     <div
       className="flex items-center justify-between py-1.5 border-b last:border-0"
-      style={{ borderColor: "#f0f0f0" }}
+      style={{ borderColor: "var(--blusukan-surface-container)" }}
     >
       <div>
-        <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+        <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
           {item.name}
         </p>
-        <p className="text-xs" style={{ color: "#72796e" }}>
+        <p className="text-xs" style={{ color: "var(--blusukan-outline)" }}>
           {formatRupiah(item.price)}
         </p>
       </div>
@@ -838,20 +870,20 @@ function MenuItemRow({
           onClick={() => onChange(Math.max(0, kuantitas - 1))}
           disabled={kuantitas <= 0}
           aria-label={`Kurangi jumlah ${item.name}`}
-          className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+          className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
         >
           <Minus size={12} />
         </button>
-        <span className="w-5 text-center text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
+        <span className="w-5 text-center text-sm font-bold" style={{ color: "var(--blusukan-on-surface)", fontFamily: "Inter, sans-serif" }}>
           {kuantitas}
         </span>
         <button
           type="button"
           onClick={() => onChange(kuantitas + 1)}
           aria-label={`Tambah jumlah ${item.name}`}
-          className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
-          style={{ border: "1px solid #c2c9bb", color: "#2d5a27" }}
+          className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--blusukan-surface-container)]"
+          style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-primary)" }}
         >
           <Plus size={12} />
         </button>
@@ -868,9 +900,9 @@ function UmkmCard({ warung, onClick }: { warung: Warung; onClick: () => void }) 
       id={`card-umkm-${warung.id}`}
       onClick={onClick}
       className="text-left rounded-2xl overflow-hidden flex flex-col transition-all hover:shadow-md"
-      style={{ background: "#ffffff", border: "1px solid #e8e8e8" }}
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
     >
-      <div className="h-28 relative w-full" style={{ background: "#e0e0e0" }}>
+      <div className="h-28 relative w-full" style={{ background: "var(--blusukan-surface-container-highest)" }}>
         {warung.photoUrls[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={warung.photoUrls[0]} alt={warung.name} className="w-full h-full object-cover" />
@@ -889,12 +921,12 @@ function UmkmCard({ warung, onClick }: { warung: Warung; onClick: () => void }) 
         </div>
         <p
           className="text-sm font-bold leading-tight"
-          style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+          style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
         >
           {warung.name}
         </p>
         {warung.namaPemilik && (
-          <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#72796e" }}>
+          <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "var(--blusukan-outline)" }}>
             <User size={11} />
             {warung.namaPemilik}
           </p>
@@ -988,16 +1020,16 @@ function UmkmDetailDialog({
         showCloseButton={false}
         className="!max-w-lg !w-[calc(100vw-2rem)] !max-h-[85vh] !p-0 overflow-hidden flex flex-col"
       >
-        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: "#e8e8e8" }}>
-          <DialogTitle className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}>
+        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: "var(--blusukan-outline-variant)" }}>
+          <DialogTitle className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
             {warung.name}
           </DialogTitle>
           <button
             type="button"
             id="btn-tutup-detail-umkm"
             onClick={() => onOpenChange(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
-            style={{ color: "#42493e" }}
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[var(--blusukan-surface-low)]"
+            style={{ color: "var(--blusukan-on-surface-variant)" }}
             aria-label="Tutup detail UMKM"
           >
             <X size={16} />
@@ -1006,7 +1038,7 @@ function UmkmDetailDialog({
 
         <div className="overflow-y-auto p-4">
           {/* Galeri foto */}
-          <div className="h-40 rounded-xl overflow-hidden mb-2" style={{ background: "#e0e0e0" }}>
+          <div className="h-40 rounded-xl overflow-hidden mb-2" style={{ background: "var(--blusukan-surface-container-highest)" }}>
             {warung.photoUrls[activePhotoIdx] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -1036,7 +1068,7 @@ function UmkmDetailDialog({
                   style={{
                     width: 56,
                     height: 42,
-                    border: idx === activePhotoIdx ? "2px solid var(--blusukan-primary)" : "1px solid #e8e8e8",
+                    border: idx === activePhotoIdx ? "2px solid var(--blusukan-primary)" : "1px solid var(--blusukan-outline-variant)",
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1050,19 +1082,19 @@ function UmkmDetailDialog({
             <KategoriUmkmBadge kategori={warung.kategori} />
           </div>
           {warung.namaPemilik && (
-            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#72796e" }}>
+            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--blusukan-outline)" }}>
               <User size={11} />
               {warung.namaPemilik}
             </p>
           )}
           {warung.location && (
-            <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#72796e" }}>
+            <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "var(--blusukan-outline)" }}>
               <MapPin size={12} />
               {warung.location}
             </p>
           )}
 
-          <div className="mt-3 pt-3" style={{ borderTop: "1px dashed #e8e8e8" }}>
+          <div className="mt-3 pt-3" style={{ borderTop: "1px dashed var(--blusukan-outline-variant)" }}>
             {warung.menuItems.length > 0 ? (
               <div className="mb-3">
                 {warung.menuItems.map((m) => (
@@ -1075,7 +1107,7 @@ function UmkmDetailDialog({
                 ))}
               </div>
             ) : (
-              <p className="text-sm mb-3" style={{ color: "#72796e" }}>
+              <p className="text-sm mb-3" style={{ color: "var(--blusukan-outline)" }}>
                 Menu belum tersedia
               </p>
             )}
@@ -1094,7 +1126,7 @@ function UmkmDetailDialog({
                     className="w-4 h-4"
                     style={{ accentColor: "var(--blusukan-primary)" }}
                   />
-                  <span className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
+                  <span className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
                     Reservasi tempat duduk
                   </span>
                 </label>
@@ -1104,7 +1136,7 @@ function UmkmDetailDialog({
                     <label
                       htmlFor={`jadwal-umkm-${warung.id}`}
                       className="block text-xs font-medium mb-1"
-                      style={{ color: "#72796e" }}
+                      style={{ color: "var(--blusukan-outline)" }}
                     >
                       Jadwal Kedatangan
                     </label>
@@ -1125,15 +1157,15 @@ function UmkmDetailDialog({
             )}
 
             {hasSelection && (
-              <div className="rounded-xl p-3 mb-3" style={{ background: "#f0f8f0" }}>
-                <p className="text-sm" style={{ color: "#42493e", fontFamily: "Inter, sans-serif" }}>
-                  Total Menu: <strong style={{ color: "#2d5a27" }}>{formatRupiah(total)}</strong>
+              <div className="rounded-xl p-3 mb-3" style={{ background: "var(--blusukan-primary-container)" }}>
+                <p className="text-sm" style={{ color: "var(--blusukan-on-surface-variant)", fontFamily: "Inter, sans-serif" }}>
+                  Total Menu: <strong style={{ color: "var(--blusukan-primary)" }}>{formatRupiah(total)}</strong>
                 </p>
               </div>
             )}
 
             {error && (
-              <p className="text-xs mb-3" style={{ color: "#b3261e" }}>
+              <p className="text-xs mb-3" style={{ color: "var(--blusukan-error)" }}>
                 {error}
               </p>
             )}
@@ -1149,7 +1181,7 @@ function UmkmDetailDialog({
               {loading ? "Memproses..." : "Pesan"}
             </button>
             {!bisaPesan && (
-              <p className="text-xs mt-2 text-center" style={{ color: "#72796e" }}>
+              <p className="text-xs mt-2 text-center" style={{ color: "var(--blusukan-outline)" }}>
                 {warung.bisaBooking ? "Pilih menu atau centang reservasi tempat" : "Pilih menu terlebih dahulu"}
               </p>
             )}
@@ -1212,8 +1244,8 @@ function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
         <Star
           key={n}
           size={size}
-          fill={rating >= n ? "#f5a623" : "none"}
-          style={{ color: rating >= n ? "#f5a623" : "var(--blusukan-outline-variant)" }}
+          fill={rating >= n ? "var(--blusukan-rating)" : "none"}
+          style={{ color: rating >= n ? "var(--blusukan-rating)" : "var(--blusukan-outline-variant)" }}
         />
       ))}
     </div>
@@ -1241,8 +1273,8 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
           >
             <Star
               size={28}
-              fill={filled ? "#f5a623" : "none"}
-              style={{ color: filled ? "#f5a623" : "var(--blusukan-outline-variant)" }}
+              fill={filled ? "var(--blusukan-rating)" : "none"}
+              style={{ color: filled ? "var(--blusukan-rating)" : "var(--blusukan-outline-variant)" }}
             />
           </button>
         );
@@ -1378,7 +1410,7 @@ function UlasanWisatawanSection({
     <div>
       <h2
         className="text-base font-bold mb-4"
-        style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+        style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
       >
         Ulasan Wisatawan
       </h2>
@@ -1388,11 +1420,11 @@ function UlasanWisatawanSection({
         {reviews.length === 0 ? (
           <SectionCard>
             <div className="text-center py-6">
-              <Star size={36} className="mx-auto mb-3" style={{ color: "#c2c9bb" }} />
-              <p className="text-sm font-medium" style={{ color: "#42493e" }}>
+              <Star size={36} className="mx-auto mb-3" style={{ color: "var(--blusukan-outline-variant)" }} />
+              <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                 Belum ada ulasan
               </p>
-              <p className="text-xs mt-1" style={{ color: "#72796e" }}>
+              <p className="text-xs mt-1" style={{ color: "var(--blusukan-outline)" }}>
                 Jadilah wisatawan pertama yang memberi ulasan untuk destinasi ini
               </p>
             </div>
@@ -1403,27 +1435,27 @@ function UlasanWisatawanSection({
               <div className="flex items-start gap-3 mb-3">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                  style={{ background: "#e3efe0", color: "#2d5a27" }}
+                  style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
                 >
                   {getInitials(r.userName)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p
                     className="text-sm font-semibold"
-                    style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                    style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
                   >
                     {r.userName}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <StarRow rating={r.rating} size={13} />
-                    <span className="text-xs" style={{ color: "#72796e" }}>
+                    <span className="text-xs" style={{ color: "var(--blusukan-outline)" }}>
                       {timeAgo(r.createdAt)}
                     </span>
                   </div>
                 </div>
               </div>
               {r.komentar && (
-                <p className="text-sm leading-relaxed" style={{ color: "#42493e" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                   {r.komentar}
                 </p>
               )}
@@ -1491,10 +1523,10 @@ function todayISODate(): string {
 function BookingSummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-start gap-4">
-      <span className="text-xs shrink-0" style={{ color: "#72796e" }}>
+      <span className="text-xs shrink-0" style={{ color: "var(--blusukan-outline)" }}>
         {label}
       </span>
-      <span className="text-xs font-semibold text-right" style={{ color: "#1a1c1c" }}>
+      <span className="text-xs font-semibold text-right" style={{ color: "var(--blusukan-on-surface)" }}>
         {value}
       </span>
     </div>
@@ -1509,7 +1541,7 @@ function TransportServiceCard({ service, onClick }: { service: LocalService; onC
       id={`card-transport-${service.id}`}
       onClick={onClick}
       className="text-left rounded-xl overflow-hidden transition-all hover:shadow-md"
-      style={{ background: "#ffffff", border: "1px solid #e8e8e8" }}
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
     >
       {service.fotoUrl && (
         <div className="relative w-full aspect-video">
@@ -1518,7 +1550,7 @@ function TransportServiceCard({ service, onClick }: { service: LocalService; onC
       )}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <p className="text-sm font-bold" style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}>
+          <p className="text-sm font-bold" style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}>
             {service.providerName}
           </p>
           <span
@@ -1530,15 +1562,15 @@ function TransportServiceCard({ service, onClick }: { service: LocalService; onC
           </span>
         </div>
         {service.baseRate != null && (
-          <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
+          <p className="text-sm font-bold" style={{ color: "var(--blusukan-primary)" }}>
             {formatRupiah(service.baseRate)}{" "}
-            <span className="text-xs font-normal" style={{ color: "#72796e" }}>
+            <span className="text-xs font-normal" style={{ color: "var(--blusukan-outline)" }}>
               tarif dasar
             </span>
           </p>
         )}
         {service.kapasitasPenumpang != null && (
-          <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#72796e" }}>
+          <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--blusukan-outline)" }}>
             <User size={11} />
             Kapasitas {service.kapasitasPenumpang} penumpang
           </p>
@@ -1643,12 +1675,12 @@ function TransportBookingDialog({
           <DialogHeader>
             <DialogTitle
               className="text-sm font-bold"
-              style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
             >
               {service.providerName}
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm" style={{ color: "#72796e" }}>
+          <p className="text-sm" style={{ color: "var(--blusukan-outline)" }}>
             <Link
               href="/login"
               id="link-login-booking-transport"
@@ -1689,11 +1721,11 @@ function TransportBookingDialog({
             </div>
             <h3
               className="text-base font-bold mb-1"
-              style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
             >
               Booking Berhasil Dibuat
             </h3>
-            <p className="text-xs mb-5" style={{ color: "#72796e" }}>
+            <p className="text-xs mb-5" style={{ color: "var(--blusukan-outline)" }}>
               Reservasi tersimpan. Hubungi penyedia jasa via WhatsApp untuk konfirmasi ketersediaan.
             </p>
             <div className="w-full space-y-2 mb-5 text-left">
@@ -1718,7 +1750,7 @@ function TransportBookingDialog({
               id={`btn-tutup-konfirmasi-booking-${service.id}`}
               onClick={() => onOpenChange(false)}
               className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-80"
-              style={{ border: "1px solid #c2c9bb", color: "#1a1c1c" }}
+              style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-on-surface)" }}
             >
               Tutup
             </button>
@@ -1736,17 +1768,17 @@ function TransportBookingDialog({
       >
         <DialogHeader
           className="flex flex-row items-center justify-between px-4 py-3 border-b shrink-0"
-          style={{ borderColor: "#e8e8e8" }}
+          style={{ borderColor: "var(--blusukan-outline-variant)" }}
         >
-          <DialogTitle className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}>
+          <DialogTitle className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
             Booking {service.providerName}
           </DialogTitle>
           <button
             type="button"
             id="btn-tutup-booking-transport"
             onClick={() => onOpenChange(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[#f3f3f3]"
-            style={{ color: "#42493e" }}
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-[var(--blusukan-surface-low)]"
+            style={{ color: "var(--blusukan-on-surface-variant)" }}
             aria-label="Tutup form booking"
           >
             <X size={16} />
@@ -1756,18 +1788,18 @@ function TransportBookingDialog({
         <form onSubmit={handleSubmit} className="overflow-y-auto p-4 space-y-4">
           {service.baseRate != null && (
             <div>
-              <p className="text-sm font-bold" style={{ color: "#2d5a27" }}>
+              <p className="text-sm font-bold" style={{ color: "var(--blusukan-primary)" }}>
                 {formatRupiah(service.baseRate)}{" "}
-                <span className="text-xs font-normal" style={{ color: "#72796e" }}>
+                <span className="text-xs font-normal" style={{ color: "var(--blusukan-outline)" }}>
                   tarif dasar
                 </span>
               </p>
               {hargaTambahan > 0 && (
                 <>
-                  <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-outline)" }}>
                     + {formatRupiah(hargaTambahan)} titik jemput ({selectedTitikJemput?.namaLokasi})
                   </p>
-                  <p className="text-sm font-bold mt-1" style={{ color: "#2d5a27" }}>
+                  <p className="text-sm font-bold mt-1" style={{ color: "var(--blusukan-primary)" }}>
                     Total: {formatRupiah(totalHarga)}
                   </p>
                 </>
@@ -1779,7 +1811,7 @@ function TransportBookingDialog({
             <label
               htmlFor={`travelDate-${service.id}`}
               className="block text-xs font-medium mb-1.5"
-              style={{ color: "#72796e" }}
+              style={{ color: "var(--blusukan-outline)" }}
             >
               Tanggal Perjalanan <span style={{ color: "var(--blusukan-error)" }}>*</span>
             </label>
@@ -1791,7 +1823,7 @@ function TransportBookingDialog({
               value={travelDate}
               onChange={(e) => setTravelDate(e.target.value)}
               className="w-full px-3 py-2.5 text-sm"
-              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+              style={{ border: "1px solid var(--blusukan-outline-variant)", borderRadius: "8px", color: "var(--blusukan-on-surface)" }}
             />
           </div>
 
@@ -1800,7 +1832,7 @@ function TransportBookingDialog({
               <label
                 htmlFor={`titikJemput-${service.id}`}
                 className="block text-xs font-medium mb-1.5"
-                style={{ color: "#72796e" }}
+                style={{ color: "var(--blusukan-outline)" }}
               >
                 Titik Jemput
               </label>
@@ -1809,7 +1841,7 @@ function TransportBookingDialog({
                 value={titikJemputChoice}
                 onChange={(e) => setTitikJemputChoice(e.target.value)}
                 className="w-full px-3 py-2.5 text-sm"
-                style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+                style={{ border: "1px solid var(--blusukan-outline-variant)", borderRadius: "8px", color: "var(--blusukan-on-surface)" }}
               >
                 <option value="">-- Pilih titik jemput --</option>
                 {service.titikJemput.map((t) => (
@@ -1829,7 +1861,7 @@ function TransportBookingDialog({
                   value={meetingPointManual}
                   onChange={(e) => setMeetingPointManual(e.target.value)}
                   className="w-full px-3 py-2.5 text-sm mt-2"
-                  style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+                  style={{ border: "1px solid var(--blusukan-outline-variant)", borderRadius: "8px", color: "var(--blusukan-on-surface)" }}
                 />
               )}
             </div>
@@ -1838,7 +1870,7 @@ function TransportBookingDialog({
               <label
                 htmlFor={`meetingPoint-${service.id}`}
                 className="block text-xs font-medium mb-1.5"
-                style={{ color: "#72796e" }}
+                style={{ color: "var(--blusukan-outline)" }}
               >
                 Titik Jemput
               </label>
@@ -1849,7 +1881,7 @@ function TransportBookingDialog({
                 value={meetingPointManual}
                 onChange={(e) => setMeetingPointManual(e.target.value)}
                 className="w-full px-3 py-2.5 text-sm"
-                style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+                style={{ border: "1px solid var(--blusukan-outline-variant)", borderRadius: "8px", color: "var(--blusukan-on-surface)" }}
               />
             </div>
           )}
@@ -1858,7 +1890,7 @@ function TransportBookingDialog({
             <label
               htmlFor={`contactNumber-${service.id}`}
               className="block text-xs font-medium mb-1.5"
-              style={{ color: "#72796e" }}
+              style={{ color: "var(--blusukan-outline)" }}
             >
               Nomor Kontak <span style={{ color: "var(--blusukan-error)" }}>*</span>
             </label>
@@ -1870,7 +1902,7 @@ function TransportBookingDialog({
               value={contactNumber}
               onChange={(e) => setContactNumber(e.target.value)}
               className="w-full px-3 py-2.5 text-sm"
-              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+              style={{ border: "1px solid var(--blusukan-outline-variant)", borderRadius: "8px", color: "var(--blusukan-on-surface)" }}
             />
           </div>
 
@@ -1878,7 +1910,7 @@ function TransportBookingDialog({
             <label
               htmlFor={`notes-${service.id}`}
               className="block text-xs font-medium mb-1.5"
-              style={{ color: "#72796e" }}
+              style={{ color: "var(--blusukan-outline)" }}
             >
               Catatan Tambahan
             </label>
@@ -1889,7 +1921,7 @@ function TransportBookingDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-3 py-2.5 text-sm resize-none"
-              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+              style={{ border: "1px solid var(--blusukan-outline-variant)", borderRadius: "8px", color: "var(--blusukan-on-surface)" }}
             />
           </div>
 
@@ -1909,7 +1941,7 @@ function TransportBookingDialog({
             {loading ? "Memproses..." : "Ajukan Booking"}
           </button>
 
-          <p className="text-xs text-center" style={{ color: "#72796e" }}>
+          <p className="text-xs text-center" style={{ color: "var(--blusukan-outline)" }}>
             Ini bukan transaksi pembayaran. Konfirmasi akhir dilakukan langsung dengan penyedia jasa via WhatsApp.
           </p>
         </form>
@@ -2011,7 +2043,7 @@ function LaporanPillGroup({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium mb-1.5" style={{ color: "#72796e" }}>
+      <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--blusukan-outline)" }}>
         {label}
       </label>
       <div className="grid grid-cols-3 gap-2">
@@ -2024,9 +2056,9 @@ function LaporanPillGroup({
               onClick={() => onChange(opt.value)}
               className="py-2.5 text-xs font-semibold text-center transition-colors rounded-lg"
               style={{
-                border: `1.5px solid ${selected ? "var(--blusukan-primary)" : "#e8e8e8"}`,
+                border: `1.5px solid ${selected ? "var(--blusukan-primary)" : "var(--blusukan-outline-variant)"}`,
                 background: selected ? "var(--blusukan-primary-container)" : "#ffffff",
-                color: selected ? "var(--blusukan-primary)" : "#1a1c1c",
+                color: selected ? "var(--blusukan-primary)" : "var(--blusukan-on-surface)",
               }}
             >
               {opt.label}
@@ -2164,7 +2196,7 @@ function LaporKondisiSection({
             Laporkan Kondisi / Usulan Perbaikan
           </span>
         </SectionTitle>
-        <p className="text-sm" style={{ color: "#72796e" }}>
+        <p className="text-sm" style={{ color: "var(--blusukan-outline)" }}>
           <Link
             href="/login"
             id="link-login-laporan"
@@ -2212,8 +2244,8 @@ function LaporKondisiSection({
           <div
             className="flex items-start gap-2.5 text-xs rounded-xl px-3.5 py-2.5"
             style={{
-              background: geoStatus === "granted" ? "var(--blusukan-primary-container)" : "#fef3e7",
-              color: geoStatus === "granted" ? "var(--blusukan-primary)" : "#805533",
+              background: geoStatus === "granted" ? "var(--blusukan-primary-container)" : "var(--blusukan-secondary-container)",
+              color: geoStatus === "granted" ? "var(--blusukan-primary)" : "var(--blusukan-secondary)",
             }}
           >
             {geoStatus === "loading" && (
@@ -2268,15 +2300,15 @@ function LaporKondisiSection({
           />
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#72796e" }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--blusukan-outline)" }}>
               Fasilitas yang layak (centang jika kondisinya baik)
             </label>
-            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #e8e8e8" }}>
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--blusukan-outline-variant)" }}>
               {LAPORAN_FASILITAS_FIELDS.map((f, idx) => (
                 <label
                   key={f.key}
                   className="flex items-center gap-3 px-3.5 py-3 cursor-pointer"
-                  style={{ borderTop: idx === 0 ? "none" : "1px solid #e8e8e8", background: "#ffffff" }}
+                  style={{ borderTop: idx === 0 ? "none" : "1px solid var(--blusukan-outline-variant)", background: "#ffffff" }}
                 >
                   <input
                     type="checkbox"
@@ -2285,7 +2317,7 @@ function LaporKondisiSection({
                     className="w-5 h-5 shrink-0"
                     style={{ accentColor: "var(--blusukan-primary)" }}
                   />
-                  <span className="text-sm" style={{ color: "#1a1c1c" }}>
+                  <span className="text-sm" style={{ color: "var(--blusukan-on-surface)" }}>
                     {f.label}
                   </span>
                 </label>
@@ -2297,7 +2329,7 @@ function LaporKondisiSection({
             <label
               htmlFor="laporan-reportedFee"
               className="block text-xs font-medium mb-1.5"
-              style={{ color: "#72796e" }}
+              style={{ color: "var(--blusukan-outline)" }}
             >
               Biaya yang dikeluarkan (opsional)
             </label>
@@ -2305,7 +2337,7 @@ function LaporKondisiSection({
           </div>
 
           <div>
-            <label htmlFor="laporan-notes" className="block text-xs font-medium mb-1.5" style={{ color: "#72796e" }}>
+            <label htmlFor="laporan-notes" className="block text-xs font-medium mb-1.5" style={{ color: "var(--blusukan-outline)" }}>
               Catatan tambahan (opsional)
             </label>
             <textarea
@@ -2315,7 +2347,7 @@ function LaporKondisiSection({
               rows={3}
               placeholder="Ceritakan kondisi lapangan lainnya..."
               className="w-full px-3 py-2.5 text-sm resize-none"
-              style={{ border: "1px solid #e8e8e8", borderRadius: "8px", color: "#1a1c1c" }}
+              style={{ border: "1px solid var(--blusukan-outline-variant)", borderRadius: "8px", color: "var(--blusukan-on-surface)" }}
             />
           </div>
 
@@ -2348,177 +2380,235 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
   return (
     <div
       className="min-h-screen"
-      style={{ background: "#f9f9f9", color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}
+      style={{
+        background: "var(--blusukan-surface)",
+        color: "var(--blusukan-on-surface)",
+        fontFamily: "Inter, sans-serif",
+      }}
     >
-      {/* ── Sticky breadcrumb header ── */}
+      {/* ── Sticky breadcrumb header — offset mengikuti tinggi navbar pill mengambang ── */}
       <header
-        className="sticky top-14 z-30 flex items-center gap-3 px-4 lg:px-8 py-3 border-b"
+        className="sticky top-[72px] sm:top-[76px] z-30 flex items-center gap-3 px-4 lg:px-8 py-3 border-b"
         style={{
-          background: "rgba(249,249,249,0.95)",
-          backdropFilter: "blur(10px)",
-          borderColor: "#e8e8e8",
+          background: "color-mix(in srgb, var(--blusukan-surface) 88%, transparent)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderColor: "var(--blusukan-outline-variant)",
         }}
       >
         <Link
           href="/"
           id="detail-back"
-          className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-70 transition-opacity"
-          style={{ color: "#2d5a27" }}
+          className="flex items-center gap-1.5 text-sm font-bold hover:opacity-70 transition-opacity shrink-0"
+          style={{ color: "var(--blusukan-primary)" }}
         >
           <ArrowLeft size={16} />
           Kembali ke Beranda
         </Link>
-        <span style={{ color: "#c2c9bb" }}>/</span>
-        <span className="text-sm truncate" style={{ color: "#72796e" }}>
+        <span style={{ color: "var(--blusukan-outline-variant)" }}>/</span>
+        <span className="text-sm truncate" style={{ color: "var(--blusukan-outline)" }}>
           {d.name}
         </span>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-20">
-
-        {/* ── Hero Section ── */}
-        <section className="pt-6 pb-8">
-          {/* Hero image — 21:9 aspect ratio */}
-          <div
-            className="relative w-full rounded-2xl overflow-hidden mb-6"
-            style={{ aspectRatio: "21/9", background: "#e0e0e0", minHeight: 200 }}
-          >
-            {d.photoUrls[activePhotoIdx] ? (
-              <Image
-                src={d.photoUrls[activePhotoIdx]}
-                alt={d.name}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 1280px) 100vw, 1280px"
-              />
-            ) : (
-              <div
-                className="w-full h-full flex items-center justify-center"
-                style={{
-                  background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)",
-                }}
-              >
-                <ImageOff size={40} style={{ color: "rgba(21,66,18,0.35)" }} />
-              </div>
-            )}
-            {/* Gradient overlay bawah */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%)",
-              }}
+      {/* ── Hero — foto besar dengan judul menumpang di atasnya (editorial) ── */}
+      <section className="relative w-full">
+        <div
+          className="relative w-full overflow-hidden"
+          style={{
+            height: "clamp(360px, 52vh, 560px)",
+            background: "var(--blusukan-surface-container-highest)",
+          }}
+        >
+          {d.photoUrls[activePhotoIdx] ? (
+            <Image
+              src={d.photoUrls[activePhotoIdx]}
+              alt={d.name}
+              fill
+              className="object-cover"
+              priority
+              sizes="100vw"
             />
-            {/* Badge status jalan — pojok kiri atas */}
-            {badge && (
-              <div className="absolute top-4 left-4">
-                <span
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-                  style={{
-                    background: badge.bg,
-                    color: badge.textColor,
-                    backdropFilter: "blur(8px)",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                  }}
-                >
-                  {badge.icon}
-                  {badge.label}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Galeri foto — hanya tampil kalau destinasi punya lebih dari 1 foto */}
-          {d.photoUrls.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto hide-scrollbar mb-6 pb-1">
-              {d.photoUrls.map((url, idx) => {
-                const isActive = idx === activePhotoIdx;
-                return (
-                  <button
-                    key={url}
-                    type="button"
-                    onClick={() => setActivePhotoIdx(idx)}
-                    aria-label={`Tampilkan foto ${idx + 1}`}
-                    aria-current={isActive}
-                    className="relative shrink-0 rounded-xl overflow-hidden transition-opacity hover:opacity-90"
-                    style={{
-                      width: 120,
-                      height: 90,
-                      border: isActive ? "2px solid var(--blusukan-primary)" : "1px solid #e8e8e8",
-                    }}
-                  >
-                    <Image
-                      src={url}
-                      alt={`${d.name} — foto ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="120px"
-                    />
-                  </button>
-                );
-              })}
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--blusukan-primary-container) 0%, var(--blusukan-tertiary-container) 100%)",
+              }}
+            >
+              <ImageOff
+                size={40}
+                style={{ color: "color-mix(in srgb, var(--blusukan-tertiary) 45%, transparent)" }}
+              />
             </div>
           )}
 
-          {/* Judul & subtitle */}
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2 items-center">
+          {/* Overlay gradient — menjaga teks tetap terbaca di atas foto apa pun */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.45) 38%, rgba(0,0,0,0.06) 70%)",
+            }}
+          />
+
+          {/* Badge status jalan — pojok kiri atas */}
+          {badge && (
+            <div className="absolute top-5 left-4 lg:left-8">
               <span
-                className="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
-                style={{ background: "#fef3e7", color: "#805533" }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+                style={{
+                  background: badge.bg,
+                  color: badge.textColor,
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.28)",
+                }}
               >
-                {KATEGORI_LABEL[d.kategori] ?? d.kategori}
+                {badge.icon}
+                {badge.label}
               </span>
-              {d.vibeTags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                  style={{ background: "rgba(45,90,39,0.1)", color: "#154212" }}
-                >
-                  {tag}
-                </span>
-              ))}
-              {popularityBadge && (
-                <span
-                  className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
-                  style={{ background: "#fef3e7", color: "#805533" }}
-                >
-                  {popularityBadge.kind === "trending" ? (
-                    <TrendingUp size={13} />
-                  ) : (
-                    <Star size={13} />
-                  )}
-                  {popularityBadge.label}
-                </span>
-              )}
             </div>
-            <h1
-              className="text-3xl lg:text-4xl font-bold leading-tight"
-              style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
-            >
-              {d.name}
-            </h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <MapPin size={15} style={{ color: "#72796e" }} />
-                <span className="text-sm" style={{ color: "#72796e" }}>
-                  {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, Daerah Istimewa Yogyakarta
+          )}
+
+          {/* Judul & meta — menumpang di bagian bawah foto */}
+          <div className="absolute inset-x-0 bottom-0">
+            <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-7">
+              <div className="flex flex-wrap gap-2 items-center mb-3">
+                <span
+                  className="text-[10px] font-bold uppercase tracking-[0.18em] px-2.5 py-1 rounded-full"
+                  style={{
+                    background: "var(--blusukan-secondary-container)",
+                    color: "var(--blusukan-secondary)",
+                  }}
+                >
+                  {KATEGORI_LABEL[d.kategori] ?? d.kategori}
                 </span>
-              </div>
-              {d.totalReview > 0 && (
-                <div className="flex items-center gap-1.5" id="rating-ringkasan">
-                  <Star size={15} fill="#f5a623" style={{ color: "#f5a623" }} />
-                  <span className="text-sm font-bold" style={{ color: "#1a1c1c" }}>
-                    {d.rataRataRating.toFixed(1)}
+                {d.vibeTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm"
+                    style={{
+                      background: "color-mix(in srgb, var(--blusukan-on-primary) 20%, transparent)",
+                      color: "var(--blusukan-on-primary)",
+                    }}
+                  >
+                    {VIBE_LABEL[tag] ?? tag}
                   </span>
-                  <span className="text-sm" style={{ color: "#72796e" }}>
-                    ({d.totalReview} ulasan)
+                ))}
+                {popularityBadge && (
+                  <span
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                    style={{
+                      background: "var(--blusukan-secondary-container)",
+                      color: "var(--blusukan-secondary)",
+                    }}
+                  >
+                    {popularityBadge.kind === "trending" ? (
+                      <TrendingUp size={13} />
+                    ) : (
+                      <Star size={13} />
+                    )}
+                    {popularityBadge.label}
+                  </span>
+                )}
+              </div>
+
+              <h1
+                className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight"
+                style={{
+                  fontFamily: "Montserrat, sans-serif",
+                  color: "var(--blusukan-on-primary)",
+                  textShadow: "0 2px 24px rgba(0,0,0,0.35)",
+                }}
+              >
+                {d.name}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
+                <div className="flex items-center gap-1.5">
+                  <MapPin
+                    size={15}
+                    style={{ color: "var(--blusukan-primary-fixed-dim)" }}
+                  />
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: "var(--blusukan-on-primary)" }}
+                  >
+                    {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, Daerah Istimewa Yogyakarta
                   </span>
                 </div>
-              )}
+                {d.totalReview > 0 && (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-sm"
+                    id="rating-ringkasan"
+                    style={{
+                      background: "color-mix(in srgb, var(--blusukan-on-primary) 18%, transparent)",
+                    }}
+                  >
+                    <Star
+                      size={15}
+                      fill="var(--blusukan-rating)"
+                      style={{ color: "var(--blusukan-rating)" }}
+                    />
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: "var(--blusukan-on-primary)" }}
+                    >
+                      {d.rataRataRating.toFixed(1)}
+                    </span>
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--blusukan-primary-container)" }}
+                    >
+                      ({d.totalReview} ulasan)
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-20">
+
+        {/* ── Galeri foto — hanya tampil kalau destinasi punya lebih dari 1 foto ── */}
+        {d.photoUrls.length > 1 && (
+          <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pt-5 pb-1">
+            {d.photoUrls.map((url, idx) => {
+              const isActive = idx === activePhotoIdx;
+              return (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => setActivePhotoIdx(idx)}
+                  aria-label={`Tampilkan foto ${idx + 1}`}
+                  aria-current={isActive}
+                  className="relative shrink-0 rounded-2xl overflow-hidden transition-all hover:opacity-95"
+                  style={{
+                    width: 120,
+                    height: 90,
+                    outline: isActive
+                      ? "2.5px solid var(--blusukan-primary)"
+                      : "1px solid var(--blusukan-outline-variant)",
+                    outlineOffset: isActive ? "2px" : "0px",
+                    opacity: isActive ? 1 : 0.72,
+                  }}
+                >
+                  <Image
+                    src={url}
+                    alt={`${d.name} — foto ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="120px"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="pt-8" />
 
         {/* ── Layout 2 kolom ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -2557,8 +2647,8 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                   icon={<Star size={18} />}
                   label="Kategori"
                   value={KATEGORI_LABEL[d.kategori] ?? d.kategori}
-                  iconBg="#fef3e7"
-                  iconColor="#805533"
+                  iconBg="var(--blusukan-secondary-container)"
+                  iconColor="var(--blusukan-secondary)"
                 />
               </div>
             </SectionCard>
@@ -2604,12 +2694,12 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
               <div className="flex items-center justify-between mb-4">
                 <h2
                   className="text-base font-bold"
-                  style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+                  style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
                 >
                   Ulasan & Laporan Wisatawan
                 </h2>
                 {d.reports.length > 0 && (
-                  <span className="text-xs" style={{ color: "#72796e" }}>
+                  <span className="text-xs" style={{ color: "var(--blusukan-outline)" }}>
                     {d.reports.length} laporan terbaru
                   </span>
                 )}
@@ -2621,15 +2711,15 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                     <MessageCircle
                       size={36}
                       className="mx-auto mb-3"
-                      style={{ color: "#c2c9bb" }}
+                      style={{ color: "var(--blusukan-outline-variant)" }}
                     />
                     <p
                       className="text-sm font-medium"
-                      style={{ color: "#42493e" }}
+                      style={{ color: "var(--blusukan-on-surface-variant)" }}
                     >
                       Belum ada laporan
                     </p>
-                    <p className="text-xs mt-1" style={{ color: "#72796e" }}>
+                    <p className="text-xs mt-1" style={{ color: "var(--blusukan-outline)" }}>
                       Bantu usulkan perbaikan untuk destinasi ini — jadilah pelapor lapangan pertama
                     </p>
                   </div>
@@ -2647,18 +2737,18 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                         <div className="flex items-start gap-3 mb-4">
                           <div
                             className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                            style={{ background: "#e3efe0", color: "#2d5a27" }}
+                            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
                           >
                             {getInitials(r.userName)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p
                               className="text-sm font-semibold"
-                              style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                              style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
                             >
                               {r.userName}
                             </p>
-                            <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
+                            <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-outline)" }}>
                               {timeAgo(r.createdAt)}
                             </p>
                           </div>
@@ -2671,17 +2761,17 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                               label={`Jalan: ${roadLabel}`}
                               bg={
                                 r.roadCondition === "RUSAK"
-                                  ? "#fde8e8"
+                                  ? "var(--blusukan-error-container)"
                                   : r.roadCondition === "SULIT"
-                                  ? "#fef3e7"
-                                  : "#e8f4e8"
+                                  ? "var(--blusukan-secondary-container)"
+                                  : "var(--blusukan-primary-container)"
                               }
                               color={
                                 r.roadCondition === "RUSAK"
-                                  ? "#ba1a1a"
+                                  ? "var(--blusukan-error)"
                                   : r.roadCondition === "SULIT"
-                                  ? "#805533"
-                                  : "#2d5a27"
+                                  ? "var(--blusukan-secondary)"
+                                  : "var(--blusukan-primary)"
                               }
                             />
                           )}
@@ -2695,8 +2785,8 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                             <InfoChip
                               icon={<Ticket size={12} />}
                               label={r.reportedFee === 0 ? "Gratis" : formatRupiah(r.reportedFee)}
-                              bg="#e8f4e8"
-                              color="#2d5a27"
+                              bg="var(--blusukan-primary-container)"
+                              color="var(--blusukan-primary)"
                             />
                           )}
                         </div>
@@ -2705,7 +2795,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                         {r.notes && (
                           <p
                             className="text-sm leading-relaxed italic"
-                            style={{ color: "#42493e", borderLeft: "3px solid #e3efe0", paddingLeft: "12px" }}
+                            style={{ color: "var(--blusukan-on-surface-variant)", borderLeft: "3px solid var(--blusukan-primary-container)", paddingLeft: "12px" }}
                           >
                             &ldquo;{r.notes}&rdquo;
                           </p>
@@ -2750,7 +2840,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                 <div className="p-4">
                   <p
                     className="text-sm font-bold mb-3"
-                    style={{ fontFamily: "Montserrat, sans-serif", color: "#1a1c1c" }}
+                    style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
                   >
                     Peta Lokasi
                   </p>
@@ -2761,12 +2851,12 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                     id="btn-google-maps"
                     className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80"
                     style={{
-                      border: "1px solid #c2c9bb",
-                      color: "#1a1c1c",
-                      background: "#fafafa",
+                      border: "1px solid var(--blusukan-outline-variant)",
+                      color: "var(--blusukan-on-surface)",
+                      background: "var(--blusukan-surface-low)",
                     }}
                   >
-                    <ExternalLink size={15} style={{ color: "#2d5a27" }} />
+                    <ExternalLink size={15} style={{ color: "var(--blusukan-primary)" }} />
                     Buka di Google Maps
                   </a>
                 </div>
@@ -2777,7 +2867,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                 <div
                   className="rounded-2xl overflow-hidden"
                   style={{
-                    border: `2px solid ${d.routeStatus === "RUSAK" ? "#ba1a1a" : "#44372a"}`,
+                    border: `2px solid ${d.routeStatus === "RUSAK" ? "var(--blusukan-error)" : "var(--blusukan-tertiary)"}`,
                     boxShadow: `0 0 0 4px ${d.routeStatus === "RUSAK" ? "rgba(186,26,26,0.08)" : "rgba(68,55,42,0.08)"}`,
                   }}
                 >
@@ -2785,25 +2875,25 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                   <div
                     className="px-5 py-4"
                     style={{
-                      background: d.routeStatus === "RUSAK" ? "#fde8e8" : "#fdf0e0",
+                      background: d.routeStatus === "RUSAK" ? "var(--blusukan-error-container)" : "var(--blusukan-secondary-container)",
                     }}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle
                         size={16}
-                        style={{ color: d.routeStatus === "RUSAK" ? "#ba1a1a" : "#805533" }}
+                        style={{ color: d.routeStatus === "RUSAK" ? "var(--blusukan-error)" : "var(--blusukan-secondary)" }}
                       />
                       <h3
                         className="text-sm font-bold"
                         style={{
                           fontFamily: "Montserrat, sans-serif",
-                          color: d.routeStatus === "RUSAK" ? "#ba1a1a" : "#44372a",
+                          color: d.routeStatus === "RUSAK" ? "var(--blusukan-error)" : "var(--blusukan-tertiary)",
                         }}
                       >
                         Perlu Perhatian — Usulan Perbaikan Akses
                       </h3>
                     </div>
-                    <p className="text-xs" style={{ color: "#72796e" }}>
+                    <p className="text-xs" style={{ color: "var(--blusukan-outline)" }}>
                       Jalan menuju sini berstatus{" "}
                       <strong>{ROAD_LABEL[d.routeStatus]?.toLowerCase()}</strong>. Warga
                       mengusulkan perbaikan akses ke destinasi ini — sementara itu, hubungi jasa
@@ -2814,23 +2904,23 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                   {/* List jasa */}
                   <div
                     className="divide-y"
-                    style={{ background: "#ffffff", borderColor: "#f0f0f0" }}
+                    style={{ background: "#ffffff", borderColor: "var(--blusukan-surface-container)" }}
                   >
                     {d.localServices.map((s) => (
                       <div key={s.id} className="px-5 py-4">
                         <p
                           className="text-sm font-semibold"
-                          style={{ color: "#1a1c1c", fontFamily: "Montserrat, sans-serif" }}
+                          style={{ color: "var(--blusukan-on-surface)", fontFamily: "Montserrat, sans-serif" }}
                         >
                           {s.providerName}
                         </p>
-                        <p className="text-xs mt-0.5 mb-2" style={{ color: "#72796e" }}>
+                        <p className="text-xs mt-0.5 mb-2" style={{ color: "var(--blusukan-outline)" }}>
                           {s.serviceType}
                         </p>
                         {s.baseRate != null && (
                           <p
                             className="text-sm font-bold mb-3"
-                            style={{ color: "#2d5a27" }}
+                            style={{ color: "var(--blusukan-primary)" }}
                           >
                             {formatRupiah(s.baseRate)}
                           </p>
