@@ -164,6 +164,20 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
               </Link>
             );
           })}
+
+          {/* Tentang Kami — selalu tampil untuk semua kondisi (guest & semua role), terpisah dari navLinks per-role */}
+          <Link
+            href="/tentang"
+            id="nav-link-tentang-kami"
+            className="px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+            style={{
+              color: pathname === "/tentang" ? "#2d5a27" : "#42493e",
+              background: pathname === "/tentang" ? "rgba(45,90,39,0.08)" : "transparent",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
+            Tentang Kami
+          </Link>
         </div>
 
         {/* ── Right side: Notif + Avatar ── */}

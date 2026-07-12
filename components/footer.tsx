@@ -7,6 +7,7 @@ import { Mail, MapPin } from "lucide-react";
 const JELAJAHI_LINKS = [
   { href: "/", label: "Beranda" },
   { href: "/info", label: "Info & Update" },
+  { href: "/tentang", label: "Tentang Kami" },
 ];
 
 const PENGELOLA_LINKS = [
