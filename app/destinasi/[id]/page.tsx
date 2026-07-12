@@ -154,6 +154,9 @@ export default async function DestinasiDetailPage({ params }: Props) {
       hargaSewa: Number(f.hargaSewa),
       satuanWaktu: f.satuanWaktu,
       jumlahUnit: f.jumlahUnit,
+      lokasiDalamDestinasi: f.lokasiDalamDestinasi,
+      deskripsiManfaat: f.deskripsiManfaat,
+      fotoUrl: f.fotoUrl,
     })),
     reviews: reviews.map((r) => ({
       id: r.id,

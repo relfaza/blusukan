@@ -119,6 +119,9 @@ type SewaFasilitas = {
   hargaSewa: number;
   satuanWaktu: string;
   jumlahUnit: number;
+  lokasiDalamDestinasi: string | null;
+  deskripsiManfaat: string | null;
+  fotoUrl: string | null;
 };
 
 type Review = {
@@ -696,6 +699,11 @@ function FasilitasBookingRow({
 
   return (
     <div className="rounded-xl p-4" style={{ border: "1px solid #e8e8e8" }}>
+      {fasilitas.fotoUrl && (
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-3">
+          <Image src={fasilitas.fotoUrl} alt={fasilitas.nama} fill className="object-cover" sizes="(max-width: 640px) 100vw, 400px" />
+        </div>
+      )}
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className="text-sm font-semibold" style={{ color: "#1a1c1c", fontFamily: "Inter, sans-serif" }}>
@@ -704,6 +712,17 @@ function FasilitasBookingRow({
           <p className="text-xs mt-0.5" style={{ color: "#72796e" }}>
             {formatRupiah(fasilitas.hargaSewa)} / {fasilitas.satuanWaktu}
           </p>
+          {fasilitas.lokasiDalamDestinasi && (
+            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#72796e" }}>
+              <MapPin size={11} />
+              {fasilitas.lokasiDalamDestinasi}
+            </p>
+          )}
+          {fasilitas.deskripsiManfaat && (
+            <p className="text-xs italic mt-1" style={{ color: "#72796e" }}>
+              &ldquo;{fasilitas.deskripsiManfaat}&rdquo;
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <button

@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import RupiahInput from "@/components/ui/rupiah-input";
-import FasilitasForm from "@/components/pengelola/fasilitas-form";
 import UmkmForm, { KATEGORI_UMKM_LABEL, type WarungFormValues } from "@/components/pengelola/umkm-form";
 import { SERVICE_TYPE_LABEL } from "@/components/pengelola/jasa-transport-form";
 import PetaLokasi from "./PetaLokasi";
@@ -640,7 +639,7 @@ function BookingTransportSection({ initialBookings }: { initialBookings: Booking
   );
 }
 
-/** Section: Kelola Fasilitas — CRUD lewat /api/pengelola/fasilitas */
+/** Section: Kelola Fasilitas — ringkasan singkat, CRUD lengkap dipindah ke halaman /fasilitas tersendiri */
 function KelolaFasilitasSection({
   destinationId,
   initialFasilitas,
@@ -648,186 +647,48 @@ function KelolaFasilitasSection({
   destinationId: string;
   initialFasilitas: FasilitasRow[];
 }) {
-  const [items, setItems] = useState(initialFasilitas);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  async function handleAdd(values: { nama: string; hargaSewa: number; satuanWaktu: string; jumlahUnit: number }) {
-    setSubmitting(true);
-    setError("");
-    try {
-      const res = await fetch("/api/pengelola/fasilitas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ destinationId, ...values }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Gagal menambah fasilitas.");
-        return;
-      }
-      setItems((prev) => [...prev, data]);
-      setShowAddForm(false);
-    } catch {
-      setError("Terjadi kesalahan. Coba lagi.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleEdit(id: string, values: { nama: string; hargaSewa: number; satuanWaktu: string; jumlahUnit: number }) {
-    setSubmitting(true);
-    setError("");
-    try {
-      const res = await fetch("/api/pengelola/fasilitas", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ...values }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Gagal memperbarui fasilitas.");
-        return;
-      }
-      setItems((prev) => prev.map((f) => (f.id === id ? data : f)));
-      setEditingId(null);
-    } catch {
-      setError("Terjadi kesalahan. Coba lagi.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-
-  function handleDelete(id: string) {
-    setDeleteTargetId(id);
-  }
-
-  async function confirmDelete() {
-    const id = deleteTargetId;
-    if (!id) return;
-    setDeleteTargetId(null);
-    setSubmitting(true);
-    setError("");
-    try {
-      const res = await fetch("/api/pengelola/fasilitas", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Gagal menghapus fasilitas.");
-        return;
-      }
-      setItems((prev) => prev.filter((f) => f.id !== id));
-    } catch {
-      setError("Terjadi kesalahan. Coba lagi.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const totalFasilitas = initialFasilitas.length;
+  const totalNilaiSewa = initialFasilitas.reduce((sum, f) => sum + f.hargaSewa, 0);
 
   return (
-    <div className="space-y-3">
-      {error && (
-        <p className="text-sm px-4 py-2.5 rounded-lg" style={{ background: "var(--blusukan-error-container)", color: "var(--blusukan-error)" }}>
-          {error}
-        </p>
-      )}
-
-      {!showAddForm && (
-        <button
-          type="button"
-          id="btn-tambah-fasilitas"
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
-          style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
-        >
-          <Plus size={16} />
-          Tambah Fasilitas
-        </button>
-      )}
-
-      {showAddForm && (
-        <FasilitasForm onCancel={() => setShowAddForm(false)} onSubmit={handleAdd} submitting={submitting} />
-      )}
-
-      {items.length === 0 && !showAddForm ? (
-        <div
-          className="rounded-2xl p-10 flex flex-col items-center text-center"
-          style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
-        >
-          <p className="text-sm font-medium" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-            Belum ada fasilitas yang ditambahkan.
+    <div
+      className="rounded-2xl p-6"
+      style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
+    >
+      <div className="grid grid-cols-2 gap-4 mb-5">
+        <div>
+          <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Total Fasilitas
+          </p>
+          <p
+            className="text-xl font-bold mt-0.5"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+          >
+            {totalFasilitas}
           </p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {items.map((f) =>
-            editingId === f.id ? (
-              <FasilitasForm
-                key={f.id}
-                initial={f}
-                onCancel={() => setEditingId(null)}
-                onSubmit={(values) => handleEdit(f.id, values)}
-                submitting={submitting}
-              />
-            ) : (
-              <div
-                key={f.id}
-                className="rounded-2xl p-5 flex items-center justify-between gap-3"
-                style={{ background: "#ffffff", border: "1px solid var(--blusukan-outline-variant)" }}
-              >
-                <div>
-                  <p className="text-sm font-bold" style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}>
-                    {f.nama}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-                    {formatRupiah(f.hargaSewa)} / {f.satuanWaktu} · {f.jumlahUnit} unit tersedia
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    id={`btn-edit-fasilitas-${f.id}`}
-                    onClick={() => setEditingId(f.id)}
-                    aria-label={`Edit ${f.nama}`}
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#f0f0f0]"
-                    style={{ border: "1px solid var(--blusukan-outline-variant)", color: "var(--blusukan-on-surface-variant)" }}
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    id={`btn-hapus-fasilitas-${f.id}`}
-                    onClick={() => handleDelete(f.id)}
-                    disabled={submitting}
-                    aria-label={`Hapus ${f.nama}`}
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
-                    style={{ border: "1px solid var(--blusukan-error)", color: "var(--blusukan-error)" }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            )
-          )}
+        <div>
+          <p className="text-xs" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+            Total Nilai Sewa
+          </p>
+          <p
+            className="text-xl font-bold mt-0.5"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-primary)" }}
+          >
+            {formatRupiah(totalNilaiSewa)}
+          </p>
         </div>
-      )}
+      </div>
 
-      <ConfirmDialog
-        open={deleteTargetId !== null}
-        title="Hapus Fasilitas"
-        message="Hapus fasilitas ini? Tindakan ini tidak bisa dibatalkan."
-        confirmLabel="Ya, Hapus"
-        isDestructive
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTargetId(null)}
-      />
+      <Link
+        href={`/pengelola/destinasi/${destinationId}/fasilitas`}
+        id="btn-kelola-fasilitas"
+        className="flex items-center justify-center gap-1.5 w-full text-sm font-bold px-4 py-3 rounded-lg transition-opacity hover:opacity-90"
+        style={{ background: "var(--blusukan-primary)", color: "var(--blusukan-on-primary)" }}
+      >
+        Kelola Fasilitas
+        <ArrowRight size={16} />
+      </Link>
     </div>
   );
 }

@@ -299,13 +299,16 @@ model TransaksiItem {
 }
 
 model Fasilitas {
-  id            String      @id @default(cuid())
-  destinationId String
-  destination   Destination @relation(fields: [destinationId], references: [id])
-  nama          String
-  hargaSewa     Decimal
-  satuanWaktu   String      @default("per jam")
-  jumlahUnit    Int         @default(1)
+  id                   String      @id @default(cuid())
+  destinationId        String
+  destination          Destination @relation(fields: [destinationId], references: [id])
+  nama                 String
+  hargaSewa            Decimal
+  satuanWaktu          String      @default("per jam")
+  jumlahUnit           Int         @default(1)
+  lokasiDalamDestinasi String?
+  deskripsiManfaat     String?
+  fotoUrl              String?
 }
 
 model Notifikasi {
