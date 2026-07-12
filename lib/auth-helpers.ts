@@ -79,3 +79,35 @@ export async function requireAdminApi(): Promise<AdminAuthResult> {
 
   return { ok: true, userId: user.id };
 }
+
+/** Dipakai di Server Component halaman app/pengaturan-wisatawan/** — redirect kalau bukan Wisatawan yang login */
+export async function requireWisatawanPage(): Promise<string> {
+  const user = await getSessionUser();
+
+  if (!user?.id) {
+    redirect("/login");
+  }
+  if (user.role !== "WISATAWAN") {
+    redirect("/");
+  }
+
+  return user.id as string;
+}
+
+type WisatawanAuthResult =
+  | { ok: true; userId: string }
+  | { ok: false; status: 401 | 403; message: string };
+
+/** Dipakai di Route Handler app/api/pengaturan-wisatawan/** — caller yang bikin NextResponse dari hasilnya */
+export async function requireWisatawanApi(): Promise<WisatawanAuthResult> {
+  const user = await getSessionUser();
+
+  if (!user?.id) {
+    return { ok: false, status: 401, message: "Anda harus masuk terlebih dahulu." };
+  }
+  if (user.role !== "WISATAWAN") {
+    return { ok: false, status: 403, message: "Akses khusus untuk Wisatawan." };
+  }
+
+  return { ok: true, userId: user.id };
+}
