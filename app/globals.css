@@ -179,3 +179,11 @@
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Leaflet gives its internal panes/controls a high z-index (up to 1000+), which
+   can leak out and paint over the navbar (z-50) anywhere a map is embedded.
+   `isolation: isolate` confines that stacking to the map container itself. */
+.leaflet-container {
+  position: relative;
+  isolation: isolate;
+}
