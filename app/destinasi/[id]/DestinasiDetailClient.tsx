@@ -38,6 +38,8 @@ import {
   Bike,
   Compass,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
@@ -891,6 +893,27 @@ function MenuItemRow({
   );
 }
 
+/**
+ * Placeholder foto UMKM — dipakai kalau warung belum punya foto, mengikuti pola
+ * fallback kartu destinasi (gradient hijau tua + ikon halus, bukan gambar rusak).
+ */
+function UmkmPhotoFallback({ iconSize }: { iconSize: number }) {
+  return (
+    <div
+      className="w-full h-full flex items-center justify-center"
+      style={{
+        background:
+          "linear-gradient(135deg, var(--blusukan-primary-container) 0%, var(--blusukan-tertiary-container) 100%)",
+      }}
+    >
+      <ImageOff
+        size={iconSize}
+        style={{ color: "color-mix(in srgb, var(--blusukan-tertiary) 45%, transparent)" }}
+      />
+    </div>
+  );
+}
+
 /** Kartu ringkas UMKM dalam grid — foto, nama, pemilik, badge kategori saja. Klik untuk buka detail. */
 function UmkmCard({ warung, onClick }: { warung: Warung; onClick: () => void }) {
   return (
@@ -906,12 +929,7 @@ function UmkmCard({ warung, onClick }: { warung: Warung; onClick: () => void }) 
           // eslint-disable-next-line @next/next/no-img-element
           <img src={warung.photoUrls[0]} alt={warung.name} className="w-full h-full object-cover" />
         ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
-          >
-            <ImageOff size={24} style={{ color: "rgba(21,66,18,0.35)" }} />
-          </div>
+          <UmkmPhotoFallback iconSize={24} />
         )}
       </div>
       <div className="p-3">
@@ -1046,12 +1064,7 @@ function UmkmDetailDialog({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div
-                className="w-full h-full flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, rgba(45,90,39,0.15) 0%, rgba(21,66,18,0.25) 100%)" }}
-              >
-                <ImageOff size={28} style={{ color: "rgba(21,66,18,0.35)" }} />
-              </div>
+              <UmkmPhotoFallback iconSize={28} />
             )}
           </div>
           {warung.photoUrls.length > 1 && (
@@ -1393,6 +1406,9 @@ function ReviewFormCard({
   );
 }
 
+/** Jumlah ulasan yang tampil sebelum wisatawan menekan "Lihat Semua Ulasan". */
+const REVIEW_PREVIEW_COUNT = 5;
+
 /** Section "Ulasan Wisatawan" — form + daftar review, terpisah dari laporan kondisi lapangan */
 function UlasanWisatawanSection({
   destinationId,
@@ -1405,6 +1421,12 @@ function UlasanWisatawanSection({
   isLoggedIn: boolean;
   myReview: MyReview;
 }) {
+  const [showAll, setShowAll] = useState(false);
+
+  // reviews sudah terurut createdAt desc dari server, jadi 5 pertama = 5 terbaru
+  const visibleReviews = showAll ? reviews : reviews.slice(0, REVIEW_PREVIEW_COUNT);
+  const adaYangDisembunyikan = reviews.length > REVIEW_PREVIEW_COUNT;
+
   return (
     <div>
       <h2
@@ -1429,7 +1451,7 @@ function UlasanWisatawanSection({
             </div>
           </SectionCard>
         ) : (
-          reviews.map((r) => (
+          visibleReviews.map((r) => (
             <SectionCard key={r.id}>
               <div className="flex items-start gap-3 mb-3">
                 <div
@@ -1460,6 +1482,34 @@ function UlasanWisatawanSection({
               )}
             </SectionCard>
           ))
+        )}
+
+        {/* Tombol expand — hanya muncul kalau ada ulasan yang belum tampil */}
+        {adaYangDisembunyikan && (
+          <button
+            type="button"
+            id="btn-lihat-semua-ulasan"
+            onClick={() => setShowAll((v) => !v)}
+            aria-expanded={showAll}
+            className="w-full flex items-center justify-center gap-1.5 text-sm font-bold px-4 py-2.5 rounded-lg transition-opacity hover:opacity-90"
+            style={{
+              background: "var(--blusukan-surface-container-lowest)",
+              color: "var(--blusukan-primary)",
+              border: "1px solid var(--blusukan-primary)",
+            }}
+          >
+            {showAll ? (
+              <>
+                Tampilkan Lebih Sedikit
+                <ChevronUp size={14} />
+              </>
+            ) : (
+              <>
+                Lihat Semua Ulasan ({reviews.length})
+                <ChevronDown size={14} />
+              </>
+            )}
+          </button>
         )}
       </div>
     </div>
