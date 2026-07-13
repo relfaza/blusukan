@@ -2386,11 +2386,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
         fontFamily: "Inter, sans-serif",
       }}
     >
-      {/* ── Sticky breadcrumb header — offset mengikuti tinggi navbar pill mengambang ──
-          Navbar wrapper = pt-3/pt-4 (12/16px) + pill h-14 (56px) + border 1px atas&bawah (2px)
-          = 70px (mobile) / 74px (sm+). Offset di bawah HARUS persis sama dengan itu, kalau
-          tidak breadcrumb "menempel" lebih rendah/tinggi dari pill dan menyisakan celah warna
-          latar yang terlihat seperti kotak aneh di sekitar navbar. ── */}
+      {/* ── Sticky breadcrumb header, menempel di bawah navbar pill mengambang ── */}
       <header
         className="sticky top-[70px] sm:top-[74px] z-30 flex items-center gap-3 px-4 lg:px-8 py-3 border-b"
         style={{
@@ -2416,13 +2412,9 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
       </header>
 
       {/* ── Hero — foto besar dengan judul menumpang di atasnya (editorial) ──
-          -mt menarik foto sampai mentok ke ujung atas viewport, menembus "ruang kosong" yang
-          ditinggalkan navbar (sticky, in-flow, 70px/74px) + breadcrumb (sticky, in-flow, 45px)
-          di atasnya. Nilai ini HARUS persis = tinggi navbar + tinggi breadcrumb, kalau tidak
-          akan muncul celah/kotak warna latar yang tidak menyatu dengan foto di sekitar navbar.
-          Breadcrumb tidak diubah — ia tetap sticky di top-[70px]/[74px] dan otomatis melayang
-          di atas foto ini berkat z-30-nya. ── */}
-      <section className="relative w-full -mt-[115px] sm:-mt-[119px]">
+          Mengalir normal di bawah breadcrumb sticky, tanpa trik negative margin — foto di
+          halaman ini inset & rounded, beda dari hero full-bleed di Beranda. ── */}
+      <section className="relative w-full pt-6 sm:pt-8">
         {/* Lebar foto disamakan dengan container konten di bawahnya (max-w-7xl px-4 lg:px-8) */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div
