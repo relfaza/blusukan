@@ -57,7 +57,7 @@ export default function Footer() {
             className="mt-6 text-xs"
             style={{ color: "var(--blusukan-primary-fixed-dim)", fontFamily: "Inter, sans-serif" }}
           >
-            © 2026 Blusukan. Dibuat untuk Tugas Akhir Sistem Informasi.
+            © 2026 Blusukan.
           </p>
         </div>
 

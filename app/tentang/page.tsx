@@ -72,7 +72,6 @@ export default function TentangPage() {
       {/* ── Hero kecil ── */}
       <div
         className="px-4 lg:px-8 py-10 sm:py-14"
-        style={{ background: "var(--blusukan-primary-container)" }}
       >
         <div className="max-w-4xl mx-auto text-center">
           <p
@@ -111,10 +110,10 @@ export default function TentangPage() {
             style={{ color: "var(--blusukan-on-surface-variant)" }}
           >
             Blusukan hadir untuk menjawab tantangan wisata hidden gem di Yogyakarta yang kerap
-            minim informasi: harga yang tidak jelas, kondisi jalan yang tidak terpantau, serta
+            minim informasi seperti harga yang tidak jelas, kondisi jalan yang tidak terpantau, serta
             manfaat ekonomi yang belum sepenuhnya dirasakan masyarakat sekitar. Kami membangun
-            ekosistem yang transparan dan akuntabel — dari wisatawan, pengelola lokal, hingga
-            Dinas Pariwisata — agar setiap perjalanan aman direncanakan dan setiap kunjungan
+            ekosistem yang transparan dan akuntabel dari wisatawan, pengelola lokal, hingga
+            Dinas Pariwisata agar setiap perjalanan aman direncanakan dan setiap kunjungan
             memberi dampak nyata bagi ekonomi lokal.
           </p>
 
