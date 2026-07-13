@@ -724,11 +724,9 @@ export default function StatistikSection() {
         </ChartCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChartCard title="Tren Rating Rata-rata (6 Bulan Terakhir)">
-          <TrenRatingChart data={data.trenRatingRataRata} onPointClick={handleRatingBulanClick} />
-        </ChartCard>
-      </div>
+      <ChartCard title="Tren Rating Rata-rata (6 Bulan Terakhir)">
+        <TrenRatingChart data={data.trenRatingRataRata} onPointClick={handleRatingBulanClick} />
+      </ChartCard>
 
       <ChartDetailDialog state={detailState} onOpenChange={closeDetail} />
     </div>

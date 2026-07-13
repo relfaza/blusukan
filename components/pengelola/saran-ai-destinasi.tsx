@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Info, Lightbulb, Loader2, Sparkles } from "lucide-react";
+import { bersihkanTeksAi, keDaftarPoin } from "@/lib/ai-teks";
 
 type Hasil = {
   ringkasan: string;
@@ -19,6 +20,10 @@ export default function SaranAiDestinasi({ destinationId }: { destinationId: str
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasil, setHasil] = useState<Hasil | null>(null);
+
+  // Nomor saran sudah digambar UI — penanda "- " / "1." dari Gemini dibuang dulu.
+  const saran = hasil ? keDaftarPoin(hasil.saran) : [];
+  const ringkasan = hasil ? bersihkanTeksAi(hasil.ringkasan) : "";
 
   // Sengaja TIDAK pakai useEffect: request ke Gemini berbiaya kuota, jadi hanya
   // jalan kalau pengelola menekan tombol.
@@ -159,13 +164,13 @@ export default function SaranAiDestinasi({ destinationId }: { destinationId: str
             <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5">
               Ringkasan Kondisi
             </p>
-            <p className="text-sm leading-relaxed">{hasil.ringkasan}</p>
+            <p className="text-sm leading-relaxed">{ringkasan}</p>
           </div>
 
           {/* Daftar saran */}
-          {hasil.saran.length > 0 && (
+          {saran.length > 0 && (
             <ul className="space-y-2.5">
-              {hasil.saran.map((s, i) => (
+              {saran.map((s, i) => (
                 <li
                   key={i}
                   className="flex items-start gap-3 rounded-2xl p-4"
