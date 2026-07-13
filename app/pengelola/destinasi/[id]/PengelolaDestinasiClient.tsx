@@ -27,6 +27,7 @@ import {
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import RupiahInput from "@/components/ui/rupiah-input";
 import UmkmForm, { KATEGORI_UMKM_LABEL, type WarungFormValues } from "@/components/pengelola/umkm-form";
+import SaranAiDestinasi from "@/components/pengelola/saran-ai-destinasi";
 import PetaLokasi from "./PetaLokasi";
 
 type TransaksiRow = {
@@ -1623,7 +1624,11 @@ export default function PengelolaDestinasiClient({
       <div className="max-w-3xl mx-auto px-4 lg:px-8 pt-6 pb-12">
         <InformasiDestinasiSection destination={destination} />
 
-        <div className="flex gap-2 mb-6 mt-6 overflow-x-auto hide-scrollbar pb-1">
+        <div className="mt-6">
+          <SaranAiDestinasi destinationId={destination.id} />
+        </div>
+
+        <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-1">
           <button
             type="button"
             id="tab-transaksi"
