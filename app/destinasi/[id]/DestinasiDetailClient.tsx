@@ -2386,9 +2386,9 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
         fontFamily: "Inter, sans-serif",
       }}
     >
-      {/* ── Sticky breadcrumb header, menempel di bawah navbar pill mengambang ── */}
+      {/* ── Breadcrumb header, mengalir normal bersama konten (bukan sticky) ── */}
       <header
-        className="sticky top-[70px] sm:top-[74px] z-30 flex items-center gap-3 px-4 lg:px-8 py-3 border-b"
+        className="flex items-center gap-3 px-4 lg:px-8 py-3 border-b"
         style={{
           background: "color-mix(in srgb, var(--blusukan-surface) 88%, transparent)",
           backdropFilter: "blur(12px)",
@@ -2412,8 +2412,9 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
       </header>
 
       {/* ── Hero — foto besar dengan judul menumpang di atasnya (editorial) ──
-          Mengalir normal di bawah breadcrumb sticky, tanpa trik negative margin — foto di
-          halaman ini inset & rounded, beda dari hero full-bleed di Beranda. ── */}
+          Mengalir normal di bawah breadcrumb yang juga sudah normal flow, tanpa trik
+          negative margin — foto di halaman ini inset & rounded, beda dari hero
+          full-bleed di Beranda. ── */}
       <section className="relative w-full pt-6 sm:pt-8">
         {/* Lebar foto disamakan dengan container konten di bawahnya (max-w-7xl px-4 lg:px-8) */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
