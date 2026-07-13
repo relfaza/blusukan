@@ -3,6 +3,7 @@
 import StatistikSection from "./StatistikSection";
 import TrenKunjunganSection from "./TrenKunjunganSection";
 import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
+import InsightAi from "@/components/admin/insight-ai";
 import type { PeringkatDestinasi } from "@/lib/peringkat";
 
 const PERINGKAT_TABS: PeringkatWidgetTab[] = [
@@ -33,6 +34,7 @@ export default function DashboardClient({ peringkat }: { peringkat: PeringkatDes
         </p>
 
         <StatistikSection />
+        <InsightAi />
         <PeringkatWidget
           title="🏆 Top 5 Destinasi"
           tabs={PERINGKAT_TABS}

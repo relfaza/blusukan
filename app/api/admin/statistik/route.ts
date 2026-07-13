@@ -1,23 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { last6Months } from "@/lib/bulan";
 
-const BULAN_LABEL = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const TRANSAKSI_SELESAI_STATUS = ["SELESAI", "DIKONFIRMASI"] as const;
-
-function last6Months(): { bulan: string; year: number; month: number }[] {
-  const now = new Date();
-  const months = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({
-      bulan: `${BULAN_LABEL[d.getMonth()]} ${d.getFullYear()}`,
-      year: d.getFullYear(),
-      month: d.getMonth(),
-    });
-  }
-  return months;
-}
 
 export async function GET() {
   const authResult = await requireAdminApi();
