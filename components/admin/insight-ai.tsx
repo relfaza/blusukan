@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Info, Lightbulb, Loader2, Sparkles, TrendingUp } from "lucide-react";
+import { keDaftarPoin } from "@/lib/ai-teks";
 
 type Hasil = {
   insightUtama: string[];
@@ -19,6 +20,11 @@ export default function InsightAi() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasil, setHasil] = useState<Hasil | null>(null);
+
+  // Poin dibersihkan dulu — bullet & nomor sudah digambar UI, penanda "- " dari
+  // Gemini tidak boleh ikut terbaca sebagai teks.
+  const insightUtama = hasil ? keDaftarPoin(hasil.insightUtama) : [];
+  const rekomendasi = hasil ? keDaftarPoin(hasil.rekomendasi) : [];
 
   // Sengaja TIDAK pakai useEffect: request ke Gemini berbiaya kuota, jadi hanya
   // jalan kalau admin menekan tombol.
@@ -63,8 +69,8 @@ export default function InsightAi() {
         Insight &amp; Rekomendasi AI
       </h2>
       <p className="text-sm mb-4" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-        Asisten akan membaca data agregat sistem — sebaran destinasi, laporan kondisi, peringkat, dan
-        tren 6 bulan terakhir — lalu menyusun insight serta usulan kebijakan.
+        Asisten akan membaca data agregat sistem seperti sebaran destinasi, laporan kondisi, peringkat, dan
+        tren 6 bulan terakhir lalu menyusun insight serta usulan kebijakan.
       </p>
 
       <button
@@ -155,13 +161,13 @@ export default function InsightAi() {
                 Insight Utama
               </h3>
 
-              {hasil.insightUtama.length === 0 ? (
+              {insightUtama.length === 0 ? (
                 <p className="text-sm" style={{ color: "var(--blusukan-outline)" }}>
                   Belum ada insight yang bisa disimpulkan dari data saat ini.
                 </p>
               ) : (
                 <ul className="space-y-2.5">
-                  {hasil.insightUtama.map((poin, i) => (
+                  {insightUtama.map((poin, i) => (
                     <li key={i} className="flex items-start gap-2.5">
                       <Lightbulb
                         size={15}
@@ -196,13 +202,13 @@ export default function InsightAi() {
                 Rekomendasi Kebijakan
               </h3>
 
-              {hasil.rekomendasi.length === 0 ? (
+              {rekomendasi.length === 0 ? (
                 <p className="text-sm" style={{ color: "var(--blusukan-outline)" }}>
                   Belum ada rekomendasi yang bisa disusun dari data saat ini.
                 </p>
               ) : (
                 <ol className="space-y-2.5">
-                  {hasil.rekomendasi.map((poin, i) => (
+                  {rekomendasi.map((poin, i) => (
                     <li key={i} className="flex items-start gap-2.5">
                       <span
                         className="flex items-center justify-center w-6 h-6 rounded-full shrink-0 text-[11px] font-extrabold"

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, Info, Loader2, Sparkles, Send } from "lucide-react";
 import DestinasiCard from "@/components/destinasi-card";
+import { bersihkanTeksAi, keDaftarPoin } from "@/lib/ai-teks";
 import type { DestinationForClient } from "@/lib/destinasi-beranda";
 
 type Rekomendasi = {
@@ -28,6 +29,10 @@ export default function AiAsistenWisatawan() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasil, setHasil] = useState<HasilRekomendasi | null>(null);
+
+  // Gemini kadang menjawab dalam format markdown list. Dipecah per poin dan
+  // penandanya dibuang, supaya tidak muncul "-" mentah di depan teks.
+  const responsSingkat = hasil ? keDaftarPoin(hasil.responsSingkat) : [];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -216,7 +221,17 @@ export default function AiAsistenWisatawan() {
               fontFamily: "Inter, sans-serif",
             }}
           >
-            {hasil.responsSingkat}
+            {/* Kalau Gemini menjawab dalam beberapa poin, tampilkan sebagai bullet
+                asli — bukan satu paragraf berisi tanda "-". */}
+            {responsSingkat.length > 1 ? (
+              <ul className="list-disc pl-5 space-y-1">
+                {responsSingkat.map((poin, i) => (
+                  <li key={i}>{poin}</li>
+                ))}
+              </ul>
+            ) : (
+              responsSingkat[0]
+            )}
           </div>
 
           {hasil.rekomendasi.length === 0 ? (
@@ -241,7 +256,7 @@ export default function AiAsistenWisatawan() {
                         fontFamily: "Inter, sans-serif",
                       }}
                     >
-                      {alasan}
+                      {bersihkanTeksAi(alasan)}
                     </p>
                   }
                 />
