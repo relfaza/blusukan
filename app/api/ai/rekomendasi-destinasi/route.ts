@@ -93,6 +93,7 @@ export async function POST(req: Request) {
   let hasil: GeminiRekomendasi;
   try {
     hasil = await generateJson<GeminiRekomendasi>({
+      asal: "ai/rekomendasi-destinasi",
       systemInstruction: SYSTEM_INSTRUCTION,
       prompt: [
         "Daftar destinasi yang tersedia (JSON):",

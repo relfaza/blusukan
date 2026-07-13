@@ -161,6 +161,7 @@ export async function POST(req: Request) {
   let hasil: GeminiSaran;
   try {
     hasil = await generateJson<GeminiSaran>({
+      asal: "ai/saran-pengelola",
       systemInstruction: SYSTEM_INSTRUCTION,
       prompt: `Data destinasi (JSON):\n${JSON.stringify(konteks)}`,
     });
