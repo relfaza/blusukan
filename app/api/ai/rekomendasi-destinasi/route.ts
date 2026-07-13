@@ -2,48 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getDestinasiBeranda, type DestinationForClient } from "@/lib/destinasi-beranda";
 import { GeminiError, generateJson } from "@/lib/gemini";
+import { getRateLimitKey, tolakKarenaRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const RATE_LIMIT_MS = 5_000;
 const MAX_PROMPT_LENGTH = 500;
 const MAX_REKOMENDASI = 5;
 const MAX_ALASAN_LENGTH = 300;
-
-/**
- * Rate limit sederhana: 1 permintaan per 5 detik per pemanggil.
- *
- * Disimpan di memori proses — cukup untuk menahan spam klik ke API Gemini yang
- * berkuota, tapi TIDAK tahan lintas-instance. Kalau nanti di-deploy multi-instance
- * (atau serverless), state ini perlu dipindah ke Redis/DB.
- */
-const lastRequestAt = new Map<string, number>();
-
-function tolakKarenaRateLimit(key: string, now: number): boolean {
-  // Buang entri kedaluwarsa dulu supaya Map tidak tumbuh tanpa batas
-  for (const [k, waktu] of lastRequestAt) {
-    if (now - waktu > RATE_LIMIT_MS) {
-      lastRequestAt.delete(k);
-    }
-  }
-
-  const sebelumnya = lastRequestAt.get(key);
-  if (sebelumnya !== undefined && now - sebelumnya < RATE_LIMIT_MS) {
-    return true;
-  }
-
-  lastRequestAt.set(key, now);
-  return false;
-}
-
-/** Identitas pemanggil: userId kalau login, kalau tamu jatuh ke IP dari proxy. */
-function getRateLimitKey(req: Request, userId: string | undefined): string {
-  if (userId) return `user:${userId}`;
-
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
-  return `ip:${ip}`;
-}
 
 const SYSTEM_INSTRUCTION = `Kamu adalah asisten rekomendasi wisata untuk aplikasi Blusukan (wisata Yogyakarta).
 
