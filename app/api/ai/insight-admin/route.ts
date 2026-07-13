@@ -180,6 +180,7 @@ export async function POST(req: Request) {
   let hasil: GeminiInsight;
   try {
     hasil = await generateJson<GeminiInsight>({
+      asal: "ai/insight-admin",
       systemInstruction: SYSTEM_INSTRUCTION,
       prompt: `Data agregat sistem Blusukan (JSON):\n${JSON.stringify(konteks)}`,
     });
