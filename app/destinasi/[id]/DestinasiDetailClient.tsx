@@ -300,10 +300,10 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
       className="flex items-center gap-2.5 text-base font-extrabold mb-5"
       style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
     >
-      <span
+      {/* <span
         className="w-1 h-5 rounded-full shrink-0"
         style={{ background: "var(--blusukan-primary)" }}
-      />
+      /> */}
       {children}
     </h2>
   );
@@ -384,11 +384,10 @@ function FasilitasItem({ label, value, icon }: { label: string; value: boolean; 
         background: value
           ? "color-mix(in srgb, var(--blusukan-primary-container) 55%, transparent)"
           : "var(--blusukan-surface-low)",
-        border: `1px solid ${
-          value
-            ? "color-mix(in srgb, var(--blusukan-primary) 22%, transparent)"
-            : "var(--blusukan-outline-variant)"
-        }`,
+        border: `1px solid ${value
+          ? "color-mix(in srgb, var(--blusukan-primary) 22%, transparent)"
+          : "var(--blusukan-outline-variant)"
+          }`,
       }}
     >
       <span style={{ color: value ? "var(--blusukan-primary)" : "var(--blusukan-outline)" }}>
@@ -1698,8 +1697,7 @@ function TransportBookingDialog({
 
   if (confirmed) {
     const waMessage =
-      `Halo ${service.providerName}, saya baru saja melakukan reservasi *${
-        SERVICE_TYPE_LABEL[service.serviceType] ?? service.serviceType
+      `Halo ${service.providerName}, saya baru saja melakukan reservasi *${SERVICE_TYPE_LABEL[service.serviceType] ?? service.serviceType
       }* melalui Blusukan.\n\n` +
       `Destinasi: ${destinationName}\n` +
       `Tanggal: ${formatTanggalBooking(confirmed.travelDate)}\n` +
@@ -2388,7 +2386,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
     >
       {/* ── Breadcrumb header, mengalir normal bersama konten (bukan sticky) ── */}
       <header
-        className="flex items-center gap-3 px-4 lg:px-8 py-3 border-b"
+        className="flex items-center gap-3 px-4 lg:px-8 pt-2 pb-2 mt-3"
         style={{
           background: "color-mix(in srgb, var(--blusukan-surface) 88%, transparent)",
           backdropFilter: "blur(12px)",
@@ -2480,100 +2478,100 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
             <div className="absolute inset-x-0 bottom-0">
               <div className="px-5 sm:px-7 lg:px-8 pb-6 sm:pb-7">
                 <div className="flex flex-wrap gap-2 items-center mb-3">
-                <span
-                  className="text-[10px] font-bold uppercase tracking-[0.18em] px-2.5 py-1 rounded-full"
-                  style={{
-                    background: "var(--blusukan-secondary-container)",
-                    color: "var(--blusukan-secondary)",
-                  }}
-                >
-                  {KATEGORI_LABEL[d.kategori] ?? d.kategori}
-                </span>
-                {d.vibeTags.map((tag) => (
                   <span
-                    key={tag}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm"
-                    style={{
-                      background: "color-mix(in srgb, var(--blusukan-on-primary) 20%, transparent)",
-                      color: "var(--blusukan-on-primary)",
-                    }}
-                  >
-                    {VIBE_LABEL[tag] ?? tag}
-                  </span>
-                ))}
-                {popularityBadge && (
-                  <span
-                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                    className="text-[10px] font-bold uppercase tracking-[0.18em] px-2.5 py-1 rounded-full"
                     style={{
                       background: "var(--blusukan-secondary-container)",
                       color: "var(--blusukan-secondary)",
                     }}
                   >
-                    {popularityBadge.kind === "trending" ? (
-                      <TrendingUp size={13} />
-                    ) : (
-                      <Star size={13} />
-                    )}
-                    {popularityBadge.label}
+                    {KATEGORI_LABEL[d.kategori] ?? d.kategori}
                   </span>
-                )}
-              </div>
-
-              <h1
-                className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight"
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  color: "var(--blusukan-on-primary)",
-                  textShadow: "0 2px 24px rgba(0,0,0,0.35)",
-                }}
-              >
-                {d.name}
-              </h1>
-
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
-                <div className="flex items-center gap-1.5">
-                  <MapPin
-                    size={15}
-                    style={{ color: "var(--blusukan-primary-fixed-dim)" }}
-                  />
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: "var(--blusukan-on-primary)" }}
-                  >
-                    {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, Daerah Istimewa Yogyakarta
-                  </span>
+                  {d.vibeTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm"
+                      style={{
+                        background: "color-mix(in srgb, var(--blusukan-on-primary) 20%, transparent)",
+                        color: "var(--blusukan-on-primary)",
+                      }}
+                    >
+                      {VIBE_LABEL[tag] ?? tag}
+                    </span>
+                  ))}
+                  {popularityBadge && (
+                    <span
+                      className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                      style={{
+                        background: "var(--blusukan-secondary-container)",
+                        color: "var(--blusukan-secondary)",
+                      }}
+                    >
+                      {popularityBadge.kind === "trending" ? (
+                        <TrendingUp size={13} />
+                      ) : (
+                        <Star size={13} />
+                      )}
+                      {popularityBadge.label}
+                    </span>
+                  )}
                 </div>
-                {d.totalReview > 0 && (
-                  <div
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-sm"
-                    id="rating-ringkasan"
-                    style={{
-                      background: "color-mix(in srgb, var(--blusukan-on-primary) 18%, transparent)",
-                    }}
-                  >
-                    <Star
+
+                <h1
+                  className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight"
+                  style={{
+                    fontFamily: "Montserrat, sans-serif",
+                    color: "var(--blusukan-on-primary)",
+                    textShadow: "0 2px 24px rgba(0,0,0,0.35)",
+                  }}
+                >
+                  {d.name}
+                </h1>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
+                  <div className="flex items-center gap-1.5">
+                    <MapPin
                       size={15}
-                      fill="var(--blusukan-rating)"
-                      style={{ color: "var(--blusukan-rating)" }}
+                      style={{ color: "var(--blusukan-primary-fixed-dim)" }}
                     />
                     <span
-                      className="text-sm font-bold"
+                      className="text-sm font-medium"
                       style={{ color: "var(--blusukan-on-primary)" }}
                     >
-                      {d.rataRataRating.toFixed(1)}
-                    </span>
-                    <span
-                      className="text-sm"
-                      style={{ color: "var(--blusukan-primary-container)" }}
-                    >
-                      ({d.totalReview} ulasan)
+                      {KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten}, Daerah Istimewa Yogyakarta
                     </span>
                   </div>
-                )}
+                  {d.totalReview > 0 && (
+                    <div
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-sm"
+                      id="rating-ringkasan"
+                      style={{
+                        background: "color-mix(in srgb, var(--blusukan-on-primary) 18%, transparent)",
+                      }}
+                    >
+                      <Star
+                        size={15}
+                        fill="var(--blusukan-rating)"
+                        style={{ color: "var(--blusukan-rating)" }}
+                      />
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: "var(--blusukan-on-primary)" }}
+                      >
+                        {d.rataRataRating.toFixed(1)}
+                      </span>
+                      <span
+                        className="text-sm"
+                        style={{ color: "var(--blusukan-primary-container)" }}
+                      >
+                        ({d.totalReview} ulasan)
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
       </section>
 
@@ -2581,7 +2579,7 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
 
         {/* ── Galeri foto — hanya tampil kalau destinasi punya lebih dari 1 foto ── */}
         {d.photoUrls.length > 1 && (
-          <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pt-5 pb-1">
+          <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pt-5 pb-1 px-1.5">
             {d.photoUrls.map((url, idx) => {
               const isActive = idx === activePhotoIdx;
               return (
@@ -2770,15 +2768,15 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
                                 r.roadCondition === "RUSAK"
                                   ? "var(--blusukan-error-container)"
                                   : r.roadCondition === "SULIT"
-                                  ? "var(--blusukan-secondary-container)"
-                                  : "var(--blusukan-primary-container)"
+                                    ? "var(--blusukan-secondary-container)"
+                                    : "var(--blusukan-primary-container)"
                               }
                               color={
                                 r.roadCondition === "RUSAK"
                                   ? "var(--blusukan-error)"
                                   : r.roadCondition === "SULIT"
-                                  ? "var(--blusukan-secondary)"
-                                  : "var(--blusukan-primary)"
+                                    ? "var(--blusukan-secondary)"
+                                    : "var(--blusukan-primary)"
                               }
                             />
                           )}
