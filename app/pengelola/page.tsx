@@ -41,7 +41,7 @@ export default async function PengelolaPage() {
       style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}
     >
       {/* ── Header — heading sederhana di atas background cream ── */}
-      <div className="max-w-5xl mx-auto px-4 lg:px-8 pt-10 pb-2">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-10 pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1
@@ -71,7 +71,7 @@ export default async function PengelolaPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 lg:px-8 pb-16">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-16">
         <PengelolaClient destinations={items} />
       </div>
     </div>
