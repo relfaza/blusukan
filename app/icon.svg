@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Blusukan">
+  <defs>
+    <linearGradient id="pin" x1="14" y1="6" x2="50" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2FA55E" />
+      <stop offset="1" stop-color="#14588F" />
+    </linearGradient>
+    <clipPath id="lens">
+      <circle cx="32" cy="24" r="13" />
+    </clipPath>
+  </defs>
+
+  <!-- Badan pin -->
+  <path
+    d="M32 3C20.4 3 11 12.4 11 24c0 15.8 21 37 21 37s21-21.2 21-37C53 12.4 43.6 3 32 3z"
+    fill="url(#pin)"
+  />
+
+  <!-- Lensa putih -->
+  <circle cx="32" cy="24" r="13" fill="#ffffff" />
+
+  <!-- Gunung + jalur, dipotong lingkaran lensa -->
+  <g clip-path="url(#lens)">
+    <path d="M17 38 27 22l5 6 4-5 11 15z" fill="url(#pin)" />
+    <path d="M19 38c6-5 13-6 21-10-4 6-10 8-14 10z" fill="#ffffff" />
+  </g>
+</svg>
