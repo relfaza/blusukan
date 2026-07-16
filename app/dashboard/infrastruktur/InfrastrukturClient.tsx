@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Check, X } from "lucide-react";
 import AdminFilterBar from "@/components/admin/admin-filter-bar";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
 
 const AdminMapHeatmapJalan = dynamic(() => import("@/components/admin-map-heatmap-jalan"), {
   ssr: false,
@@ -26,6 +27,14 @@ const KABUPATEN_LABEL: Record<string, string> = {
   BANTUL: "Bantul",
   KULON_PROGO: "Kulon Progo",
   KOTA_YOGYAKARTA: "Kota Yogyakarta",
+};
+
+const ROUTE_LABEL: Record<string, string> = {
+  MUDAH: "Mudah",
+  SEDANG: "Sedang",
+  SULIT: "Sulit",
+  RUSAK: "Rusak",
+  BELUM_ADA_DATA: "Belum ada data",
 };
 
 type Destinasi = {
@@ -50,6 +59,17 @@ const FASILITAS_KOLOM: { key: keyof Destinasi; label: string }[] = [
   { key: "hasTempatIbadah", label: "Tempat Ibadah" },
   { key: "hasTempatDuduk", label: "Tempat Duduk" },
   { key: "hasPenitipanBarang", label: "Penitipan Barang" },
+];
+
+const EXPORT_COLUMNS: ExportColumn<Destinasi>[] = [
+  { key: "name", header: "Nama Destinasi" },
+  { key: "kabupaten", header: "Kabupaten", format: (d) => KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten },
+  { key: "routeStatus", header: "Kondisi Jalan", format: (d) => ROUTE_LABEL[d.routeStatus] ?? d.routeStatus },
+  ...FASILITAS_KOLOM.map((k) => ({
+    key: k.key as string,
+    header: k.label,
+    format: (d: Destinasi) => (d[k.key] ? "Ya" : "Tidak"),
+  })),
 ];
 
 function CheckCell({ value }: { value: boolean }) {
@@ -172,12 +192,20 @@ export default function InfrastrukturClient() {
 
         {/* ── Section 2: Tabel Kelayakan Fasilitas ── */}
         <section>
-          <h2
-            className="text-lg font-bold mb-4"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-          >
-            Tabel Kelayakan Fasilitas Dasar
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2
+              className="text-lg font-bold"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            >
+              Tabel Kelayakan Fasilitas Dasar
+            </h2>
+            <AdminExportButton
+              data={terfilter}
+              columns={EXPORT_COLUMNS}
+              filenameBase="kelayakan-fasilitas"
+              title="Kelayakan Fasilitas Dasar"
+            />
+          </div>
 
           {!data && !error ? (
             <div

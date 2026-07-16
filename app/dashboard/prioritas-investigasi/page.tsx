@@ -6,8 +6,32 @@ import type { RouteStatus } from "@/lib/generated/prisma/enums";
 import type { KlasifikasiPrioritas } from "@/lib/peringkat";
 import { parseAdminFilters } from "@/lib/admin-filters";
 import AdminFilterBar from "@/components/admin/admin-filter-bar";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
 
 export const dynamic = "force-dynamic";
+
+// Label klasifikasi tanpa emoji untuk ekspor (font PDF tidak merender emoji).
+const KLASIFIKASI_EXPORT_LABEL: Record<KlasifikasiPrioritas, string> = {
+  PERLU_INVESTIGASI: "Perlu Investigasi",
+  PEMELIHARAAN_RUTIN: "Pemeliharaan Rutin",
+};
+
+type PrioritasExportRow = {
+  nama: string;
+  kabupaten: string;
+  kunjungan: number;
+  kondisiJalan: string;
+  klasifikasi: string;
+};
+
+// Kolom polos (tanpa fungsi) supaya aman dilewatkan dari Server ke Client Component.
+const PRIORITAS_EXPORT_COLUMNS: ExportColumn<PrioritasExportRow>[] = [
+  { key: "nama", header: "Nama" },
+  { key: "kabupaten", header: "Kabupaten" },
+  { key: "kunjungan", header: "Kunjungan (30 hari)" },
+  { key: "kondisiJalan", header: "Kondisi Jalan Terakhir" },
+  { key: "klasifikasi", header: "Klasifikasi" },
+];
 
 const KABUPATEN_LABEL: Record<string, string> = {
   SLEMAN: "Sleman",
@@ -40,6 +64,14 @@ export default async function PrioritasInvestigasiPage({
   const filters = parseAdminFilters(await searchParams);
   const prioritas = await getPrioritasInvestigasi(filters);
 
+  const exportRows: PrioritasExportRow[] = prioritas.map((d) => ({
+    nama: d.name,
+    kabupaten: KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten,
+    kunjungan: d.jumlahKunjungan,
+    kondisiJalan: KONDISI_JALAN[d.kondisiJalanTerakhir]?.label ?? d.kondisiJalanTerakhir,
+    klasifikasi: KLASIFIKASI_EXPORT_LABEL[d.klasifikasi],
+  }));
+
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
       <div className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
@@ -52,14 +84,22 @@ export default async function PrioritasInvestigasiPage({
           ← Kembali ke Dashboard
         </Link>
 
-        <div className="flex items-center gap-2 mb-1">
-          <AlertTriangle size={22} style={{ color: "var(--blusukan-primary)" }} />
-          <h1
-            className="text-2xl font-bold"
-            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-          >
-            Prioritas Investigasi
-          </h1>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={22} style={{ color: "var(--blusukan-primary)" }} />
+            <h1
+              className="text-2xl font-bold"
+              style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+            >
+              Prioritas Investigasi
+            </h1>
+          </div>
+          <AdminExportButton
+            data={exportRows}
+            columns={PRIORITAS_EXPORT_COLUMNS}
+            filenameBase="prioritas-investigasi"
+            title="Prioritas Investigasi"
+          />
         </div>
         <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Diurutkan dari kunjungan paling sedikit (30 hari) — destinasi sepi dengan kondisi jalan buruk perlu ditinjau

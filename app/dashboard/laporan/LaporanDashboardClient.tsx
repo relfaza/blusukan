@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, MessageSquare, MapPin } from "lucide-react";
 import AdminFilterBar from "@/components/admin/admin-filter-bar";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import ChartDetailDialog, { type DetailColumn } from "../ChartDetailDialog";
 import { useChartDetail } from "../useChartDetail";
@@ -211,6 +212,13 @@ function DistribusiKondisiJalanTotalChart({
   );
 }
 
+const EXPORT_COLUMNS: ExportColumn<DestinasiLaporan>[] = [
+  { key: "name", header: "Nama Destinasi" },
+  { key: "kabupaten", header: "Kabupaten", format: (d) => KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten },
+  { key: "jumlahLaporan", header: "Jumlah Laporan", format: (d) => String(d.jumlahLaporan) },
+  { key: "ringkasan", header: "Ringkasan Kondisi Jalan", format: (d) => formatBreakdownRingkas(d.breakdownKondisiJalan) },
+];
+
 export default function LaporanDashboardClient() {
   const [items, setItems] = useState<DestinasiLaporan[] | null>(null);
   const [laporanTotal, setLaporanTotal] = useState<LaporanTotal | null>(null);
@@ -270,12 +278,20 @@ export default function LaporanDashboardClient() {
           Kembali ke Dashboard
         </Link>
 
-        <h1
-          className="text-2xl font-bold mb-1"
-          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-        >
-          Laporan Masuk
-        </h1>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+          <h1
+            className="text-2xl font-bold"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+          >
+            Laporan Masuk
+          </h1>
+          <AdminExportButton
+            data={items ?? []}
+            columns={EXPORT_COLUMNS}
+            filenameBase="laporan-masuk"
+            title="Laporan Masuk per Destinasi"
+          />
+        </div>
         <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Destinasi dengan laporan kondisi lapangan dari wisatawan
         </p>

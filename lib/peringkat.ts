@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { RouteStatus } from "@/lib/generated/prisma/enums";
-import { destinationFilterWhere, type AdminFilters } from "@/lib/admin-filters";
+import type { AdminFilters } from "@/lib/admin-filters";
+import { getKondisiJalanTerakhirMap } from "@/lib/kondisi-jalan";
 
 export type PeringkatDestinasi = {
   id: string;
@@ -77,7 +78,8 @@ export async function getPrioritasInvestigasi(
 
   const [destinations, kunjunganGroups, laporanJalan] = await Promise.all([
     prisma.destination.findMany({
-      where: { status: "APPROVED", ...destinationFilterWhere(filters) },
+      // Filter kabupaten di query; kondisi jalan difilter dari laporan warga (di bawah).
+      where: { status: "APPROVED", ...(filters.kabupaten ? { kabupaten: filters.kabupaten } : {}) },
       select: { id: true, name: true, kabupaten: true, routeStatus: true },
     }),
     prisma.transaksi.groupBy({
@@ -94,13 +96,12 @@ export async function getPrioritasInvestigasi(
 
   const kunjunganMap = new Map(kunjunganGroups.map((g) => [g.destinationId, g._count._all]));
 
-  // Laporan sudah terurut terbaru → paling awal; simpan kondisi terakhir & flag jalan buruk 30 hari.
-  const kondisiTerakhirMap = new Map<string, RouteStatus>();
+  // Kondisi jalan terakhir = laporan warga terbaru (semua waktu), sama dengan halaman Infrastruktur.
+  const kondisiMap = await getKondisiJalanTerakhirMap(destinations.map((d) => d.id));
+
+  // Flag "ada jalan buruk" tetap memakai jendela 30 hari (untuk klasifikasi Perlu Investigasi).
   const adaJalanBurukMap = new Map<string, boolean>();
   for (const laporan of laporanJalan) {
-    if (!kondisiTerakhirMap.has(laporan.destinationId)) {
-      kondisiTerakhirMap.set(laporan.destinationId, laporan.roadCondition);
-    }
     if (KONDISI_JALAN_BURUK.includes(laporan.roadCondition)) {
       adaJalanBurukMap.set(laporan.destinationId, true);
     }
@@ -111,19 +112,26 @@ export async function getPrioritasInvestigasi(
     name: d.name,
     kabupaten: d.kabupaten,
     jumlahKunjungan: kunjunganMap.get(d.id) ?? 0,
-    kondisiJalanTerakhir: kondisiTerakhirMap.get(d.id) ?? d.routeStatus,
+    kondisiJalanTerakhir: kondisiMap.get(d.id) ?? d.routeStatus,
     adaJalanBuruk: adaJalanBurukMap.get(d.id) ?? false,
   }));
 
+  // Rata-rata keseluruhan dihitung dari semua destinasi (kabupaten terpilih), sebelum filter kondisi jalan.
   const rataRataKunjungan =
     rows.length > 0 ? rows.reduce((sum, r) => sum + r.jumlahKunjungan, 0) / rows.length : 0;
 
-  return rows
-    .map(({ adaJalanBuruk, ...r }) => ({
-      ...r,
-      klasifikasi: (r.jumlahKunjungan < rataRataKunjungan && adaJalanBuruk
-        ? "PERLU_INVESTIGASI"
-        : "PEMELIHARAAN_RUTIN") as KlasifikasiPrioritas,
-    }))
-    .sort((a, b) => a.jumlahKunjungan - b.jumlahKunjungan);
+  const hasil = rows.map(({ adaJalanBuruk, ...r }) => ({
+    ...r,
+    klasifikasi: (r.jumlahKunjungan < rataRataKunjungan && adaJalanBuruk
+      ? "PERLU_INVESTIGASI"
+      : "PEMELIHARAAN_RUTIN") as KlasifikasiPrioritas,
+  }));
+
+  // Filter kondisi jalan dicocokkan ke kondisi jalan terakhir yang dilaporkan warga
+  // (kolom "Kondisi Jalan Terakhir"), bukan field routeStatus resmi.
+  const terfilter = filters.kondisiJalan
+    ? hasil.filter((r) => r.kondisiJalanTerakhir === filters.kondisiJalan)
+    : hasil;
+
+  return terfilter.sort((a, b) => a.jumlahKunjungan - b.jumlahKunjungan);
 }

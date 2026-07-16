@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet, MapPin, Receipt
 import type { PeringkatKeuangan } from "@/lib/peringkat-keuangan";
 import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
 import AdminFilterBar from "@/components/admin/admin-filter-bar";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
 import ChartDetailDialog, { type DetailColumn } from "../ChartDetailDialog";
 import { useChartDetail } from "../useChartDetail";
 import {
@@ -61,6 +62,15 @@ const TRANSAKSI_COLUMNS: DetailColumn[] = [
   { key: "totalHarga", label: "Total", format: (v) => formatRupiah(Number(v)) },
   { key: "status", label: "Status", format: (v) => TRANSAKSI_STATUS_LABEL[v as string] ?? String(v) },
   { key: "createdAt", label: "Tanggal", format: formatTanggalSingkat },
+];
+
+const EXPORT_COLUMNS: ExportColumn<PeringkatKeuangan>[] = [
+  { key: "name", header: "Nama Destinasi" },
+  { key: "kabupaten", header: "Kabupaten", format: (d) => KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten },
+  { key: "kategori", header: "Kategori", format: (d) => KATEGORI_LABEL[d.kategori] ?? d.kategori },
+  { key: "submittedByName", header: "Dikelola oleh" },
+  { key: "totalPendapatan", header: "Total Pendapatan", format: (d) => formatRupiah(d.totalPendapatan) },
+  { key: "jumlahTransaksi", header: "Jumlah Transaksi", format: (d) => String(d.jumlahTransaksi) },
 ];
 
 export default function KeuanganDashboardClient({
@@ -131,15 +141,23 @@ export default function KeuanganDashboardClient({
             <ArrowLeft size={16} />
             Kembali ke Dashboard
           </Link>
-          <Link
-            href="/dashboard/transaksi?from=keuangan"
-            id="link-log-transaksi"
-            className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
-            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
-          >
-            <Receipt size={14} />
-            Log Transaksi
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <AdminExportButton
+              data={semuaDestinasiKeuangan}
+              columns={EXPORT_COLUMNS}
+              filenameBase="keuangan-per-destinasi"
+              title="Keuangan per Destinasi"
+            />
+            <Link
+              href="/dashboard/transaksi?from=keuangan"
+              id="link-log-transaksi"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
+              style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+            >
+              <Receipt size={14} />
+              Log Transaksi
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 mb-1">

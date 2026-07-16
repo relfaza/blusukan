@@ -22,7 +22,7 @@ export default async function KunjunganPage() {
           Tren kunjungan wisatawan dari waktu ke waktu
         </p>
 
-        <AdminFilterBar className="mb-8" />
+        <AdminFilterBar showKondisiJalan={false} className="mb-8" />
 
         <TrenKunjunganSection />
       </div>

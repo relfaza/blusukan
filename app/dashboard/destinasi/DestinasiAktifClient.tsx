@@ -6,6 +6,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { MapPin, Search, BarChart3 } from "lucide-react";
 import AdminFilterBar from "@/components/admin/admin-filter-bar";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
 
 const AdminMapOverview = dynamic(() => import("@/components/admin-map-overview"), {
   ssr: false,
@@ -51,6 +52,18 @@ const KATEGORI_LABEL: Record<string, string> = {
 };
 
 const KATEGORI_OPTIONS = [{ value: "ALL", label: "Semua" }, ...Object.entries(KATEGORI_LABEL).map(([value, label]) => ({ value, label }))];
+
+const EXPORT_COLUMNS: ExportColumn<DestinasiRow>[] = [
+  { key: "name", header: "Nama" },
+  { key: "kabupaten", header: "Kabupaten", format: (d) => KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten },
+  { key: "kategori", header: "Kategori", format: (d) => KATEGORI_LABEL[d.kategori] ?? d.kategori },
+  { key: "submittedByName", header: "Dikelola oleh" },
+  {
+    key: "createdAt",
+    header: "Ditambahkan",
+    format: (d) => new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(d.createdAt)),
+  },
+];
 
 const SORT_OPTIONS: { value: "terbaru" | "terlama"; label: string }[] = [
   { value: "terbaru", label: "Terbaru" },
@@ -151,15 +164,23 @@ export default function DestinasiAktifClient() {
           >
             ← Kembali ke Dashboard
           </Link>
-          <Link
-            href="/dashboard/peringkat?from=destinasi"
-            id="link-lihat-peringkat"
-            className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
-            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
-          >
-            <BarChart3 size={14} />
-            Lihat Peringkat Keramaian
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <AdminExportButton
+              data={items ?? []}
+              columns={EXPORT_COLUMNS}
+              filenameBase="destinasi-aktif"
+              title="Destinasi Aktif"
+            />
+            <Link
+              href="/dashboard/peringkat?from=destinasi"
+              id="link-lihat-peringkat"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
+              style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+            >
+              <BarChart3 size={14} />
+              Lihat Peringkat Keramaian
+            </Link>
+          </div>
         </div>
 
         <h1
@@ -196,7 +217,7 @@ export default function DestinasiAktifClient() {
         </div>
 
         <div className="space-y-4 mb-6">
-          <AdminFilterBar />
+          <AdminFilterBar showKondisiJalan={false} />
 
           <section>
             <h2 className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
