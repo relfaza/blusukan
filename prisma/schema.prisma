@@ -169,6 +169,7 @@ model Destination {
   transaksis Transaksi[]
   fasilitas  Fasilitas[]
   reviews    Review[]
+  penginapan Penginapan[]
 }
 
 model LocalService {
@@ -349,4 +350,18 @@ model Review {
   createdAt     DateTime    @default(now())
 
   @@unique([userId, destinationId])
+}
+
+// Data penginapan/homestay di sekitar destinasi — input manual Admin/Pengelola
+// (representasi data Pokdarwis, PRD FR-006). Dipakai sebagai satu-satunya sumber
+// rekomendasi AI penginapan (tidak boleh mengarang penginapan baru).
+model Penginapan {
+  id            String      @id @default(cuid())
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  nama          String
+  jarakKm       Float
+  estimasiHarga Decimal
+  kontak        String
+  createdAt     DateTime    @default(now())
 }

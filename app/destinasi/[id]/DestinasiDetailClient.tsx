@@ -44,6 +44,7 @@ import {
 import type { MapDestination } from "@/components/DestinationMap";
 import { getPopularityBadge } from "@/lib/popularity";
 import { formatJamOperasionalLabel, isJamBukaValid, type JamOperasionalDestination } from "@/lib/jam-operasional";
+import { RekomendasiPenginapanSection, RekomendasiTransportSection } from "./RekomendasiAiSections";
 
 // Leaflet browser-only
 const DestinationMap = dynamic(() => import("@/components/DestinationMap"), {
@@ -2735,6 +2736,10 @@ export default function DestinasiDetailClient({ destination: d }: Props) {
               isLoggedIn={d.isLoggedIn}
               defaultContactNumber={d.userPhone ?? ""}
             />
+
+            {/* Rekomendasi AI (manual trigger, hemat API call) — penginapan terdekat & moda transportasi. */}
+            <RekomendasiPenginapanSection destinationId={d.id} />
+            <RekomendasiTransportSection destinationId={d.id} />
 
             {/* Section Laporkan Kondisi / Usulan Perbaikan — form laporan sama seperti /laporan, destinationId otomatis terisi */}
             <LaporKondisiSection

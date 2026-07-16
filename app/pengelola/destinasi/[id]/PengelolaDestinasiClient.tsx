@@ -27,6 +27,7 @@ import {
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import RupiahInput from "@/components/ui/rupiah-input";
 import UmkmForm, { KATEGORI_UMKM_LABEL, type WarungFormValues } from "@/components/pengelola/umkm-form";
+import KelolaPenginapanSection from "./KelolaPenginapanSection";
 import SaranAiDestinasi from "@/components/pengelola/saran-ai-destinasi";
 import PetaLokasi from "./PetaLokasi";
 
@@ -1587,7 +1588,7 @@ export default function PengelolaDestinasiClient({
   initialWarungs,
   localServiceCount,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<"transaksi" | "fasilitas" | "umkm" | "booking">("transaksi");
+  const [activeTab, setActiveTab] = useState<"transaksi" | "fasilitas" | "umkm" | "booking" | "penginapan">("transaksi");
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
@@ -1713,6 +1714,27 @@ export default function PengelolaDestinasiClient({
           >
             Booking Transport
           </button>
+          <button
+            type="button"
+            id="tab-penginapan"
+            onClick={() => setActiveTab("penginapan")}
+            className="text-sm font-bold px-4 py-2.5 rounded-full transition-all active:scale-95"
+            style={
+              activeTab === "penginapan"
+                ? {
+                    background: "var(--blusukan-primary)",
+                    color: "var(--blusukan-on-primary)",
+                    boxShadow: "0 6px 16px -6px color-mix(in srgb, var(--blusukan-primary) 65%, transparent)",
+                  }
+                : {
+                    background: "var(--blusukan-surface-container-lowest)",
+                    color: "var(--blusukan-on-surface-variant)",
+                    border: "1px solid var(--blusukan-outline-variant)",
+                  }
+            }
+          >
+            Penginapan
+          </button>
         </div>
 
         {activeTab === "transaksi" && (
@@ -1731,6 +1753,7 @@ export default function PengelolaDestinasiClient({
         {activeTab === "booking" && (
           <KelolaTransportSection destinationId={destination.id} localServiceCount={localServiceCount} />
         )}
+        {activeTab === "penginapan" && <KelolaPenginapanSection destinationId={destination.id} />}
       </div>
     </div>
   );
