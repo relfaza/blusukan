@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { destinationFilterWhere, destinationRelationWhere, type AdminFilters } from "@/lib/admin-filters";
 
 const TRANSAKSI_SELESAI_STATUS = ["SELESAI", "DIKONFIRMASI"] as const;
 
@@ -13,15 +14,17 @@ export type PeringkatKeuangan = {
 };
 
 /** Destinasi APPROVED, total pendapatan all-time dari Transaksi SELESAI/DIKONFIRMASI, urut descending */
-export async function getPeringkatKeuangan(): Promise<PeringkatKeuangan[]> {
+export async function getPeringkatKeuangan(
+  filters: AdminFilters = { kabupaten: null, kondisiJalan: null }
+): Promise<PeringkatKeuangan[]> {
   const [destinations, transaksiGroups] = await Promise.all([
     prisma.destination.findMany({
-      where: { status: "APPROVED" },
+      where: { status: "APPROVED", ...destinationFilterWhere(filters) },
       select: { id: true, name: true, kabupaten: true, kategori: true, submittedBy: { select: { name: true } } },
     }),
     prisma.transaksi.groupBy({
       by: ["destinationId"],
-      where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] } },
+      where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] }, ...destinationRelationWhere(filters) },
       _sum: { totalHarga: true },
       _count: { _all: true },
     }),

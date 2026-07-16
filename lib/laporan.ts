@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { destinationFilterWhere, type AdminFilters } from "@/lib/admin-filters";
 
 export type DestinasiDenganLaporan = {
   id: string;
@@ -9,9 +10,11 @@ export type DestinasiDenganLaporan = {
 };
 
 /** Destinasi yang punya minimal 1 UserReport, urut jumlahLaporan terbanyak */
-export async function getDestinasiDenganLaporan(): Promise<DestinasiDenganLaporan[]> {
+export async function getDestinasiDenganLaporan(
+  filters: AdminFilters = { kabupaten: null, kondisiJalan: null }
+): Promise<DestinasiDenganLaporan[]> {
   const destinations = await prisma.destination.findMany({
-    where: { reports: { some: {} } },
+    where: { reports: { some: {} }, ...destinationFilterWhere(filters) },
     select: {
       id: true,
       name: true,

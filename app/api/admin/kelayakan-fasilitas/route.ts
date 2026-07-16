@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import type { Kabupaten } from "@/lib/generated/prisma/enums";
+import { destinationFilterWhere, parseAdminFilters } from "@/lib/admin-filters";
 
 const VALID_KABUPATEN = ["SLEMAN", "GUNUNGKIDUL", "BANTUL", "KULON_PROGO", "KOTA_YOGYAKARTA"];
 
@@ -13,13 +13,14 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const kabupatenFilter = searchParams.get("kabupaten");
+  const filters = parseAdminFilters({
+    kabupaten: searchParams.get("kabupaten"),
+    kondisiJalan: searchParams.get("kondisiJalan"),
+  });
 
   const where: Prisma.DestinationWhereInput = {
     status: "APPROVED",
-    ...(kabupatenFilter && VALID_KABUPATEN.includes(kabupatenFilter)
-      ? { kabupaten: kabupatenFilter as Kabupaten }
-      : {}),
+    ...destinationFilterWhere(filters),
   };
 
   const destinations = await prisma.destination.findMany({

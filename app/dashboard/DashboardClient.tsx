@@ -3,6 +3,7 @@
 import StatistikSection from "./StatistikSection";
 import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
 import InsightAi from "@/components/admin/insight-ai";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
 import type { PeringkatDestinasi } from "@/lib/peringkat";
 
 const PERINGKAT_TABS: PeringkatWidgetTab[] = [
@@ -28,9 +29,11 @@ export default function DashboardClient({ peringkat }: { peringkat: PeringkatDes
         >
           Dashboard Admin
         </h1>
-        <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Ringkasan aktivitas Blusukan
         </p>
+
+        <AdminFilterBar className="mb-8" />
 
         <StatistikSection />
         <InsightAi />

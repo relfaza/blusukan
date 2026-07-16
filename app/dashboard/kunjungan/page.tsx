@@ -1,5 +1,6 @@
 import { requireAdminPage } from "@/lib/auth-helpers";
 import TrenKunjunganSection from "../TrenKunjunganSection";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +18,11 @@ export default async function KunjunganPage() {
         >
           Kunjungan & Kepadatan
         </h1>
-        <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Tren kunjungan wisatawan dari waktu ke waktu
         </p>
+
+        <AdminFilterBar className="mb-8" />
 
         <TrenKunjunganSection />
       </div>

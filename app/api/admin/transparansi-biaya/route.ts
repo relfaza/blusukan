@@ -1,22 +1,29 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { destinationFilterWhere, destinationRelationWhere, parseAdminFilters } from "@/lib/admin-filters";
 
 // Ambang selisih harga dianggap "tidak sesuai": > 20% dari HTM resmi (definisi PRD).
 const SELISIH_THRESHOLD = 0.2;
 // Jumlah laporan tidak sesuai dalam 30 hari yang memicu status potensi pungli (definisi PRD).
 const PUNGLI_MIN_LAPORAN = 3;
 
-export async function GET() {
+export async function GET(request: Request) {
   const authResult = await requireAdminApi();
   if (!authResult.ok) {
     return NextResponse.json({ message: authResult.message }, { status: authResult.status });
   }
 
+  const { searchParams } = new URL(request.url);
+  const filters = parseAdminFilters({
+    kabupaten: searchParams.get("kabupaten"),
+    kondisiJalan: searchParams.get("kondisiJalan"),
+  });
+
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const destinasi = await prisma.destination.findMany({
-    where: { status: "APPROVED" },
+    where: { status: "APPROVED", ...destinationFilterWhere(filters) },
     select: { id: true, name: true, kabupaten: true, htmResmi: true },
     orderBy: { name: "asc" },
   });
@@ -73,8 +80,9 @@ export async function GET() {
     };
   });
 
-  // Section 2: warung + menu, dikelompokkan per destinasi.
+  // Section 2: warung + menu, dikelompokkan per destinasi (ikut filter Kabupaten/Kondisi Jalan).
   const warungs = await prisma.localWarung.findMany({
+    where: { ...destinationRelationWhere(filters) },
     select: {
       id: true,
       name: true,

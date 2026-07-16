@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { RouteStatus } from "@/lib/generated/prisma/enums";
+import { destinationFilterWhere, type AdminFilters } from "@/lib/admin-filters";
 
 export type PeringkatDestinasi = {
   id: string;
@@ -69,12 +70,14 @@ const KONDISI_JALAN_BURUK: RouteStatus[] = ["RUSAK", "SULIT"];
  * Destinasi dengan kunjungan di bawah rata-rata keseluruhan DAN ada laporan
  * kondisi jalan RUSAK/SULIT dalam 30 hari terakhir → "Perlu Investigasi".
  */
-export async function getPrioritasInvestigasi(): Promise<PrioritasInvestigasi[]> {
+export async function getPrioritasInvestigasi(
+  filters: AdminFilters = { kabupaten: null, kondisiJalan: null }
+): Promise<PrioritasInvestigasi[]> {
   const sejak30Hari = new Date(Date.now() - HARI_30_MS);
 
   const [destinations, kunjunganGroups, laporanJalan] = await Promise.all([
     prisma.destination.findMany({
-      where: { status: "APPROVED" },
+      where: { status: "APPROVED", ...destinationFilterWhere(filters) },
       select: { id: true, name: true, kabupaten: true, routeStatus: true },
     }),
     prisma.transaksi.groupBy({

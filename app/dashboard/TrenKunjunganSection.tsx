@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Users } from "lucide-react";
 import ChartDetailDialog, { type DetailColumn } from "./ChartDetailDialog";
@@ -99,6 +100,11 @@ export default function TrenKunjunganSection({
   const [error, setError] = useState("");
   const { state: detailState, show: showDetail, onOpenChange: closeDetail } = useChartDetail();
 
+  // Filter kabupaten/kondisiJalan dari URL — hanya dipakai pada tampilan agregat (bukan detail per-destinasi).
+  const searchParams = useSearchParams();
+  const kabupaten = destinationId ? null : searchParams.get("kabupaten");
+  const kondisiJalan = destinationId ? null : searchParams.get("kondisiJalan");
+
   function handlePointClick(label: string) {
     const params: Record<string, string> = { type: "kunjungan", periode, label };
     if (destinationId) params.destinationId = destinationId;
@@ -109,6 +115,8 @@ export default function TrenKunjunganSection({
     let cancelled = false;
     const params = new URLSearchParams({ periode });
     if (destinationId) params.set("destinationId", destinationId);
+    if (kabupaten) params.set("kabupaten", kabupaten);
+    if (kondisiJalan) params.set("kondisiJalan", kondisiJalan);
 
     fetch(`/api/admin/kunjungan?${params.toString()}`)
       .then((res) => res.json())
@@ -124,7 +132,7 @@ export default function TrenKunjunganSection({
     return () => {
       cancelled = true;
     };
-  }, [periode, destinationId]);
+  }, [periode, destinationId, kabupaten, kondisiJalan]);
 
   return (
     <div className="mb-10">

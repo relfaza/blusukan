@@ -4,6 +4,8 @@ import { requireAdminPage } from "@/lib/auth-helpers";
 import { getPrioritasInvestigasi } from "@/lib/peringkat";
 import type { RouteStatus } from "@/lib/generated/prisma/enums";
 import type { KlasifikasiPrioritas } from "@/lib/peringkat";
+import { parseAdminFilters } from "@/lib/admin-filters";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +30,15 @@ const KLASIFIKASI_BADGE: Record<KlasifikasiPrioritas, { label: string; bg: strin
   PEMELIHARAAN_RUTIN: { label: "🟢 Pemeliharaan Rutin", bg: "#e8f5e9", color: "#2e7d32" },
 };
 
-export default async function PrioritasInvestigasiPage() {
+export default async function PrioritasInvestigasiPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kabupaten?: string; kondisiJalan?: string }>;
+}) {
   await requireAdminPage();
 
-  const prioritas = await getPrioritasInvestigasi();
+  const filters = parseAdminFilters(await searchParams);
+  const prioritas = await getPrioritasInvestigasi(filters);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
@@ -54,9 +61,11 @@ export default async function PrioritasInvestigasiPage() {
             Prioritas Investigasi
           </h1>
         </div>
-        <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Diurutkan dari kunjungan paling sedikit (30 hari) — destinasi sepi dengan kondisi jalan buruk perlu ditinjau
         </p>
+
+        <AdminFilterBar className="mb-8" />
 
         {prioritas.length === 0 ? (
           <div

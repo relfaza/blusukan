@@ -2,14 +2,24 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { last6Months } from "@/lib/bulan";
+import { destinationFilterWhere, destinationRelationWhere, parseAdminFilters } from "@/lib/admin-filters";
 
 const TRANSAKSI_SELESAI_STATUS = ["SELESAI", "DIKONFIRMASI"] as const;
 
-export async function GET() {
+export async function GET(request: Request) {
   const authResult = await requireAdminApi();
   if (!authResult.ok) {
     return NextResponse.json({ message: authResult.message }, { status: authResult.status });
   }
+
+  const { searchParams } = new URL(request.url);
+  const filters = parseAdminFilters({
+    kabupaten: searchParams.get("kabupaten"),
+    kondisiJalan: searchParams.get("kondisiJalan"),
+  });
+  // Fragmen WHERE bersama: destWhere untuk model Destination, destRel untuk model dengan relasi destinasi.
+  const destWhere = destinationFilterWhere(filters);
+  const destRel = destinationRelationWhere(filters);
 
   const months = last6Months();
   const rangeStart = new Date(months[0].year, months[0].month, 1);
@@ -34,42 +44,42 @@ export async function GET() {
     crowdLevelGroups,
     reviewsRecent,
   ] = await Promise.all([
-    prisma.destination.count({ where: { status: "APPROVED" } }),
-    prisma.destination.count({ where: { status: "PENDING" } }),
-    prisma.userReport.count(),
+    prisma.destination.count({ where: { status: "APPROVED", ...destWhere } }),
+    prisma.destination.count({ where: { status: "PENDING", ...destWhere } }),
+    prisma.userReport.count({ where: { ...destRel } }),
     prisma.transaksi.aggregate({
-      where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] } },
+      where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] }, ...destRel },
       _sum: { totalHarga: true },
       _count: { _all: true },
     }),
     prisma.userReport.findMany({
-      where: { createdAt: { gte: rangeStart } },
+      where: { createdAt: { gte: rangeStart }, ...destRel },
       select: { createdAt: true },
     }),
     prisma.transaksi.findMany({
-      where: { createdAt: { gte: rangeStart }, status: { in: [...TRANSAKSI_SELESAI_STATUS] } },
+      where: { createdAt: { gte: rangeStart }, status: { in: [...TRANSAKSI_SELESAI_STATUS] }, ...destRel },
       select: { createdAt: true, totalHarga: true },
     }),
     prisma.destination.groupBy({
       by: ["kategori"],
-      where: { status: "APPROVED" },
+      where: { status: "APPROVED", ...destWhere },
       _count: { _all: true },
     }),
     prisma.destination.groupBy({
       by: ["kabupaten"],
-      where: { status: "APPROVED" },
+      where: { status: "APPROVED", ...destWhere },
       _count: { _all: true },
     }),
-    prisma.destination.count({ where: { status: "APPROVED", approvedAt: { gte: startOfMonth } } }),
-    prisma.destination.findMany({ where: { status: "PENDING" }, select: { createdAt: true } }),
-    prisma.userReport.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+    prisma.destination.count({ where: { status: "APPROVED", approvedAt: { gte: startOfMonth }, ...destWhere } }),
+    prisma.destination.findMany({ where: { status: "PENDING", ...destWhere }, select: { createdAt: true } }),
+    prisma.userReport.count({ where: { createdAt: { gte: sevenDaysAgo }, ...destRel } }),
     prisma.transaksi.count({
-      where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] }, createdAt: { gte: sevenDaysAgo } },
+      where: { status: { in: [...TRANSAKSI_SELESAI_STATUS] }, createdAt: { gte: sevenDaysAgo }, ...destRel },
     }),
-    prisma.userReport.groupBy({ by: ["roadCondition"], _count: { _all: true } }),
-    prisma.userReport.groupBy({ by: ["crowdLevel"], _count: { _all: true } }),
+    prisma.userReport.groupBy({ by: ["roadCondition"], where: { ...destRel }, _count: { _all: true } }),
+    prisma.userReport.groupBy({ by: ["crowdLevel"], where: { ...destRel }, _count: { _all: true } }),
     prisma.review.findMany({
-      where: { createdAt: { gte: rangeStart } },
+      where: { createdAt: { gte: rangeStart }, ...destRel },
       select: { createdAt: true, rating: true },
     }),
   ]);
