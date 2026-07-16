@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, MessageSquare, MapPin } from "lucide-react";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import ChartDetailDialog, { type DetailColumn } from "../ChartDetailDialog";
 import { useChartDetail } from "../useChartDetail";
@@ -215,6 +217,10 @@ export default function LaporanDashboardClient() {
   const [error, setError] = useState("");
   const { state: detailState, show: showDetail, onOpenChange: closeDetail } = useChartDetail();
 
+  const searchParams = useSearchParams();
+  const kabupaten = searchParams.get("kabupaten");
+  const kabupatenQs = kabupaten ? `?kabupaten=${kabupaten}` : "";
+
   function handleDestinasiBarClick(destinationId: string, name: string) {
     showDetail({ destinationId }, `Laporan — ${name}`, LAPORAN_DESTINASI_COLUMNS, "/api/admin/laporan");
   }
@@ -225,7 +231,7 @@ export default function LaporanDashboardClient() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/laporan")
+    fetch(`/api/admin/laporan${kabupatenQs}`)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setItems(Array.isArray(data) ? data : []);
@@ -236,11 +242,11 @@ export default function LaporanDashboardClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kabupatenQs]);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/laporan-total")
+    fetch(`/api/admin/laporan-total${kabupatenQs}`)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setLaporanTotal(data);
@@ -249,7 +255,7 @@ export default function LaporanDashboardClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kabupatenQs]);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
@@ -270,9 +276,11 @@ export default function LaporanDashboardClient() {
         >
           Laporan Masuk
         </h1>
-        <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Destinasi dengan laporan kondisi lapangan dari wisatawan
         </p>
+
+        <AdminFilterBar showKondisiJalan={false} className="mb-8" />
 
         {error && (
           <p

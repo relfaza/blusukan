@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { MapPin, Search, BarChart3 } from "lucide-react";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
 
 const AdminMapOverview = dynamic(() => import("@/components/admin-map-overview"), {
   ssr: false,
@@ -48,7 +50,6 @@ const KATEGORI_LABEL: Record<string, string> = {
   TEBING: "Tebing",
 };
 
-const KABUPATEN_OPTIONS = [{ value: "ALL", label: "Semua" }, ...Object.entries(KABUPATEN_LABEL).map(([value, label]) => ({ value, label }))];
 const KATEGORI_OPTIONS = [{ value: "ALL", label: "Semua" }, ...Object.entries(KATEGORI_LABEL).map(([value, label]) => ({ value, label }))];
 
 const SORT_OPTIONS: { value: "terbaru" | "terlama"; label: string }[] = [
@@ -93,9 +94,13 @@ export default function DestinasiAktifClient() {
   const [items, setItems] = useState<DestinasiRow[] | null>(null);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [kabupaten, setKabupaten] = useState("ALL");
   const [kategori, setKategori] = useState("ALL");
   const [sortBy, setSortBy] = useState<"terbaru" | "terlama">("terbaru");
+
+  // Kabupaten + Kondisi Jalan dari URL (shared AdminFilterBar).
+  const searchParams = useSearchParams();
+  const kabupaten = searchParams.get("kabupaten");
+  const kondisiJalan = searchParams.get("kondisiJalan");
   const [showMap, setShowMap] = useState(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem(MAP_VISIBILITY_KEY) !== "false";
@@ -113,7 +118,8 @@ export default function DestinasiAktifClient() {
     let cancelled = false;
     const params = new URLSearchParams({ status: "APPROVED", sortBy });
     if (search.trim()) params.set("search", search.trim());
-    if (kabupaten !== "ALL") params.set("kabupaten", kabupaten);
+    if (kabupaten) params.set("kabupaten", kabupaten);
+    if (kondisiJalan) params.set("kondisiJalan", kondisiJalan);
     if (kategori !== "ALL") params.set("kategori", kategori);
 
     const timeout = setTimeout(() => {
@@ -131,7 +137,7 @@ export default function DestinasiAktifClient() {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [search, kabupaten, kategori, sortBy]);
+  }, [search, kabupaten, kondisiJalan, kategori, sortBy]);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
@@ -190,12 +196,7 @@ export default function DestinasiAktifClient() {
         </div>
 
         <div className="space-y-4 mb-6">
-          <section>
-            <h2 className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
-              Kabupaten
-            </h2>
-            <FilterChipRow options={KABUPATEN_OPTIONS} value={kabupaten} onChange={setKabupaten} />
-          </section>
+          <AdminFilterBar />
 
           <section>
             <h2 className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>

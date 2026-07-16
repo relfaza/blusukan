@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Check, X } from "lucide-react";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
 
 const AdminMapHeatmapJalan = dynamic(() => import("@/components/admin-map-heatmap-jalan"), {
   ssr: false,
@@ -25,11 +27,6 @@ const KABUPATEN_LABEL: Record<string, string> = {
   KULON_PROGO: "Kulon Progo",
   KOTA_YOGYAKARTA: "Kota Yogyakarta",
 };
-
-const KABUPATEN_OPTIONS = [
-  { value: "ALL", label: "Semua Kabupaten" },
-  ...Object.entries(KABUPATEN_LABEL).map(([value, label]) => ({ value, label })),
-];
 
 type Destinasi = {
   id: string;
@@ -82,11 +79,19 @@ function CheckCell({ value }: { value: boolean }) {
 export default function InfrastrukturClient() {
   const [data, setData] = useState<Response | null>(null);
   const [error, setError] = useState("");
-  const [kabupaten, setKabupaten] = useState("ALL");
+
+  const searchParams = useSearchParams();
+  const kabupaten = searchParams.get("kabupaten");
+  const kondisiJalan = searchParams.get("kondisiJalan");
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/kelayakan-fasilitas")
+    const params = new URLSearchParams();
+    if (kabupaten) params.set("kabupaten", kabupaten);
+    if (kondisiJalan) params.set("kondisiJalan", kondisiJalan);
+    const qs = params.toString();
+
+    fetch(`/api/admin/kelayakan-fasilitas${qs ? `?${qs}` : ""}`)
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();
@@ -100,13 +105,10 @@ export default function InfrastrukturClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kabupaten, kondisiJalan]);
 
-  const semua = useMemo(() => (data ? data.groups.flatMap((g) => g.destinasi) : []), [data]);
-  const terfilter = useMemo(
-    () => (kabupaten === "ALL" ? semua : semua.filter((d) => d.kabupaten === kabupaten)),
-    [semua, kabupaten]
-  );
+  // Data sudah difilter di server; cukup ratakan semua grup.
+  const terfilter = useMemo(() => (data ? data.groups.flatMap((g) => g.destinasi) : []), [data]);
 
   const mapPoints = terfilter.map((d) => ({
     id: d.id,
@@ -149,23 +151,7 @@ export default function InfrastrukturClient() {
               🗺️ Peta Kondisi Jalan per Kabupaten
             </h2>
 
-            <select
-              id="filter-kabupaten"
-              value={kabupaten}
-              onChange={(e) => setKabupaten(e.target.value)}
-              className="text-sm font-semibold px-3.5 py-2 rounded-xl cursor-pointer"
-              style={{
-                background: "#ffffff",
-                border: "1px solid var(--blusukan-outline-variant)",
-                color: "var(--blusukan-on-surface)",
-              }}
-            >
-              {KABUPATEN_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <AdminFilterBar />
           </div>
 
           {!data && !error ? (
@@ -178,7 +164,7 @@ export default function InfrastrukturClient() {
               <AdminMapHeatmapJalan destinasi={mapPoints} />
               <p className="text-xs mt-2" style={{ color: "var(--blusukan-on-surface-variant)" }}>
                 {terfilter.length} destinasi ditampilkan
-                {kabupaten !== "ALL" ? ` di ${KABUPATEN_LABEL[kabupaten]}` : ""}
+                {kabupaten ? ` di ${KABUPATEN_LABEL[kabupaten] ?? kabupaten}` : ""}
               </p>
             </>
           )}

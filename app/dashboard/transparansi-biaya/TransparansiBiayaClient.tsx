@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Store, ShieldAlert, ShieldCheck } from "lucide-react";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
 
 const KABUPATEN_LABEL: Record<string, string> = {
   SLEMAN: "Sleman",
@@ -140,9 +142,18 @@ export default function TransparansiBiayaClient() {
   const [data, setData] = useState<Response | null>(null);
   const [error, setError] = useState("");
 
+  const searchParams = useSearchParams();
+  const kabupaten = searchParams.get("kabupaten");
+  const kondisiJalan = searchParams.get("kondisiJalan");
+
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/transparansi-biaya")
+    const params = new URLSearchParams();
+    if (kabupaten) params.set("kabupaten", kabupaten);
+    if (kondisiJalan) params.set("kondisiJalan", kondisiJalan);
+    const qs = params.toString();
+
+    fetch(`/api/admin/transparansi-biaya${qs ? `?${qs}` : ""}`)
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();
@@ -156,7 +167,7 @@ export default function TransparansiBiayaClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kabupaten, kondisiJalan]);
 
   // Kelompokkan warung per destinasi untuk Section 2.
   const warungPerDestinasi = (() => {
@@ -181,9 +192,11 @@ export default function TransparansiBiayaClient() {
         >
           Transparansi Biaya
         </h1>
-        <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Perbandingan tarif resmi dengan biaya yang dilaporkan wisatawan, serta daftar harga warung.
         </p>
+
+        <AdminFilterBar className="mb-8" />
 
         {error && (
           <p

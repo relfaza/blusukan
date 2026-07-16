@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   CartesianGrid,
@@ -514,6 +515,10 @@ export default function StatistikSection() {
   const [error, setError] = useState("");
   const { state: detailState, show: showDetail, onOpenChange: closeDetail } = useChartDetail();
 
+  const searchParams = useSearchParams();
+  const kabupaten = searchParams.get("kabupaten");
+  const kondisiJalan = searchParams.get("kondisiJalan");
+
   const laporanColumns: DetailColumn[] = [
     { key: "destinationName", label: "Destinasi" },
     { key: "userName", label: "Pelapor" },
@@ -590,7 +595,12 @@ export default function StatistikSection() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/statistik")
+    const params = new URLSearchParams();
+    if (kabupaten) params.set("kabupaten", kabupaten);
+    if (kondisiJalan) params.set("kondisiJalan", kondisiJalan);
+    const qs = params.toString();
+
+    fetch(`/api/admin/statistik${qs ? `?${qs}` : ""}`)
       .then((res) => res.json())
       .then((json) => {
         if (!cancelled) setData(json);
@@ -601,7 +611,7 @@ export default function StatistikSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kabupaten, kondisiJalan]);
 
   if (error) {
     return (
