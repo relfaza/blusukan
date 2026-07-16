@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Store, ShieldAlert, ShieldCheck } from "lucide-react";
 import AdminFilterBar from "@/components/admin/admin-filter-bar";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
 
 const KABUPATEN_LABEL: Record<string, string> = {
   SLEMAN: "Sleman",
@@ -138,6 +139,24 @@ function SelisihCell({ row }: { row: DestinasiRow }) {
 const thStyle = "text-left text-xs font-bold uppercase tracking-wide px-4 py-3 whitespace-nowrap";
 const tdStyle = "px-4 py-3 text-sm whitespace-nowrap";
 
+const EXPORT_COLUMNS: ExportColumn<DestinasiRow>[] = [
+  { key: "name", header: "Nama Destinasi" },
+  { key: "kabupaten", header: "Kabupaten", format: (r) => kabupatenLabel(r.kabupaten) },
+  { key: "htmResmi", header: "HTM Resmi", format: (r) => formatHtm(r.htmResmi) },
+  {
+    key: "rataRataReportedFee",
+    header: "Rata-rata Dilaporkan",
+    format: (r) => (r.rataRataReportedFee != null ? formatRupiah(r.rataRataReportedFee) : "-"),
+  },
+  { key: "jumlahLaporan", header: "Jumlah Laporan", format: (r) => String(r.jumlahLaporan) },
+  { key: "selisihPersen", header: "Selisih (%)", format: (r) => (r.selisihPersen != null ? `${r.selisihPersen}%` : "-") },
+  {
+    key: "statusPungli",
+    header: "Status",
+    format: (r) => (r.jumlahLaporan === 0 ? "Belum ada laporan" : r.statusPungli ? "Potensi Pungli" : "Sesuai"),
+  },
+];
+
 export default function TransparansiBiayaClient() {
   const [data, setData] = useState<Response | null>(null);
   const [error, setError] = useState("");
@@ -186,17 +205,25 @@ export default function TransparansiBiayaClient() {
   return (
     <div className="min-h-screen" style={{ background: "var(--blusukan-surface)", fontFamily: "Inter, sans-serif" }}>
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
-        <h1
-          className="text-2xl font-bold mb-1"
-          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-        >
-          Transparansi Biaya
-        </h1>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+          <h1
+            className="text-2xl font-bold"
+            style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+          >
+            Transparansi Biaya
+          </h1>
+          <AdminExportButton
+            data={data?.destinasi ?? []}
+            columns={EXPORT_COLUMNS}
+            filenameBase="transparansi-biaya"
+            title="Transparansi Biaya — HTM vs Laporan Aktual"
+          />
+        </div>
         <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Perbandingan tarif resmi dengan biaya yang dilaporkan wisatawan, serta daftar harga warung.
         </p>
 
-        <AdminFilterBar className="mb-8" />
+        <AdminFilterBar showKondisiJalan={false} className="mb-8" />
 
         {error && (
           <p

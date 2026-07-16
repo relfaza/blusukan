@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { destinationFilterWhere, parseAdminFilters } from "@/lib/admin-filters";
+import { parseAdminFilters } from "@/lib/admin-filters";
+import { getKondisiJalanTerakhirMap } from "@/lib/kondisi-jalan";
 
 const VALID_KABUPATEN = ["SLEMAN", "GUNUNGKIDUL", "BANTUL", "KULON_PROGO", "KOTA_YOGYAKARTA"];
 
@@ -18,9 +19,10 @@ export async function GET(request: Request) {
     kondisiJalan: searchParams.get("kondisiJalan"),
   });
 
+  // Kabupaten difilter di query; kondisi jalan difilter dari laporan warga (di bawah).
   const where: Prisma.DestinationWhereInput = {
     status: "APPROVED",
-    ...destinationFilterWhere(filters),
+    ...(filters.kabupaten ? { kabupaten: filters.kabupaten } : {}),
   };
 
   const destinations = await prisma.destination.findMany({
@@ -41,10 +43,16 @@ export async function GET(request: Request) {
     },
   });
 
+  // routeStatus yang dikembalikan = kondisi jalan terakhir dilaporkan warga (fallback ke field resmi).
+  const kondisiMap = await getKondisiJalanTerakhirMap(destinations.map((d) => d.id));
+  const denganKondisi = destinations
+    .map((d) => ({ ...d, routeStatus: kondisiMap.get(d.id) ?? d.routeStatus }))
+    .filter((d) => !filters.kondisiJalan || d.routeStatus === filters.kondisiJalan);
+
   // Kelompokkan per kabupaten dengan urutan tetap.
-  const groupsMap = new Map<string, typeof destinations>();
+  const groupsMap = new Map<string, typeof denganKondisi>();
   for (const kab of VALID_KABUPATEN) groupsMap.set(kab, []);
-  for (const d of destinations) {
+  for (const d of denganKondisi) {
     const arr = groupsMap.get(d.kabupaten) ?? [];
     arr.push(d);
     groupsMap.set(d.kabupaten, arr);

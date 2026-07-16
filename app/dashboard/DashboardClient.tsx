@@ -33,7 +33,7 @@ export default function DashboardClient({ peringkat }: { peringkat: PeringkatDes
           Ringkasan aktivitas Blusukan
         </p>
 
-        <AdminFilterBar className="mb-8" />
+        <AdminFilterBar showKondisiJalan={false} className="mb-8" />
 
         <StatistikSection />
         <InsightAi />

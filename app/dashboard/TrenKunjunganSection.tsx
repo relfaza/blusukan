@@ -7,6 +7,13 @@ import { Users } from "lucide-react";
 import ChartDetailDialog, { type DetailColumn } from "./ChartDetailDialog";
 import { useChartDetail } from "./useChartDetail";
 import { pointValueLabelContent } from "@/components/admin/chart-value-label";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
+
+type KunjunganDatum = { label: string; jumlahKunjungan: number };
+const EXPORT_COLUMNS: ExportColumn<KunjunganDatum>[] = [
+  { key: "label", header: "Periode" },
+  { key: "jumlahKunjungan", header: "Jumlah Kunjungan", format: (d) => String(d.jumlahKunjungan) },
+];
 
 function formatTanggalSingkat(iso: unknown): string {
   if (typeof iso !== "string" || !iso) return "–";
@@ -143,7 +150,15 @@ export default function TrenKunjunganSection({
         >
           {title}
         </h2>
-        <PeriodeToggle value={periode} onChange={setPeriode} />
+        <div className="flex flex-wrap items-center gap-2">
+          <AdminExportButton
+            data={result?.data ?? []}
+            columns={EXPORT_COLUMNS}
+            filenameBase={destinationId ? "tren-kunjungan-destinasi" : "tren-kunjungan"}
+            title={`${title.replace(/^[^A-Za-z]+/, "").trim()} (${periode})`}
+          />
+          <PeriodeToggle value={periode} onChange={setPeriode} />
+        </div>
       </div>
 
       {error ? (
