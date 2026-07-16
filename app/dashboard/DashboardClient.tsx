@@ -1,7 +1,6 @@
 "use client";
 
 import StatistikSection from "./StatistikSection";
-import TrenKunjunganSection from "./TrenKunjunganSection";
 import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
 import InsightAi from "@/components/admin/insight-ai";
 import type { PeringkatDestinasi } from "@/lib/peringkat";
@@ -41,7 +40,6 @@ export default function DashboardClient({ peringkat }: { peringkat: PeringkatDes
           initialItems={initialItems}
           source="dashboard"
         />
-        <TrenKunjunganSection />
       </div>
     </div>
   );

@@ -108,12 +108,14 @@ export default function NavbarClient({ user }: { user: NavbarUser }) {
   const navLinks = (user?.role && ROLE_NAV_LINKS[user.role]) || NAV_LINKS;
   const dashboardLink = user?.role ? ROLE_DASHBOARD_LINK[user.role] : undefined;
 
-  // Halaman pre-login tidak menampilkan header aplikasi
+  // Halaman pre-login tidak menampilkan header aplikasi.
+  // Area Admin (/dashboard/**) memakai sidebar sendiri — header global disembunyikan.
   if (
     pathname === "/login" ||
     pathname === "/register" ||
     pathname === "/lupa-password" ||
-    pathname?.startsWith("/reset-password")
+    pathname?.startsWith("/reset-password") ||
+    pathname?.startsWith("/dashboard")
   ) {
     return null;
   }
