@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, ArrowDownRight, Minus, Wallet, MapPin, Receipt } from "lucide-react";
 import type { PeringkatKeuangan } from "@/lib/peringkat-keuangan";
 import PeringkatWidget, { type PeringkatWidgetItem, type PeringkatWidgetTab } from "@/components/admin/peringkat-widget";
+import AdminFilterBar from "@/components/admin/admin-filter-bar";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
 import ChartDetailDialog, { type DetailColumn } from "../ChartDetailDialog";
 import { useChartDetail } from "../useChartDetail";
 import {
@@ -61,6 +64,15 @@ const TRANSAKSI_COLUMNS: DetailColumn[] = [
   { key: "createdAt", label: "Tanggal", format: formatTanggalSingkat },
 ];
 
+const EXPORT_COLUMNS: ExportColumn<PeringkatKeuangan>[] = [
+  { key: "name", header: "Nama Destinasi" },
+  { key: "kabupaten", header: "Kabupaten", format: (d) => KABUPATEN_LABEL[d.kabupaten] ?? d.kabupaten },
+  { key: "kategori", header: "Kategori", format: (d) => KATEGORI_LABEL[d.kategori] ?? d.kategori },
+  { key: "submittedByName", header: "Dikelola oleh" },
+  { key: "totalPendapatan", header: "Total Pendapatan", format: (d) => formatRupiah(d.totalPendapatan) },
+  { key: "jumlahTransaksi", header: "Jumlah Transaksi", format: (d) => String(d.jumlahTransaksi) },
+];
+
 export default function KeuanganDashboardClient({
   semuaDestinasiKeuangan,
   peringkatWidgetItems,
@@ -72,6 +84,9 @@ export default function KeuanganDashboardClient({
   const [data, setData] = useState<KeuanganResponse | null>(null);
   const [error, setError] = useState("");
   const { state: detailState, show: showDetail, onOpenChange: closeDetail } = useChartDetail();
+
+  const searchParams = useSearchParams();
+  const kabupaten = searchParams.get("kabupaten");
 
   function handleTrenBucketClick(label: string) {
     showDetail(
@@ -93,7 +108,9 @@ export default function KeuanganDashboardClient({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/admin/keuangan?periode=${periode}`)
+    const params = new URLSearchParams({ periode });
+    if (kabupaten) params.set("kabupaten", kabupaten);
+    fetch(`/api/admin/keuangan?${params.toString()}`)
       .then((res) => res.json())
       .then((json: KeuanganResponse) => {
         if (!cancelled) setData(json);
@@ -104,7 +121,7 @@ export default function KeuanganDashboardClient({
     return () => {
       cancelled = true;
     };
-  }, [periode]);
+  }, [periode, kabupaten]);
 
   const naik = (data?.persenPerubahan ?? 0) > 0;
   const turun = (data?.persenPerubahan ?? 0) < 0;
@@ -124,15 +141,23 @@ export default function KeuanganDashboardClient({
             <ArrowLeft size={16} />
             Kembali ke Dashboard
           </Link>
-          <Link
-            href="/dashboard/transaksi?from=keuangan"
-            id="link-log-transaksi"
-            className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
-            style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
-          >
-            <Receipt size={14} />
-            Log Transaksi
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <AdminExportButton
+              data={semuaDestinasiKeuangan}
+              columns={EXPORT_COLUMNS}
+              filenameBase="keuangan-per-destinasi"
+              title="Keuangan per Destinasi"
+            />
+            <Link
+              href="/dashboard/transaksi?from=keuangan"
+              id="link-log-transaksi"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full transition-opacity hover:opacity-90"
+              style={{ background: "var(--blusukan-primary-container)", color: "var(--blusukan-primary)" }}
+            >
+              <Receipt size={14} />
+              Log Transaksi
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
@@ -141,9 +166,11 @@ export default function KeuanganDashboardClient({
           </h1>
           <PeriodeToggle value={periode} onChange={setPeriode} />
         </div>
-        <p className="text-sm mb-8" style={{ color: "var(--blusukan-on-surface-variant)" }}>
+        <p className="text-sm mb-5" style={{ color: "var(--blusukan-on-surface-variant)" }}>
           Pendapatan dari transaksi berstatus Selesai atau Dikonfirmasi
         </p>
+
+        <AdminFilterBar showKondisiJalan={false} className="mb-8" />
 
         {error && (
           <p className="text-sm px-4 py-2.5 rounded-lg mb-4" style={{ background: "var(--blusukan-error-container)", color: "var(--blusukan-error)" }}>

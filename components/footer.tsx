@@ -18,12 +18,14 @@ const PENGELOLA_LINKS = [
 export default function Footer() {
   const pathname = usePathname();
 
-  // Halaman pre-login punya layout sendiri tanpa header, jadi footer juga disembunyikan
+  // Halaman pre-login punya layout sendiri tanpa header, jadi footer juga disembunyikan.
+  // Area Admin (/dashboard/**) memakai sidebar penuh tanpa footer.
   if (
     pathname === "/login" ||
     pathname === "/register" ||
     pathname === "/lupa-password" ||
-    pathname?.startsWith("/reset-password")
+    pathname?.startsWith("/reset-password") ||
+    pathname?.startsWith("/dashboard")
   ) {
     return null;
   }

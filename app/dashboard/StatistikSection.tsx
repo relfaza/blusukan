@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   CartesianGrid,
@@ -22,6 +23,13 @@ import { MapPin, Clock, MessageSquare, Receipt } from "lucide-react";
 import ChartDetailDialog, { type DetailColumn } from "./ChartDetailDialog";
 import { useChartDetail } from "./useChartDetail";
 import { pointValueLabelContent } from "@/components/admin/chart-value-label";
+import AdminExportButton, { type ExportColumn } from "@/components/admin-export-button";
+
+type RingkasanRow = { metrik: string; nilai: string };
+const RINGKASAN_COLUMNS: ExportColumn<RingkasanRow>[] = [
+  { key: "metrik", header: "Metrik" },
+  { key: "nilai", header: "Nilai" },
+];
 
 type Statistik = {
   totalDestinasi: number;
@@ -514,6 +522,10 @@ export default function StatistikSection() {
   const [error, setError] = useState("");
   const { state: detailState, show: showDetail, onOpenChange: closeDetail } = useChartDetail();
 
+  const searchParams = useSearchParams();
+  const kabupaten = searchParams.get("kabupaten");
+  const kondisiJalan = searchParams.get("kondisiJalan");
+
   const laporanColumns: DetailColumn[] = [
     { key: "destinationName", label: "Destinasi" },
     { key: "userName", label: "Pelapor" },
@@ -590,7 +602,12 @@ export default function StatistikSection() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/statistik")
+    const params = new URLSearchParams();
+    if (kabupaten) params.set("kabupaten", kabupaten);
+    if (kondisiJalan) params.set("kondisiJalan", kondisiJalan);
+    const qs = params.toString();
+
+    fetch(`/api/admin/statistik${qs ? `?${qs}` : ""}`)
       .then((res) => res.json())
       .then((json) => {
         if (!cancelled) setData(json);
@@ -601,7 +618,7 @@ export default function StatistikSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kabupaten, kondisiJalan]);
 
   if (error) {
     return (
@@ -633,14 +650,50 @@ export default function StatistikSection() {
     );
   }
 
+  const ringkasanRows: RingkasanRow[] = [
+    { metrik: "Total Destinasi Aktif", nilai: String(data.totalDestinasi) },
+    { metrik: "Destinasi Baru Bulan Ini", nilai: String(data.destinasiBaruBulanIni) },
+    { metrik: "Menunggu Persetujuan", nilai: String(data.totalPending) },
+    { metrik: "Rata-rata Hari Menunggu", nilai: String(data.rataRataHariMenunggu) },
+    { metrik: "Total Laporan Masuk", nilai: String(data.totalLaporan) },
+    { metrik: "Laporan Minggu Ini", nilai: String(data.laporanMingguIni) },
+    { metrik: "Total Transaksi", nilai: String(data.totalTransaksi) },
+    { metrik: "Transaksi Minggu Ini", nilai: String(data.transaksiMingguIni) },
+    { metrik: "Total Pendapatan Estimasi", nilai: formatRupiah(data.totalPendapatanEstimasi) },
+    ...data.destinasiPerKabupaten.map((k) => ({
+      metrik: `Destinasi di ${KABUPATEN_LABEL[k.kabupaten] ?? k.kabupaten}`,
+      nilai: String(k.jumlah),
+    })),
+    ...data.destinasiPerKategori.map((k) => ({
+      metrik: `Destinasi kategori ${KATEGORI_LABEL[k.kategori] ?? k.kategori}`,
+      nilai: String(k.jumlah),
+    })),
+    ...data.distribusiKondisiJalan.map((k) => ({
+      metrik: `Laporan kondisi jalan: ${ROAD_LABEL[k.kondisi] ?? k.kondisi}`,
+      nilai: String(k.jumlah),
+    })),
+    ...data.distribusiKeramaian.map((k) => ({
+      metrik: `Laporan keramaian: ${CROWD_LABEL[k.keramaian] ?? k.keramaian}`,
+      nilai: String(k.jumlah),
+    })),
+  ];
+
   return (
     <div className="mb-10">
-      <h2
-        className="text-lg font-bold mb-4"
-        style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
-      >
-        Statistik
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2
+          className="text-lg font-bold"
+          style={{ fontFamily: "Montserrat, sans-serif", color: "var(--blusukan-on-surface)" }}
+        >
+          Statistik
+        </h2>
+        <AdminExportButton
+          data={ringkasanRows}
+          columns={RINGKASAN_COLUMNS}
+          filenameBase="ringkasan-statistik"
+          title="Ringkasan Statistik Blusukan"
+        />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <KpiCard

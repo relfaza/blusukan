@@ -3,6 +3,7 @@ import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { buildBucketsForPeriodeKeuangan, type PeriodeKeuangan } from "@/lib/keuanganBuckets";
 import type { TransaksiType } from "@/lib/generated/prisma/enums";
+import { destinationRelationWhere, parseAdminFilters } from "@/lib/admin-filters";
 
 const TRANSAKSI_SELESAI_STATUS = ["SELESAI", "DIKONFIRMASI"] as const;
 const VALID_JENIS = ["TIKET_MASUK", "FASILITAS", "UMKM"];
@@ -22,6 +23,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Periode tidak valid." }, { status: 400 });
   }
 
+  // Filter kabupaten hanya relevan saat tidak dibatasi ke satu destinasi.
+  const filterWhere = destinationId
+    ? {}
+    : destinationRelationWhere(parseAdminFilters({ kabupaten: searchParams.get("kabupaten") }));
+
   const now = new Date();
   const buckets = buildBucketsForPeriodeKeuangan(periode as PeriodeKeuangan, now);
 
@@ -33,6 +39,7 @@ export async function GET(request: Request) {
       createdAt: { gte: rangeStart },
       ...(destinationId ? { destinationId } : {}),
       ...(jenis && VALID_JENIS.includes(jenis) ? { type: jenis as TransaksiType } : {}),
+      ...filterWhere,
     },
     select: {
       totalHarga: true,

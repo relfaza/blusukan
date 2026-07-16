@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { buildBucketsForPeriode } from "@/lib/kunjunganBuckets";
+import { destinationRelationWhere, parseAdminFilters } from "@/lib/admin-filters";
 
 export async function GET(request: Request) {
   const authResult = await requireAdminApi();
@@ -17,6 +18,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Periode tidak valid." }, { status: 400 });
   }
 
+  // Filter kabupaten/kondisiJalan hanya relevan saat tidak dibatasi ke satu destinasi.
+  const filterWhere = destinationId
+    ? {}
+    : destinationRelationWhere(
+        parseAdminFilters({
+          kabupaten: searchParams.get("kabupaten"),
+          kondisiJalan: searchParams.get("kondisiJalan"),
+        })
+      );
+
   const now = new Date();
   const buckets = buildBucketsForPeriode(periode as "harian" | "mingguan" | "bulanan", now);
 
@@ -28,6 +39,7 @@ export async function GET(request: Request) {
       status: "SELESAI",
       selesaiAt: { gte: rangeStart, not: null },
       ...(destinationId ? { destinationId } : {}),
+      ...filterWhere,
     },
     select: { selesaiAt: true },
   });

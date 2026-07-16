@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth-helpers";
 import { computeLaporanDistribusi, getDestinasiDenganLaporan, getLaporanByDestinasi } from "@/lib/laporan";
+import { parseAdminFilters } from "@/lib/admin-filters";
 
 export async function GET(request: Request) {
   const authResult = await requireAdminApi();
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ rows, ...computeLaporanDistribusi(reports) });
   }
 
-  const destinations = await getDestinasiDenganLaporan();
+  const filters = parseAdminFilters({ kabupaten: searchParams.get("kabupaten") });
+  const destinations = await getDestinasiDenganLaporan(filters);
   return NextResponse.json(destinations);
 }
