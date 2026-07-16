@@ -1,17 +1,10 @@
-import { Building2 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth-helpers";
-import ComingSoon from "@/components/admin/coming-soon";
+import InfrastrukturClient from "./InfrastrukturClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function InfrastrukturPage() {
   await requireAdminPage();
 
-  return (
-    <ComingSoon
-      title="Infrastruktur & Fasilitas"
-      description="Pemantauan kondisi jalan, sinyal, dan fasilitas destinasi"
-      icon={<Building2 size={26} />}
-    />
-  );
+  return <InfrastrukturClient />;
 }
